@@ -13,7 +13,7 @@ module.exports = {
   deploy: {
     production: {
       user: "www-data",
-      host: ["minimars.com"],
+      host: ["mini-mars.com"],
       ref: "origin/master",
       repo: "https://github.com/uicestone/minimars-server",
       path: "/var/www/minimars-server",
