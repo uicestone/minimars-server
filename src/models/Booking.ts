@@ -47,7 +47,7 @@ const Booking = new Schema({
   date: { type: String, required: true },
   checkInAt: { type: String, required: true },
   hours: { type: Number, default: 1 },
-  membersCount: { type: Number, default: 1 },
+  adultsCount: { type: Number, default: 1 },
   kidsCount: { type: Number, default: 0 },
   socksCount: { type: Number, default: 0 },
   bandIds: { type: [String] },
@@ -99,7 +99,7 @@ Booking.methods.calculatePrice = async function() {
   const kidFirstHourPrice = config.kidHourPrice;
 
   let discountHours = 0;
-  let membersCount = booking.membersCount;
+  let adultsCount = booking.adultsCount;
   let kidsCount = booking.kidsCount;
 
   if (booking.code) {
@@ -113,8 +113,8 @@ Booking.methods.calculatePrice = async function() {
   }
 
   if (booking.customer.freePlay) {
-    if (membersCount > 0) {
-      membersCount -= 1;
+    if (adultsCount > 0) {
+      adultsCount -= 1;
     } else if (kidsCount > 0) {
       kidsCount -= 1;
     }
@@ -134,7 +134,7 @@ Booking.methods.calculatePrice = async function() {
 
   if (booking.code) {
     if (+booking.code.hours === +booking.hours) {
-      membersCount -= booking.code.membersCount || 1;
+      adultsCount -= booking.code.adultsCount || 1;
       kidsCount -= booking.code.kidsCount || 0;
     } else {
       throw new Error("code_booking_hours_not_match");
@@ -156,7 +156,7 @@ Booking.methods.calculatePrice = async function() {
         .reduce((price, ratio) => {
           return price + firstHourPrice * ratio;
         }, 0) *
-        membersCount +
+        adultsCount +
       config.hourPriceRatio
         .slice(discountHours, booking.hours)
         .reduce((price, ratio) => {
@@ -169,7 +169,7 @@ Booking.methods.calculatePrice = async function() {
   } else {
     // unlimited hours standard
     booking.price =
-      config.unlimitedPrice * membersCount +
+      config.unlimitedPrice * adultsCount +
       config.kidUnlimitedPrice * kidsCount;
   }
 
@@ -365,7 +365,7 @@ Booking.methods.bindBands = async function(auth = true) {
     throw new Error("duplicate_band_id");
   }
 
-  if (booking.bandIds.length !== booking.membersCount + booking.kidsCount) {
+  if (booking.bandIds.length !== booking.adultsCount + booking.kidsCount) {
     throw new Error("band_count_unmatched");
   }
 
@@ -459,7 +459,7 @@ export interface IBooking extends mongoose.Document {
   date: string;
   checkInAt: string;
   hours?: number; // undefined hours means unlimited hours
-  membersCount: number;
+  adultsCount: number;
   kidsCount: number;
   bandIds: string[];
   bandIds8: number[];

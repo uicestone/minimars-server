@@ -74,7 +74,7 @@ export default router => {
           throw new HttpError(403, "只能为自己预订");
         }
 
-        if (req.body.membersCount === 0 && req.body.kidsCount === 0) {
+        if (req.body.adultsCount === 0 && req.body.kidsCount === 0) {
           throw new HttpError(400, "成人和儿童数不能都为0");
         }
 
@@ -92,7 +92,7 @@ export default router => {
               case "band_count_unmatched":
                 throw new HttpError(
                   400,
-                  `手环数量必须等于玩家数量（${booking.membersCount +
+                  `手环数量必须等于玩家数量（${booking.adultsCount +
                     booking.kidsCount}）`
                 );
               case "band_occupied":
@@ -305,7 +305,7 @@ export default router => {
               case "band_count_unmatched":
                 throw new HttpError(
                   400,
-                  `手环数量必须等于玩家数量（${booking.membersCount +
+                  `手环数量必须等于玩家数量（${booking.adultsCount +
                     booking.kidsCount}）`
                 );
               case "band_occupied":
@@ -476,7 +476,7 @@ export default router => {
         .line("手机尾号：" + booking.customer.mobile.substr(-4))
         .line("会员卡号：" + (booking.customer.cardNo || "无"))
         .line("打印时间：" + moment().format("YYYY-MM-DD HH:mm:ss"))
-        .line("入场人数：" + booking.membersCount + booking.kidsCount);
+        .line("入场人数：" + booking.adultsCount + booking.kidsCount);
 
       if (booking.hours) {
         encoder.line(
@@ -526,12 +526,12 @@ export default router => {
           encoder.line(
             "自由游玩" +
               " ".repeat(2) +
-              `${booking.membersCount}成人第${thHour + 1}小时` +
+              `${booking.adultsCount}成人第${thHour + 1}小时` +
               " ".repeat(2) +
               `￥${(
                 firstHourPrice *
                 config.hourPriceRatio[thHour] *
-                booking.membersCount
+                booking.adultsCount
               ).toFixed(2)}`
           );
           if (booking.kidsCount) {
@@ -559,9 +559,9 @@ export default router => {
         encoder.line(
           "自由游玩" +
             " ".repeat(2) +
-            `${booking.membersCount}成人 畅玩` +
+            `${booking.adultsCount}成人 畅玩` +
             " ".repeat(4) +
-            `￥${(config.unlimitedPrice * booking.membersCount).toFixed(2)}`
+            `￥${(config.unlimitedPrice * booking.adultsCount).toFixed(2)}`
         );
         if (booking.kidsCount) {
           encoder.line(
@@ -736,68 +736,6 @@ export default router => {
       res.json({ price: booking.price });
     })
   );
-
-  router
-    /**
-     *  get availability of dates
-     *  :type could be 'play', 'party'
-     *  either ?month=2019-07 or ?date=2019-07-11 should be provided
-     */
-    .route("/booking-availability/:type")
-    .get(
-      handleAsyncErrors(async (req, res) => {
-        const { month, date, hours } = req.query;
-        const { type } = req.params;
-        if (!month && !date) {
-          throw new HttpError(400, "Missing month or date in query.");
-        }
-        if (date && !hours) {
-          throw new HttpError(
-            400,
-            "Missing hours in query, date availability requires hours."
-          );
-        }
-        if (!["play", "party"].includes(type)) {
-          throw new HttpError(400, `Invalid booking type: ${type}.`);
-        }
-
-        let availability: {
-          full: string[];
-          peak?: string[];
-          remarks?: string;
-          checkInAt?: string[];
-        } = { full: [] };
-
-        if (date && type !== "party") {
-          availability.remarks = "Only party has hourly availability.";
-        } else if (month) {
-          const nextMonth = moment(month, "YYYY-MM")
-            .add(1, "month")
-            .format("YYYY-MM");
-
-          availability = {
-            full: ["2019-07-16", "2019-07-18"],
-            peak: ["2019-07-20", "2019-07-21"]
-          };
-        } else {
-          availability = {
-            full: ["10:00", "12:00", "16:00", "20:00"],
-            checkInAt: [
-              "11:00:00",
-              "13:00:00",
-              "14:00:00",
-              "15:00:00",
-              "17:00:00",
-              "18:00:00",
-              "19:00:00",
-              "21:00:00"
-            ]
-          };
-        }
-
-        res.json(availability);
-      })
-    );
 
   return router;
 };

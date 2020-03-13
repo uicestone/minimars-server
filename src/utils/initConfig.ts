@@ -96,7 +96,7 @@ const initConfig: IConfig = {
       type: "play",
       hours: 12,
       amount: 0,
-      membersCount: 1,
+      adultsCount: 1,
       kidsCount: 1,
       fixedHours: true,
       fixedMembersCount: true,
@@ -112,7 +112,7 @@ const initConfig: IConfig = {
       type: "play",
       hours: 12,
       amount: 0,
-      membersCount: 2,
+      adultsCount: 2,
       kidsCount: 1,
       fixedHours: true,
       fixedMembersCount: true,
@@ -128,7 +128,7 @@ const initConfig: IConfig = {
       type: "play",
       hours: 12,
       amount: 0,
-      membersCount: 2,
+      adultsCount: 2,
       fixedHours: true,
       fixedMembersCount: true,
       price: 159
@@ -143,7 +143,7 @@ const initConfig: IConfig = {
       type: "play",
       hours: 12,
       amount: 0,
-      membersCount: 1,
+      adultsCount: 1,
       fixedHours: true,
       price: 79
     }

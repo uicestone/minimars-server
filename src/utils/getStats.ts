@@ -61,17 +61,17 @@ export default async (
       }
     })
     .reduce(
-      (count, booking) => count + booking.membersCount + booking.kidsCount,
+      (count, booking) => count + booking.adultsCount + booking.kidsCount,
       0
     );
 
   const checkedInCount = bookingServing.reduce(
-    (count, booking) => count + booking.membersCount + booking.kidsCount,
+    (count, booking) => count + booking.adultsCount + booking.kidsCount,
     0
   );
 
   const customerCount = bookingsPaid.reduce(
-    (count, booking) => count + booking.membersCount + booking.kidsCount,
+    (count, booking) => count + booking.adultsCount + booking.kidsCount,
     0
   );
 
@@ -159,8 +159,8 @@ export default async (
         couponsCount.push(couponCount);
       }
       couponCount.count +=
-        (booking.membersCount + booking.kidsCount) /
-        ((coupon.membersCount || 0) + (coupon.kidsCount || 0) || 1);
+        (booking.adultsCount + booking.kidsCount) /
+        ((coupon.adultsCount || 0) + (coupon.kidsCount || 0) || 1);
       return couponsCount;
     }, [])
     .map(couponCount => {
@@ -226,7 +226,7 @@ export default async (
     { $match: { date: { $gte: dateRangeStartStr, $lte: dateStr } } },
     {
       $project: {
-        membersCount: 1,
+        adultsCount: 1,
         kidsCount: 1,
         date: {
           $dateToParts: {
@@ -248,8 +248,8 @@ export default async (
           m: "$date.month",
           d: "$date.day"
         },
-        membersCount: {
-          $sum: "$membersCount"
+        adultsCount: {
+          $sum: "$adultsCount"
         },
         kidsCount: {
           $sum: "$kidsCount"
@@ -274,7 +274,7 @@ export default async (
             }
           }
         },
-        membersCount: 1,
+        adultsCount: 1,
         kidsCount: 1
       }
     }

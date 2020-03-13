@@ -39,7 +39,7 @@ export interface IConfig {
       type: string;
       hours: number;
       amountWeight?: number;
-      membersCount?: number;
+      adultsCount?: number;
       kidsCount?: number;
       count: number;
     }[];
@@ -60,7 +60,7 @@ export interface IConfig {
     type: string;
     hours: number;
     amount: number; // value of the coupon itself
-    membersCount?: number;
+    adultsCount?: number;
     kidsCount?: number;
     fixedHours?: boolean;
     fixedMembersCount?: boolean;
