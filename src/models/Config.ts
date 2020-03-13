@@ -32,6 +32,7 @@ export interface IConfig {
     desc: string;
     price: number;
     cardType: string;
+    isGift?: boolean;
     depositCredit?: number;
     rewardCredit?: number;
     rewardCodes?: {
@@ -48,9 +49,9 @@ export interface IConfig {
   }[];
   hourPrice?: number;
   sockPrice?: number;
-  unlimitedPrice?: number;
+  fullDayPrice?: number;
   kidHourPrice?: number;
-  kidUnlimitedPrice?: number;
+  kidFullDayPrice?: number;
   hourPriceRatio?: number[];
   coupons?: {
     slug: string;

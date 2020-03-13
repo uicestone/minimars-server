@@ -143,7 +143,7 @@ export default router => {
           ).count * 580,
         depositAmount2:
           (
-            stats.depositsCount.find(d => d.slug === "10-time-unlimited") || {
+            stats.depositsCount.find(d => d.slug === "10-time-fullDay") || {
               count: 0
             }
           ).count * 1280,
@@ -158,7 +158,7 @@ export default router => {
         depositAmount4:
           (
             stats.depositsCount.find(
-              d => d.slug === "10-time-parent-child-unlimited"
+              d => d.slug === "10-time-parent-child-fullDay"
             ) || {
               count: 0
             }
@@ -166,7 +166,7 @@ export default router => {
         depositAmount5:
           (
             stats.depositsCount.find(
-              d => d.slug === "8-time-couple-unlimited"
+              d => d.slug === "8-time-couple-fullDay"
             ) || {
               count: 0
             }
@@ -192,7 +192,7 @@ export default router => {
           ).count * 580,
         depositAmount2M:
           (
-            statsM.depositsCount.find(d => d.slug === "10-time-unlimited") || {
+            statsM.depositsCount.find(d => d.slug === "10-time-fullDay") || {
               count: 0
             }
           ).count * 1280,
@@ -207,7 +207,7 @@ export default router => {
         depositAmount4M:
           (
             statsM.depositsCount.find(
-              d => d.slug === "10-time-parent-child-unlimited"
+              d => d.slug === "10-time-parent-child-fullDay"
             ) || {
               count: 0
             }
@@ -215,7 +215,7 @@ export default router => {
         depositAmount5M:
           (
             statsM.depositsCount.find(
-              d => d.slug === "8-time-couple-unlimited"
+              d => d.slug === "8-time-couple-fullDay"
             ) || {
               count: 0
             }

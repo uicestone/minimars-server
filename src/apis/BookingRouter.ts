@@ -362,7 +362,7 @@ export default router => {
           if (!hoursWas) {
             throw new HttpError(
               400,
-              "Cannot extend hours for unlimited booking."
+              "Cannot extend hours for fullDay booking."
             );
           }
           const priceWas = booking.price;
@@ -561,7 +561,7 @@ export default router => {
             " ".repeat(2) +
             `${booking.adultsCount}成人 畅玩` +
             " ".repeat(4) +
-            `￥${(config.unlimitedPrice * booking.adultsCount).toFixed(2)}`
+            `￥${(config.fullDayPrice * booking.adultsCount).toFixed(2)}`
         );
         if (booking.kidsCount) {
           encoder.line(
@@ -569,7 +569,7 @@ export default router => {
               " ".repeat(2) +
               `${booking.kidsCount}儿童 畅玩` +
               " ".repeat(4) +
-              `￥${(config.kidUnlimitedPrice * booking.kidsCount).toFixed(2)}`
+              `￥${(config.kidFullDayPrice * booking.kidsCount).toFixed(2)}`
           );
         }
       }

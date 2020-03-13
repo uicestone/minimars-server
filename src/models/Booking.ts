@@ -164,13 +164,12 @@ Booking.methods.calculatePrice = async function() {
         }, 0) *
         kidsCount; // WARN: code will reduce each user by hour, maybe unexpected
   } else if (coupon && !coupon.hours) {
-    // unlimited hours with coupon
+    // fullDay hours with coupon
     booking.price = 0;
   } else {
-    // unlimited hours standard
+    // fullDay hours standard
     booking.price =
-      config.unlimitedPrice * adultsCount +
-      config.kidUnlimitedPrice * kidsCount;
+      config.fullDayPrice * adultsCount + config.kidFullDayPrice * kidsCount;
   }
 
   if (coupon && coupon.price) {
@@ -197,7 +196,7 @@ Booking.methods.createPayment = async function(
     paymentGateway = Gateways.WechatPay,
     useCredit = true,
     adminAddWithoutPayment = false,
-    extendHoursBy = null // 0 stands for unlimited
+    extendHoursBy = null // 0 stands for fullDay
   } = {},
   amount?: number
 ) {
@@ -458,7 +457,7 @@ export interface IBooking extends mongoose.Document {
   type: string;
   date: string;
   checkInAt: string;
-  hours?: number; // undefined hours means unlimited hours
+  hours?: number; // undefined hours means fullDay hours
   adultsCount: number;
   kidsCount: number;
   bandIds: string[];
