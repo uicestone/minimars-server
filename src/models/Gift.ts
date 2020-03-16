@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
+import autoPopulate from "./plugins/autoPopulate";
 
 const Gift = new Schema({
   title: { type: String, required: true },
@@ -7,10 +8,12 @@ const Gift = new Schema({
   posterUrl: { type: String, required: true },
   quantity: { type: Number, default: 0 },
   priceInCredit: { type: Number, required: true },
-  priceInCny: { type: Number }
+  priceInCny: { type: Number },
+  store: { type: Schema.Types.ObjectId, ref: "Store", required: true }
 });
 
 Gift.plugin(updateTimes);
+Gift.plugin(autoPopulate, ["store"]);
 
 Gift.set("toJSON", {
   getters: true,
