@@ -13,6 +13,7 @@ export default router => {
     .post(
       handleAsyncErrors(async (req, res) => {
         const post = new Post(req.body);
+        post.author = req.user;
         await post.save();
         res.json(post);
       })
