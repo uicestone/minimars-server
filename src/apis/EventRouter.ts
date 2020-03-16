@@ -9,6 +9,15 @@ export default router => {
   router
     .route("/event")
 
+    // create an event
+    .post(
+      handleAsyncErrors(async (req, res) => {
+        const event = new Event(req.body);
+        await event.save();
+        res.json(event);
+      })
+    )
+
     // get all the events
     .get(
       paginatify,

@@ -9,6 +9,15 @@ export default router => {
   router
     .route("/card-type")
 
+    // create a cardType
+    .post(
+      handleAsyncErrors(async (req, res) => {
+        const cardType = new CardType(req.body);
+        await cardType.save();
+        res.json(cardType);
+      })
+    )
+
     // get all the cardTypes
     .get(
       paginatify,

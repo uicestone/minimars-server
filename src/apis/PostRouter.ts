@@ -9,6 +9,14 @@ export default router => {
   router
     .route("/post")
 
+    // create a post
+    .post(
+      handleAsyncErrors(async (req, res) => {
+        const post = new Post(req.body);
+        await post.save();
+        res.json(post);
+      })
+    )
     // get all the posts
     .get(
       paginatify,

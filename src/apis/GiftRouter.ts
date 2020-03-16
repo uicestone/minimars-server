@@ -9,6 +9,15 @@ export default router => {
   router
     .route("/gift")
 
+    // create a gift
+    .post(
+      handleAsyncErrors(async (req, res) => {
+        const gift = new Gift(req.body);
+        await gift.save();
+        res.json(gift);
+      })
+    )
+
     // get all the gifts
     .get(
       paginatify,
