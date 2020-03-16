@@ -1,14 +1,16 @@
 import mongoose, { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
 import { IUser } from "./User";
+import { IStore } from "./Store";
 
 const Card = new Schema({
   customer: { type: Schema.Types.ObjectId, ref: "User", required: true },
   timesLeft: { type: Number },
   bound: { type: Boolean },
+  num: { type: String },
   title: { type: String, required: true },
   type: { type: String, enum: ["times", "period", "credit"], required: true },
-  num: { type: String },
+  store: { type: Schema.Types.ObjectId, ref: "Store" },
   content: { type: String },
   times: { type: Number },
   start: { type: Date },
@@ -31,9 +33,10 @@ export interface ICard extends mongoose.Document {
   customer: IUser;
   timesLeft: number;
   bound: boolean;
+  num?: string;
   title: string;
   type: string;
-  num?: string;
+  store?: IStore;
   content: string;
   times: number;
   start: Date;

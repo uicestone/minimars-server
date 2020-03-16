@@ -1,10 +1,12 @@
 import mongoose, { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
+import { IStore } from "./Store";
+import autoPopulate from "./plugins/autoPopulate";
 
 const CardType = new Schema({
   title: { type: String, required: true },
   type: { type: String, enum: ["times", "period", "credit"], required: true },
-  num: { type: String },
+  store: { type: Schema.Types.ObjectId, ref: "Store" },
   content: { type: String },
   times: { type: Number },
   start: { type: Date },
@@ -14,6 +16,7 @@ const CardType = new Schema({
 });
 
 CardType.plugin(updateTimes);
+CardType.plugin(autoPopulate, ["store"]);
 
 CardType.set("toJSON", {
   getters: true,
@@ -26,7 +29,7 @@ CardType.set("toJSON", {
 export interface ICardType extends mongoose.Document {
   title: string;
   type: string;
-  num?: string;
+  store?: IStore;
   content: string;
   times: number;
   start: Date;
