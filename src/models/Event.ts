@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
 import { IStore } from "./Store";
+import autoPopulate from "./plugins/autoPopulate";
 
 const Event = new Schema({
   title: { type: String, required: true },
@@ -14,6 +15,7 @@ const Event = new Schema({
 });
 
 Event.plugin(updateTimes);
+Event.plugin(autoPopulate, ["store"]);
 
 Event.set("toJSON", {
   getters: true,
