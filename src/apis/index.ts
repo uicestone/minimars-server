@@ -8,6 +8,7 @@ import CardTypeRouter from "./CardTypeRouter";
 import CodeRouter from "./CodeRouter";
 import ConfigRouter from "./ConfigRouter";
 import EventRouter from "./EventRouter";
+import FileRouter from "./FileRouter";
 import GiftRouter from "./GiftRouter";
 import PaymentRouter from "./PaymentRouter";
 import PostRouter from "./PostRouter";
@@ -25,6 +26,7 @@ export default (app, router) => {
     CodeRouter,
     ConfigRouter,
     EventRouter,
+    FileRouter,
     GiftRouter,
     PaymentRouter,
     PostRouter,
