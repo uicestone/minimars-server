@@ -61,13 +61,6 @@ Payment.methods.paidSuccess = async function() {
   switch (paymentAttach[0]) {
     case "booking":
       const booking = await Booking.findOne({ _id: paymentAttach[1] });
-      if (paymentAttach[2] === "extend") {
-        if (+paymentAttach[3] === 0) {
-          booking.hours = 0;
-        } else {
-          booking.hours += +paymentAttach[3];
-        }
-      }
       if (payment.amount >= 0) {
         await booking.paymentSuccess();
         console.log(`[PAY] Booking payment success, id: ${booking._id}.`);

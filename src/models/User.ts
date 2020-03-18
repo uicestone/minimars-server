@@ -149,7 +149,6 @@ User.methods.depositSuccess = async function(levelName: string) {
         title: template.title,
         type: template.type,
         amount: amountPerWeight * (template.amountWeight || 1),
-        hours: template.hours,
         customer: user,
         adultsCount: template.adultsCount,
         kidsCount: template.kidsCount
@@ -182,24 +181,6 @@ User.methods.depositSuccess = async function(levelName: string) {
       `[USR] ${codes.length} codes was rewarded to user ${user.id}, amount: ${codeAmount}, user total: ${user.codeAmount}.`
     );
   }
-
-  // send user notification
-
-  return user;
-};
-
-User.methods.membershipUpgradeSuccess = async function(cardTypeName: string) {
-  const user = this as IUser;
-
-  const cardType = config.cardTypes[cardTypeName];
-
-  if (!cardType) {
-    throw new Error(`Card type not found for price ${cardType}.`);
-  }
-
-  user.cardType = cardTypeName;
-
-  await user.save();
 
   // send user notification
 

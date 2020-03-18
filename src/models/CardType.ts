@@ -12,7 +12,9 @@ const CardType = new Schema({
   start: { type: Date },
   end: { type: Date },
   credit: { type: Number },
-  price: { type: Number, required: true }
+  price: { type: Number, required: true },
+  maxKids: { type: Number, requried: true },
+  freeParentsPerKid: { type: Number, requried: true }
 });
 
 CardType.plugin(updateTimes);
@@ -36,6 +38,8 @@ export interface ICardType extends mongoose.Document {
   end: Date;
   credit: number;
   price: number;
+  maxKids: number;
+  freeParentsPerKid: number;
 }
 
 export default mongoose.model<ICardType>("CardType", CardType);

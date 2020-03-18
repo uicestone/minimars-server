@@ -7,6 +7,7 @@ import Payment, { IPayment, Gateways } from "./Payment";
 import User, { IUser } from "./User";
 import Store, { IStore } from "./Store";
 import Code, { ICode } from "./Code";
+import { ICard } from "./Card";
 
 const { DEBUG } = process.env;
 
@@ -44,7 +45,6 @@ const Booking = new Schema({
   type: { type: String, enum: ["play", "party"], default: "play" },
   date: { type: String, required: true },
   checkInAt: { type: String, required: true },
-  hours: { type: Number, default: 1 },
   adultsCount: { type: Number, default: 1 },
   kidsCount: { type: Number, default: 0 },
   socksCount: { type: Number, default: 0 },
@@ -55,6 +55,7 @@ const Booking = new Schema({
   },
   price: { type: Number, default: 0 },
   code: { type: Schema.Types.ObjectId, ref: Code },
+  card: { type: Schema.Types.ObjectId, ref: "Card" },
   coupon: { type: String },
   payments: [{ type: Schema.Types.ObjectId, ref: Payment }],
   remarks: String
@@ -83,32 +84,23 @@ Booking.methods.calculatePrice = async function() {
 
   await booking.populate("customer").execPopulate();
 
-  const cardType = config.cardTypes[booking.customer.cardType];
-
-  const firstHourPrice =
-    (cardType && cardType.firstHourPrice) || config.hourPrice;
-  const kidFirstHourPrice = config.kidHourPrice;
-
-  let discountHours = 0;
-  let adultsCount = booking.adultsCount;
   let kidsCount = booking.kidsCount;
+  let extraAdultsCount = Math.max(
+    0,
+    booking.adultsCount - booking.kidsCount * config.freeParentsPerKid
+  );
 
-  if (booking.code) {
-    await booking.populate("code").execPopulate();
-    if (!booking.code) {
-      throw new Error("code_not_found");
+  if (booking.card) {
+    if (!booking.card.id) {
+      await booking.populate("card").execPopulate();
     }
-    if (booking.code.used) {
-      throw new Error("code_used");
-    }
-  }
-
-  if (booking.customer.freePlay) {
-    if (adultsCount > 0) {
-      adultsCount -= 1;
-    } else if (kidsCount > 0) {
-      kidsCount -= 1;
-    }
+    kidsCount = Math.max(0, booking.kidsCount - booking.card.maxKids);
+    extraAdultsCount = Math.max(
+      0,
+      booking.adultsCount - booking.kidsCount * booking.card.freeParentsPerKid
+    );
+    // TODO check card valid times
+    // TODO check card valid period
   }
 
   let coupon;
@@ -118,49 +110,16 @@ Booking.methods.calculatePrice = async function() {
     if (!coupon) {
       throw new Error("coupon_not_found");
     }
-    if (coupon.hours && !coupon.discountAmount && !coupon.discountRate) {
-      discountHours += coupon.hours;
-    }
   }
 
-  if (booking.code) {
-    if (+booking.code.hours === +booking.hours) {
-      adultsCount -= booking.code.adultsCount || 1;
-      kidsCount -= booking.code.kidsCount || 0;
-    } else {
-      throw new Error("code_booking_hours_not_match");
-    }
-
-    if (booking.code.price) {
-      booking.price += booking.code.price;
-    }
-
-    if (booking.code.hours) {
-      discountHours += booking.code.hours;
-    }
-  }
-
-  if (booking.hours) {
-    booking.price +=
-      config.hourPriceRatio
-        .slice(discountHours, booking.hours)
-        .reduce((price, ratio) => {
-          return price + firstHourPrice * ratio;
-        }, 0) *
-        adultsCount +
-      config.hourPriceRatio
-        .slice(discountHours, booking.hours)
-        .reduce((price, ratio) => {
-          return price + kidFirstHourPrice * ratio;
-        }, 0) *
-        kidsCount; // WARN: code will reduce each user by hour, maybe unexpected
-  } else if (coupon && !coupon.hours) {
+  if (coupon) {
     // fullDay hours with coupon
     booking.price = 0;
   } else {
     // fullDay hours standard
     booking.price =
-      config.fullDayPrice * adultsCount + config.kidFullDayPrice * kidsCount;
+      config.extraParentFullDayPrice * extraAdultsCount +
+      config.kidFullDayPrice * kidsCount;
   }
 
   if (coupon && coupon.price) {
@@ -178,7 +137,7 @@ Booking.methods.calculatePrice = async function() {
     booking.price = booking.price * (1 - coupon.discountRate);
   }
 
-  booking.price += (booking.socksCount || 0) * config.sockPrice;
+  booking.price += booking.socksCount * config.sockPrice;
   booking.price = +booking.price.toFixed(2);
 };
 
@@ -186,8 +145,7 @@ Booking.methods.createPayment = async function(
   {
     paymentGateway = Gateways.WechatPay,
     useCredit = true,
-    adminAddWithoutPayment = false,
-    extendHoursBy = null // 0 stands for fullDay
+    adminAddWithoutPayment = false
   } = {},
   amount?: number
 ) {
@@ -199,13 +157,7 @@ Booking.methods.createPayment = async function(
 
   let attach = `booking ${booking._id}`;
 
-  if (extendHoursBy !== null) {
-    attach += ` extend ${extendHoursBy}`;
-  }
-
-  const title = `预定${booking.store.name} ${booking.date} ${
-    booking.hours ? booking.hours + "小时" : "畅玩"
-  } ${booking.checkInAt}入场`;
+  const title = `预定${booking.store.name} ${booking.date} ${booking.checkInAt}入场`;
 
   if (booking.code) {
     const codePayment = new Payment({
@@ -245,11 +197,6 @@ Booking.methods.createPayment = async function(
 
   if (extraPayAmount < 0.01 || adminAddWithoutPayment) {
     booking.status = BookingStatuses.BOOKED;
-    if (extendHoursBy === 0) {
-      booking.hours = 0;
-    } else if (extendHoursBy) {
-      booking.hours += extendHoursBy;
-    }
   } else {
     const extraPayment = new Payment({
       customer: booking.customer,
@@ -405,13 +352,13 @@ export interface IBooking extends mongoose.Document {
   type: string;
   date: string;
   checkInAt: string;
-  hours?: number; // undefined hours means fullDay hours
   adultsCount: number;
   kidsCount: number;
   socksCount: number;
   status: BookingStatuses;
   price?: number;
   code?: ICode;
+  card?: ICard;
   coupon?: string;
   payments?: IPayment[];
   remarks?: string;
@@ -421,7 +368,6 @@ export interface IBooking extends mongoose.Document {
       paymentGateway?: Gateways;
       useCredit?: boolean;
       adminAddWithoutPayment?: boolean;
-      extendHoursBy?: number;
     },
     amount?: number
   ) => Promise<IBooking>;

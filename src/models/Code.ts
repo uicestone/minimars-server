@@ -11,7 +11,6 @@ const Code = new Schema({
   num: String,
   amount: { type: Number, default: 0 },
   price: { type: Number, default: 0 },
-  hours: { type: Number },
   adultsCount: { type: Number, default: 1 },
   kidsCount: { type: Number, default: 0 },
   used: { type: Boolean, default: false },
@@ -37,7 +36,6 @@ export interface ICode extends mongoose.Document {
   num?: string;
   amount: number;
   price: number;
-  hours?: number;
   adultsCount: number;
   kidsCount: number;
   used: boolean;

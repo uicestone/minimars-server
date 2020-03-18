@@ -22,7 +22,6 @@ export default async (config: IConfig) => {
 };
 
 const initConfig: IConfig = {
-  cardTypes: {},
   depositLevels: [
     {
       slug: "gift-1000",
@@ -46,11 +45,9 @@ const initConfig: IConfig = {
         .toDate()
     }
   ],
-  hourPriceRatio: [1, 0.5, 0.5],
-  hourPrice: 158,
-  sockPrice: 10,
-  fullDayPrice: 200,
-  kidHourPrice: 33,
-  kidFullDayPrice: 33,
+  sockPrice: 0,
+  kidFullDayPrice: 248,
+  extraParentFullDayPrice: 50,
+  freeParentsPerKid: 1,
   coupons: []
 };

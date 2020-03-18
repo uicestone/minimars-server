@@ -26,7 +26,6 @@ configSchema.statics.get = async function(key, defaults) {
 export default mongoose.model("Config", configSchema);
 
 export interface IConfig {
-  cardTypes?: { [name: string]: { firstHourPrice: number; netPrice: number } };
   depositLevels?: {
     slug: string;
     desc: string;
@@ -38,7 +37,6 @@ export interface IConfig {
     rewardCodes?: {
       title: string;
       type: string;
-      hours: number;
       amountWeight?: number;
       adultsCount?: number;
       kidsCount?: number;
@@ -47,23 +45,19 @@ export interface IConfig {
     freePlayFrom?: Date;
     freePlayTo?: Date;
   }[];
-  hourPrice?: number;
   sockPrice?: number;
-  fullDayPrice?: number;
-  kidHourPrice?: number;
+  extraParentFullDayPrice?: number;
   kidFullDayPrice?: number;
-  hourPriceRatio?: number[];
+  freeParentsPerKid?: number;
   coupons?: {
     slug: string;
     name: string;
     validFrom: Date;
     validTill: Date;
     type: string;
-    hours: number;
     amount: number; // value of the coupon itself
     adultsCount?: number;
     kidsCount?: number;
-    fixedHours?: boolean;
     fixedMembersCount?: boolean;
     price?: number;
     discountAmount?: number;

@@ -135,42 +135,6 @@ export default router => {
         restaurantAmount: "",
         drinkAmount: "",
         socksAmount: stats.socksAmount,
-        depositAmount1:
-          (
-            stats.depositsCount.find(d => d.slug === "5-time-2-hour") || {
-              count: 0
-            }
-          ).count * 580,
-        depositAmount2:
-          (
-            stats.depositsCount.find(d => d.slug === "10-time-fullDay") || {
-              count: 0
-            }
-          ).count * 1280,
-        depositAmount3:
-          (
-            stats.depositsCount.find(
-              d => d.slug === "5-time-parent-child-2-hour"
-            ) || {
-              count: 0
-            }
-          ).count * 780,
-        depositAmount4:
-          (
-            stats.depositsCount.find(
-              d => d.slug === "10-time-parent-child-fullDay"
-            ) || {
-              count: 0
-            }
-          ).count * 1680,
-        depositAmount5:
-          (
-            stats.depositsCount.find(
-              d => d.slug === "8-time-couple-fullDay"
-            ) || {
-              count: 0
-            }
-          ).count * 1314,
         codeDepositAmount: stats.codeDepositAmount,
 
         customerCountM: statsM.customerCount,
@@ -184,42 +148,6 @@ export default router => {
         restaurantAmountM: "",
         drinkAmountM: "",
         socksAmountM: statsM.socksAmount,
-        depositAmount1M:
-          (
-            statsM.depositsCount.find(d => d.slug === "5-time-2-hour") || {
-              count: 0
-            }
-          ).count * 580,
-        depositAmount2M:
-          (
-            statsM.depositsCount.find(d => d.slug === "10-time-fullDay") || {
-              count: 0
-            }
-          ).count * 1280,
-        depositAmount3M:
-          (
-            statsM.depositsCount.find(
-              d => d.slug === "5-time-parent-child-2-hour"
-            ) || {
-              count: 0
-            }
-          ).count * 780,
-        depositAmount4M:
-          (
-            statsM.depositsCount.find(
-              d => d.slug === "10-time-parent-child-fullDay"
-            ) || {
-              count: 0
-            }
-          ).count * 1680,
-        depositAmount5M:
-          (
-            statsM.depositsCount.find(
-              d => d.slug === "8-time-couple-fullDay"
-            ) || {
-              count: 0
-            }
-          ).count * 1314,
         codeDepositAmountM: statsM.codeDepositAmount,
         freePlayDepositAmountM: ""
       };

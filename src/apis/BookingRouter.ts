@@ -60,13 +60,6 @@ export default router => {
             .format("HH:mm:ss");
         }
 
-        // if (booking.hours > config.hourPriceRatio.length) {
-        //   throw new HttpError(
-        //     400,
-        //     `预定小时数超过限制（${config.hourPriceRatio.length}小时）`
-        //   );
-        // }
-
         if (
           req.user.role === "customer" &&
           !booking.customer.equals(req.user)
@@ -223,7 +216,6 @@ export default router => {
         // TODO restrict for roles
 
         const statusWas = booking.status;
-        const hoursWas = booking.hours;
 
         booking.set(req.body);
 
@@ -247,58 +239,6 @@ export default router => {
                   403,
                   "服务状态无法取消，只有待付款/已确认状态才能取消"
                 );
-              default:
-                throw err;
-            }
-          }
-        }
-
-        if (hoursWas !== booking.hours) {
-          if (booking.hours && booking.hours < hoursWas) {
-            throw new HttpError(
-              400,
-              "Hour must greater than original if not equal."
-            );
-          }
-          if (!hoursWas) {
-            throw new HttpError(
-              400,
-              "Cannot extend hours for fullDay booking."
-            );
-          }
-          const priceWas = booking.price;
-          try {
-            await booking.calculatePrice();
-          } catch (err) {
-            switch (err.message) {
-              case "code_not_found":
-                throw new HttpError(400, "优惠券不存在");
-              case "code_used":
-                throw new HttpError(403, "优惠券已经使用");
-              case "coupon_not_found":
-                throw new HttpError(400, "优惠不存在");
-              default:
-                throw err;
-            }
-          }
-          const extendHoursBy = booking.hours ? booking.hours - hoursWas : 0;
-          booking.hours = hoursWas;
-          try {
-            await booking.createPayment(
-              {
-                paymentGateway: req.query.paymentGateway,
-                useCredit: req.query.useCredit !== "false",
-                adminAddWithoutPayment: req.user.role === "admin",
-                extendHoursBy
-              },
-              booking.price - priceWas
-            );
-          } catch (err) {
-            switch (err.message) {
-              case "no_customer_openid":
-                throw new HttpError(400, "Customer openid is missing.");
-              case "insufficient_credit":
-                throw new HttpError(400, "Customer credit is insufficient.");
               default:
                 throw err;
             }
@@ -365,15 +305,6 @@ export default router => {
         .line("打印时间：" + moment().format("YYYY-MM-DD HH:mm:ss"))
         .line("入场人数：" + booking.adultsCount + booking.kidsCount);
 
-      if (booking.hours) {
-        encoder.line(
-          "出场时间：" +
-            moment(booking.checkInAt, "HH:mm:ss")
-              .add(booking.hours, "hours")
-              .format("YYYY-MM-DD HH:mm:ss")
-        );
-      }
-
       const counter = await User.findOne({ _id: req.user.id });
 
       encoder
@@ -392,58 +323,15 @@ export default router => {
             " ".repeat(2)
         );
 
-      if (
-        booking.type === "play" &&
-        !booking.coupon &&
-        !booking.code &&
-        booking.hours
-      ) {
-        const cardType = config.cardTypes[booking.customer.cardType];
-
-        const firstHourPrice =
-          (cardType && cardType.firstHourPrice) || config.hourPrice;
-        const kidFirstHourPrice = config.kidHourPrice;
-
-        for (let thHour = 0; thHour <= booking.hours; thHour++) {
-          encoder.line(
-            "自由游玩" +
-              " ".repeat(2) +
-              `${booking.adultsCount}成人第${thHour + 1}小时` +
-              " ".repeat(2) +
-              `￥${(
-                firstHourPrice *
-                config.hourPriceRatio[thHour] *
-                booking.adultsCount
-              ).toFixed(2)}`
-          );
-          if (booking.kidsCount) {
-            encoder.line(
-              "自由游玩" +
-                " ".repeat(2) +
-                `${booking.kidsCount}儿童第${thHour + 1}小时` +
-                " ".repeat(2) +
-                `￥${(
-                  kidFirstHourPrice *
-                  config.hourPriceRatio[thHour] *
-                  booking.kidsCount
-                ).toFixed(2)}`
-            );
-          }
-        }
-      }
-
-      if (
-        booking.type === "play" &&
-        !booking.hours &&
-        !booking.coupon &&
-        !booking.code
-      ) {
+      if (booking.type === "play" && !booking.coupon && !booking.code) {
         encoder.line(
           "自由游玩" +
             " ".repeat(2) +
-            `${booking.adultsCount}成人 畅玩` +
+            `${booking.adultsCount}额外成人 畅玩` +
             " ".repeat(4) +
-            `￥${(config.fullDayPrice * booking.adultsCount).toFixed(2)}`
+            `￥${(config.extraParentFullDayPrice * booking.adultsCount).toFixed(
+              2
+            )}`
         );
         if (booking.kidsCount) {
           encoder.line(
@@ -494,7 +382,7 @@ export default router => {
 
       if (booking.socksCount > 0) {
         encoder.line(
-          "蹦床袜" +
+          "袜子" +
             " ".repeat(7) +
             `${booking.socksCount}双` +
             " ".repeat(7) +
@@ -592,13 +480,6 @@ export default router => {
           .add(5, "minutes")
           .format("HH:mm:ss");
       }
-
-      // if (booking.hours > config.hourPriceRatio.length) {
-      //   throw new HttpError(
-      //     400,
-      //     `预定小时数超过限制（${config.hourPriceRatio.length}小时）`
-      //   );
-      // }
 
       try {
         await booking.calculatePrice();
