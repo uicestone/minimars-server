@@ -36,6 +36,10 @@ export default router => {
           query.find({ slug: new RegExp("^" + req.query.slug) });
         }
 
+        if (req.query.tag) {
+          query.find({ tags: req.query.tag });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()

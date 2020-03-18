@@ -6,6 +6,7 @@ import autoPopulate from "./plugins/autoPopulate";
 const Post = new Schema({
   title: { type: String, required: true },
   slug: { type: String },
+  tags: { type: [String] },
   content: { type: String },
   posterUrl: { type: String },
   author: { type: Schema.Types.ObjectId, ref: "User", required: true }
@@ -26,6 +27,7 @@ export interface IPost extends mongoose.Document {
   title: string;
   slug: string;
   content: string;
+  tags: string[];
   posterUrl: string;
   author: IUser;
 }
