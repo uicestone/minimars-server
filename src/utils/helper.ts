@@ -43,3 +43,7 @@ export const icCode10To8 = (input: string): number => {
   const buffer = Buffer.alloc(4, hexString, "hex");
   return buffer.readUInt8(1) * 1e5 + buffer.readUInt16BE(2);
 };
+
+export const isValidHexObjectId = (id: string) => {
+  return id.match(/^[0-9a-fA-F]{24}$/);
+};

@@ -3,6 +3,7 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Post from "../models/Post";
+import { isValidHexObjectId } from "../utils/helper";
 
 export default router => {
   // Post CURD
@@ -31,6 +32,10 @@ export default router => {
           createdAt: -1
         };
 
+        if (req.query.slug) {
+          query.find({ slug: new RegExp("^" + req.query.slug) });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()
@@ -52,13 +57,14 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        if (req.user.role !== "admin") {
-          throw new HttpError(403);
-        }
-        const post = await Post.findById(req.params.postId);
+        const post = isValidHexObjectId(req.params.postId)
+          ? await Post.findById(req.params.postId)
+          : await Post.findOne({ slug: req.params.postId });
+
         if (!post) {
           throw new HttpError(404, `Post not found: ${req.params.postId}`);
         }
+
         req.item = post;
         next();
       })

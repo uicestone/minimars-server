@@ -36,7 +36,7 @@ mongoose.connect(mongooseUrl, {
 
 mongoose.Promise = global.Promise;
 
-app.use(bodyParser.json({ limit: "4mb" }));
+app.use(bodyParser.json({ limit: "100mb" }));
 app.use(bodyParser.raw({ type: "text/xml" }));
 app.use("/uploads/", express.static(`${__dirname}/../uploads`));
 
