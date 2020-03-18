@@ -35,7 +35,6 @@ yarn lint
 ```
 {
   "checkedInCount":number, // 场内人数
-  "dueCount":number, // 即将超时人数
   "todayCount":number, // 当日人数
   "todayAmount":number // 当日流水
 }
@@ -76,8 +75,6 @@ queries: `?`
 `status=`
 
 `type=`
-
-`due=true`
 
 ## 查询用户
 

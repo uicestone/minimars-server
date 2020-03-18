@@ -175,26 +175,6 @@ export default router => {
           });
         }
 
-        if (req.query.due) {
-          query.find({
-            status: BookingStatuses.IN_SERVICE
-          });
-          $and.push({
-            $or: config.hourPriceRatio.map((ratio, index) => {
-              const hours = index + 1;
-              return {
-                hours,
-                checkInAt: {
-                  $lt: moment()
-                    .subtract(hours, "hours")
-                    .subtract(5, "minutes")
-                    .format("HH:mm:ss")
-                }
-              };
-            })
-          });
-        }
-
         if (req.query.customerKeyword) {
           const matchCustomers = await User.find({
             $or: [
