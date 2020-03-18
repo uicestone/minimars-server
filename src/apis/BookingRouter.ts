@@ -78,34 +78,6 @@ export default router => {
           throw new HttpError(400, "成人和儿童数不能都为0");
         }
 
-        if (req.query.bypassBandIdsCheck && req.user.role !== "admin") {
-          throw new HttpError(403);
-        }
-
-        if (req.body.bandIds && !req.query.bypassBandIdsCheck) {
-          try {
-            await booking.bindBands(req.query.authBands !== "false");
-          } catch (err) {
-            switch (err.message) {
-              case "duplicate_band_id":
-                throw new HttpError(400, `手环号重复`);
-              case "band_count_unmatched":
-                throw new HttpError(
-                  400,
-                  `手环数量必须等于玩家数量（${booking.adultsCount +
-                    booking.kidsCount}）`
-                );
-              case "band_occupied":
-                throw new HttpError(
-                  400,
-                  "一个或多个手环已被其他有效预定使用，无法绑定"
-                );
-              default:
-                console.error(err);
-            }
-          }
-        }
-
         try {
           await booking.calculatePrice();
         } catch (err) {
@@ -186,15 +158,6 @@ export default router => {
           query.find({ customer: { $in: matchCustomers } });
         }
 
-        if (req.query.bandId) {
-          $and.push({
-            $or: [
-              { bandIds: new RegExp(req.query.bandId) },
-              { bandIds8: +req.query.bandId }
-            ]
-          });
-        }
-
         if (req.query.coupon) {
           query.find({ coupon: new RegExp(req.query.coupon) });
         }
@@ -219,15 +182,7 @@ export default router => {
           total = skip + page.length;
         }
 
-        const result = page.map(i => {
-          const o = i.toJSON();
-          if (o.store && o.store.localServer) {
-            delete o.store.localServer;
-          }
-          return o;
-        });
-
-        res.paginatify(limit, skip, total).json(result);
+        res.paginatify(limit, skip, total).json(page);
       })
     );
 
@@ -274,40 +229,6 @@ export default router => {
 
         await booking.populate("customer").execPopulate();
         await booking.populate("store").execPopulate();
-
-        if (req.body.bandIds) {
-          try {
-            await booking.bindBands(req.query.authBands !== "false");
-          } catch (err) {
-            switch (err.message) {
-              case "duplicate_band_id":
-                throw new HttpError(400, `手环号重复`);
-              case "band_count_unmatched":
-                throw new HttpError(
-                  400,
-                  `手环数量必须等于玩家数量（${booking.adultsCount +
-                    booking.kidsCount}）`
-                );
-              case "band_occupied":
-                throw new HttpError(
-                  400,
-                  "一个或多个手环已被其他有效预定使用，无法绑定"
-                );
-              default:
-                console.error(err);
-            }
-          }
-        }
-
-        if (
-          booking.status === BookingStatuses.IN_SERVICE &&
-          statusWas === BookingStatuses.BOOKED
-        ) {
-          if (!booking.bandIds.length) {
-            throw new HttpError(400, "必须绑定手环才能签到入场");
-          }
-          booking.checkIn(false);
-        }
 
         if (
           booking.status === BookingStatuses.CANCELED &&
@@ -431,20 +352,6 @@ export default router => {
 
       const booking = await Booking.findOne({ _id: req.params.bookingId });
 
-      if (
-        ![
-          BookingStatuses.BOOKED,
-          BookingStatuses.IN_SERVICE,
-          BookingStatuses.FINISHED
-        ].includes(booking.status) &&
-        booking.bandIds.length
-      ) {
-        throw new HttpError(
-          400,
-          `当前预定状态无法打印小票 (${booking.status})`
-        );
-      }
-
       let encoder = new EscPosEncoder();
       encoder
         .initialize()
@@ -466,11 +373,6 @@ export default router => {
               .format("YYYY-MM-DD HH:mm:ss")
         );
       }
-
-      booking.bandIds.forEach((bandId, index) => {
-        const noStr = (index + 1).toString().padStart(2, "0");
-        encoder.line(`手环号${noStr}：${bandId}`);
-      });
 
       const counter = await User.findOne({ _id: req.user.id });
 

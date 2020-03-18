@@ -39,12 +39,7 @@ const User = new Schema({
   constellation: String,
   idCardNo: String,
   openid: { type: String, index: { unique: true, sparse: true } },
-  passNo: { type: String }, // staff only
-  passNo8: { type: Number }, // staff only
   store: { type: Schema.Types.ObjectId, ref: Store }, // manager only
-  passLogs: {
-    type: [{ time: Date, gate: String, entry: Boolean, allow: Boolean }]
-  },
   creditDeposit: Number, // below for customer only
   creditReward: Number,
   freePlayFrom: Date,
@@ -241,10 +236,7 @@ export interface IUser extends mongoose.Document {
   constellation?: string;
   idCardNo?: string;
   openid?: string;
-  passNo?: string;
-  passNo8?: number;
   store?: IStore;
-  passLogs: { time: Date; gate: string; entry: boolean; allow: boolean }[];
   creditDeposit?: number;
   creditReward?: number;
   credit?: number;

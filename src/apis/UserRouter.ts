@@ -235,14 +235,6 @@ export default router => {
             throw new HttpError(400, "外籍用户必须录入国籍");
           }
         }
-        if (req.body.passNo) {
-          if (req.user.role !== "admin") {
-            throw new HttpError(403);
-          }
-          user.passNo8 = icCode10To8(req.body.passNo);
-          const store = await Store.findOne();
-          store.authBands([req.body.passNo]);
-        }
 
         user.set(req.body);
 

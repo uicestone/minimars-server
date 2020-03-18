@@ -32,37 +32,6 @@ db.payments.find({ attach: /^deposit/ }).forEach(p => {
   }
 });
 
-// get gate pass stats of today
-const date = new Date().toISOString().substr(0, 10);
-const total = db.bookings.find({ date }).count();
-const passed = db.bookings.find({ date, "passLogs.allow": true }).count();
-const blocked = db.bookings.find({ date, "passLogs.allow": false }).count();
-const blockNoPass = db.bookings
-  .find({
-    date,
-    "passLogs.allow": false,
-    $where: "this.passLogs.filter(p=>p.allow).length==0"
-  })
-  .count();
-[
-  { label: "全部订单", count: total },
-  {
-    label: "有成功通过记录的",
-    count: passed,
-    percent: ((passed / total) * 100).toFixed(2) + "%"
-  },
-  {
-    label: "有拦截记录的",
-    count: blocked,
-    percent: ((blocked / total) * 100).toFixed(2) + "%"
-  },
-  {
-    label: "只有拦截记录的",
-    count: blockNoPass,
-    percent: ((blockNoPass / total) * 100).toFixed(2) + "%"
-  }
-];
-
 // check unexpectedly used codes
 db.bookings
   .find({ code: { $ne: null }, status: { $in: ["PENDING", "CANCELED"] } })

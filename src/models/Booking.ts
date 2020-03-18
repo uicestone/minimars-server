@@ -4,8 +4,6 @@ import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { config } from "../models/Config";
 import Payment, { IPayment, Gateways } from "./Payment";
-import { icCode10To8 } from "../utils/helper";
-import agenda from "../utils/agenda";
 import User, { IUser } from "./User";
 import Store, { IStore } from "./Store";
 import Code, { ICode } from "./Code";
@@ -50,10 +48,6 @@ const Booking = new Schema({
   adultsCount: { type: Number, default: 1 },
   kidsCount: { type: Number, default: 0 },
   socksCount: { type: Number, default: 0 },
-  bandIds: { type: [String] },
-  bandIds8: { type: [Number] },
-  bandIds8In: { type: [Number] },
-  bandIds8Out: { type: [Number] },
   status: {
     type: String,
     enum: Object.values(BookingStatuses),
@@ -63,9 +57,6 @@ const Booking = new Schema({
   code: { type: Schema.Types.ObjectId, ref: Code },
   coupon: { type: String },
   payments: [{ type: Schema.Types.ObjectId, ref: Payment }],
-  passLogs: {
-    type: [{ time: Date, gate: String, entry: Boolean, allow: Boolean }]
-  },
   remarks: String
 });
 
@@ -352,55 +343,12 @@ Booking.methods.refundSuccess = async function() {
   booking.status = BookingStatuses.CANCELED;
   await booking.save();
   // send user notification
-  booking.store.authBands(booking.bandIds, true);
-};
-
-Booking.methods.bindBands = async function(auth = true) {
-  const booking = this as IBooking;
-
-  if (!booking.bandIds.length) return;
-
-  if (Array.from(new Set(booking.bandIds)).length < booking.bandIds.length) {
-    throw new Error("duplicate_band_id");
-  }
-
-  if (booking.bandIds.length !== booking.adultsCount + booking.kidsCount) {
-    throw new Error("band_count_unmatched");
-  }
-
-  const bookingsOccupyingBand = await this.constructor.find({
-    status: {
-      $in: liveBookingStatuses
-    },
-    _id: { $ne: booking.id },
-    bandIds: { $in: booking.bandIds }
-  });
-  if (bookingsOccupyingBand.length) {
-    throw new Error("band_occupied");
-  }
-
-  booking.bandIds8 = booking.bandIds.map(id => icCode10To8(id));
-
-  // (re)authorize band to gate controllers
-  if (auth && liveBookingStatuses.includes(booking.status)) {
-    try {
-      await booking.store.authBands(booking.bandIds);
-    } catch (err) {
-      console.error(`Booking auth bands failed, id: ${booking.id}.`);
-    }
-  }
 };
 
 Booking.methods.checkIn = async function(save = true) {
   const booking = this as IBooking;
   booking.status = BookingStatuses.IN_SERVICE;
   booking.checkInAt = moment().format("HH:mm:ss");
-  if (booking.hours) {
-    agenda.schedule(`in ${booking.hours} hours`, "revoke band auth", {
-      bandIds: booking.bandIds,
-      storeId: booking.store.id
-    });
-  }
   if (save) {
     await booking.save();
   }
@@ -460,17 +408,12 @@ export interface IBooking extends mongoose.Document {
   hours?: number; // undefined hours means fullDay hours
   adultsCount: number;
   kidsCount: number;
-  bandIds: string[];
-  bandIds8: number[];
-  bandIds8In: number[];
-  bandIds8Out: number[];
   socksCount: number;
   status: BookingStatuses;
   price?: number;
   code?: ICode;
   coupon?: string;
   payments?: IPayment[];
-  passLogs?: { time: Date; gate: string; entry: boolean; allow: boolean }[];
   remarks?: string;
   calculatePrice: () => Promise<IBooking>;
   createPayment: (
@@ -485,7 +428,6 @@ export interface IBooking extends mongoose.Document {
   paymentSuccess: () => Promise<IBooking>;
   createRefundPayment: () => Promise<IBooking>;
   refundSuccess: () => Promise<IBooking>;
-  bindBands: (auth?: boolean) => Promise<boolean>;
   checkIn: (save?: boolean) => Promise<boolean>;
   cancel: (save?: boolean) => Promise<boolean>;
   finish: (save?: boolean) => Promise<boolean>;
