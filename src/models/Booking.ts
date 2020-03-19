@@ -6,7 +6,6 @@ import { config } from "../models/Config";
 import Payment, { IPayment, Gateways } from "./Payment";
 import User, { IUser } from "./User";
 import Store, { IStore } from "./Store";
-import Code, { ICode } from "./Code";
 import { ICard } from "./Card";
 
 const { DEBUG } = process.env;
@@ -54,7 +53,6 @@ const Booking = new Schema({
     default: BookingStatuses.PENDING
   },
   price: { type: Number, default: 0 },
-  code: { type: Schema.Types.ObjectId, ref: Code },
   card: { type: Schema.Types.ObjectId, ref: "Card" },
   coupon: { type: String },
   payments: [{ type: Schema.Types.ObjectId, ref: Payment }],
@@ -67,7 +65,7 @@ Booking.plugin(autoPopulate, [
   { path: "customer", select: "name avatarUrl mobile" },
   { path: "store", select: "name" },
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
-  { path: "code" }
+  { path: "card" }
 ]);
 Booking.plugin(updateTimes);
 
@@ -159,19 +157,6 @@ Booking.methods.createPayment = async function(
 
   const title = `预定${booking.store.name} ${booking.date} ${booking.checkInAt}入场`;
 
-  if (booking.code) {
-    const codePayment = new Payment({
-      customer: booking.customer,
-      amount: booking.code.amount || 0,
-      title,
-      attach,
-      gateway: Gateways.Code,
-      gatewayData: { codeId: booking.code.id, bookingId: booking.id }
-    });
-    await codePayment.save();
-    booking.payments.push(codePayment);
-  }
-
   if (
     totalPayAmount >= 0.01 &&
     useCredit &&
@@ -231,20 +216,20 @@ Booking.methods.createRefundPayment = async function() {
   // repopulate payments with customers
   await booking.populate("payments").execPopulate();
 
-  const creditAndCodePayments = booking.payments.filter(
+  const creditAndCardPayments = booking.payments.filter(
     p =>
-      [Gateways.Credit, Gateways.Code].includes(p.gateway) &&
+      [Gateways.Credit, Gateways.Card].includes(p.gateway) &&
       p.amount > 0 &&
       p.paid
   );
   const extraPayments = booking.payments.filter(
     p =>
-      ![Gateways.Credit, Gateways.Code].includes(p.gateway) &&
+      ![Gateways.Credit, Gateways.Card].includes(p.gateway) &&
       p.amount > 0 &&
       p.paid
   );
 
-  for (const p of creditAndCodePayments) {
+  for (const p of creditAndCardPayments) {
     const refundPayment = new Payment({
       customer: p.customer,
       amount: -p.amount,
@@ -258,8 +243,8 @@ Booking.methods.createRefundPayment = async function() {
       gatewayData: p.gatewayData,
       original: p.id
     });
-    if (p.gateway === Gateways.Code) {
-      p.gatewayData.codeRefund = true;
+    if (p.gateway === Gateways.Card) {
+      p.gatewayData.cardRefund = true;
     }
     await refundPayment.save();
     booking.payments.push(refundPayment);
@@ -357,7 +342,6 @@ export interface IBooking extends mongoose.Document {
   socksCount: number;
   status: BookingStatuses;
   price?: number;
-  code?: ICode;
   card?: ICard;
   coupon?: string;
   payments?: IPayment[];

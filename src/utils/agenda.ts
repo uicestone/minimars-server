@@ -1,7 +1,6 @@
 import Agenda from "agenda";
 import moment from "moment";
 import Booking, { BookingStatuses } from "../models/Booking";
-import { icCode10To8, sleep } from "./helper";
 
 const agenda = new Agenda({
   db: {

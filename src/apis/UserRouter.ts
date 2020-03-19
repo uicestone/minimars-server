@@ -3,7 +3,7 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import User, { IUser } from "../models/User";
-import { hashPwd, icCode10To8 } from "../utils/helper";
+import { hashPwd } from "../utils/helper";
 import { config } from "../models/Config";
 import Payment, { Gateways } from "../models/Payment";
 import Store from "../models/Store";
@@ -20,7 +20,7 @@ export default router => {
     .post(
       handleAsyncErrors(async (req, res) => {
         if (req.user.role !== "admin") {
-          ["role", "openid", "codes", "cardType", "credit"].forEach(f => {
+          ["role", "openid", "cardType", "credit"].forEach(f => {
             delete req.body[f];
           });
         }
@@ -103,7 +103,6 @@ export default router => {
 
         if (req.query.membership) {
           const membershipConditions = {
-            code: { codeAmount: { $gt: 0 } },
             deposit: { creditDeposit: { $gt: 0 } }
           };
           $and.push({
@@ -127,7 +126,7 @@ export default router => {
             $group: {
               _id: null,
               totalCredit: {
-                $sum: { $sum: ["$creditDeposit", "$codeAmount"] }
+                $sum: { $sum: ["$creditDeposit"] }
               }
             }
           }
@@ -184,7 +183,6 @@ export default router => {
           [
             "role",
             "openid",
-            "codes",
             "cardType",
             "creditDeposit",
             "creditReward"

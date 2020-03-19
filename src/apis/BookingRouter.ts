@@ -75,10 +75,6 @@ export default router => {
           await booking.calculatePrice();
         } catch (err) {
           switch (err.message) {
-            case "code_not_found":
-              throw new HttpError(400, "优惠券不存在");
-            case "code_used":
-              throw new HttpError(403, "优惠券已经使用");
             case "coupon_not_found":
               throw new HttpError(400, "优惠不存在");
             default:
@@ -323,7 +319,7 @@ export default router => {
             " ".repeat(2)
         );
 
-      if (booking.type === "play" && !booking.coupon && !booking.code) {
+      if (booking.type === "play" && !booking.coupon) {
         encoder.line(
           "自由游玩" +
             " ".repeat(2) +
@@ -362,22 +358,6 @@ export default router => {
               (coupon.price ? `￥${coupon.price.toFixed(2)}` : "")
           );
         }
-      }
-
-      if (booking.code) {
-        await booking.populate("code").execPopulate();
-        encoder.line(
-          booking.code.title +
-            " ".repeat(
-              Math.max(
-                0,
-                31 -
-                  stringWidth(booking.code.title) -
-                  stringWidth(`￥${(0).toFixed(2)}`)
-              )
-            ) +
-            `￥${(0).toFixed(2)}`
-        );
       }
 
       if (booking.socksCount > 0) {
@@ -485,10 +465,6 @@ export default router => {
         await booking.calculatePrice();
       } catch (err) {
         switch (err.message) {
-          case "code_not_found":
-            throw new HttpError(400, "优惠券不存在");
-          case "code_used":
-            throw new HttpError(403, "优惠券已经使用");
           case "coupon_not_found":
             throw new HttpError(400, "优惠不存在");
           default:

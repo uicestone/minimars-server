@@ -34,14 +34,6 @@ export interface IConfig {
     isGift?: boolean;
     depositCredit?: number;
     rewardCredit?: number;
-    rewardCodes?: {
-      title: string;
-      type: string;
-      amountWeight?: number;
-      adultsCount?: number;
-      kidsCount?: number;
-      count: number;
-    }[];
     freePlayFrom?: Date;
     freePlayTo?: Date;
   }[];

@@ -5,7 +5,6 @@ import castEmbedded from "../middlewares/castEmbedded";
 import AuthRouter from "./AuthRouter";
 import BookingRouter from "./BookingRouter";
 import CardTypeRouter from "./CardTypeRouter";
-import CodeRouter from "./CodeRouter";
 import ConfigRouter from "./ConfigRouter";
 import EventRouter from "./EventRouter";
 import FileRouter from "./FileRouter";
@@ -23,7 +22,6 @@ export default (app, router) => {
     AuthRouter,
     BookingRouter,
     CardTypeRouter,
-    CodeRouter,
     ConfigRouter,
     EventRouter,
     FileRouter,

@@ -33,12 +33,6 @@ export default async (
     status: { $in: paidBookingStatuses }
   });
 
-  for (const booking of bookingsPaid) {
-    if (booking.code) {
-      await booking.populate("code").execPopulate();
-    }
-  }
-
   const payments = await Payment.find({
     createdAt: {
       $gte: startOfDay,
@@ -72,12 +66,6 @@ export default async (
 
   const depositAmount = payments
     .filter(p => p.attach.match(/^deposit /))
-    .reduce((amount, p) => amount + p.amount, 0);
-
-  const codeDepositAmount = payments
-    .filter(
-      p => p.attach.match(/^deposit /) && p.attach.split(" ")[2].match(/-time-/)
-    )
     .reduce((amount, p) => amount + p.amount, 0);
 
   const socksCount = bookingsPaid.reduce(
@@ -154,24 +142,6 @@ export default async (
     });
 
   paidAmountByGateways.coupon = couponsCount.reduce((a, c) => a + c.amount, 0);
-
-  const codesCount: {
-    title: string;
-    count: number;
-  }[] = bookingsPaid
-    .filter(b => b.code)
-    .reduce((codesCount, booking) => {
-      let codeCount = codesCount.find(c => c.title === booking.code.title);
-      if (!codeCount) {
-        codeCount = {
-          title: booking.code.title,
-          count: 0
-        };
-        codesCount.push(codeCount);
-      }
-      codeCount.count++;
-      return codesCount;
-    }, []);
 
   const depositsCount: {
     slug: string;
@@ -382,12 +352,10 @@ export default async (
     partyAmount,
     tbAmount,
     depositAmount,
-    codeDepositAmount,
     socksCount,
     socksAmount,
     paidAmountByGateways,
     couponsCount,
-    codesCount,
     depositsCount,
     dailyCustomers,
     dailyBookingPayment,

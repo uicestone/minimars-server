@@ -3,7 +3,6 @@ import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import User, { IUser } from "./User";
 import Booking from "./Booking";
-import Code from "./Code";
 import {
   unifiedOrder as wechatUnifiedOrder,
   payArgs as wechatPayArgs
@@ -170,43 +169,6 @@ Payment.pre("save", async function(next) {
       // we need to change booking status manually after credit payment
       await customer.save();
       break;
-    case Gateways.Code:
-      if (
-        !payment.gatewayData ||
-        !payment.gatewayData.bookingId ||
-        !payment.gatewayData.codeId
-      ) {
-        throw new Error("invalid_code_payment_gateway_data");
-      }
-      const code = await Code.findOne({ _id: payment.gatewayData.codeId });
-
-      if (Math.abs(payment.amount) !== code.amount) {
-        throw new Error("code_payment_amount_mismatch");
-      }
-
-      if (payment.gatewayData.codeRefund) {
-        code.used = false;
-        code.usedAt = undefined;
-        code.usedInBooking = undefined;
-        await code.save();
-        await customer.updateCodeAmount();
-        console.log(
-          `[PAY] Code ${code.id} refunded, customer ${customer.id} code amount is now ${customer.codeAmount}`
-        );
-        payment.paid = true;
-      } else {
-        code.used = true;
-        code.usedAt = new Date();
-        code.usedInBooking = payment.gatewayData.bookingId;
-        await code.save();
-        await customer.updateCodeAmount();
-        console.log(
-          `[PAY] Code ${code.id} used in ${code.usedInBooking}, customer ${customer.id} code amount is now ${customer.codeAmount}`
-        );
-        payment.paid = true;
-      }
-
-      break;
     case Gateways.Card:
       break;
     case Gateways.Scan:
@@ -235,10 +197,9 @@ export interface IPayment extends mongoose.Document {
 
 export enum Gateways {
   Credit = "credit",
-  Code = "code",
+  Card = "card",
   Coupon = "coupon",
   Scan = "scan",
-  Card = "card",
   Cash = "cash",
   WechatPay = "wechatpay",
   Alipay = "alipay",
@@ -247,10 +208,9 @@ export enum Gateways {
 
 export const gatewayNames = {
   [Gateways.Credit]: "充值余额",
-  [Gateways.Code]: "次卡券码",
   [Gateways.Coupon]: "团购优惠券",
   [Gateways.Scan]: "现场扫码",
-  [Gateways.Card]: "现场刷卡",
+  [Gateways.Card]: "会员卡",
   [Gateways.Cash]: "现场现金",
   [Gateways.WechatPay]: "微信小程序",
   [Gateways.Alipay]: "支付宝",

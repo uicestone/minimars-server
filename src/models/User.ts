@@ -1,8 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
 import { config } from "./Config";
-import Code, { ICode } from "./Code";
-import autoPopulate from "./plugins/autoPopulate";
 import Store, { IStore } from "./Store";
 
 const User = new Schema({
@@ -44,10 +42,8 @@ const User = new Schema({
   creditReward: Number,
   freePlayFrom: Date,
   freePlayTo: Date,
-  codeAmount: Number, // sum of amount of unused code
   cardType: { type: String },
-  cardNo: { type: String },
-  codes: [{ type: Schema.Types.ObjectId, ref: Code }]
+  cardNo: { type: String }
 });
 
 // User.virtual("avatarUrl").get(function(req) {
@@ -70,7 +66,6 @@ User.virtual("freePlay").get(function() {
   return from && from <= now && to && to >= now;
 });
 
-User.plugin(autoPopulate, ["codes"]);
 User.plugin(updateTimes);
 
 User.pre("validate", function(next) {
@@ -125,41 +120,6 @@ User.methods.depositSuccess = async function(levelName: string) {
     );
   }
 
-  const codeWeights = (level.rewardCodes || []).reduce(
-    (weights, template) =>
-      weights + (template.amountWeight || 1) * template.count,
-    0
-  );
-
-  // console.log(`CodeWeights is ${codeWeights}.`);
-
-  let amountPerWeight: number;
-
-  if (level.depositCredit) {
-    amountPerWeight = 0; // reward codes for credit deposit are 0-value
-  } else {
-    amountPerWeight = +(level.price / codeWeights).toFixed(2);
-  }
-
-  // console.log(`[USR] AmountPerWeight is ${amountPerWeight}.`);
-
-  const codes = (level.rewardCodes || []).reduce((codes, template) => {
-    for (let i = 0; i < template.count; i++) {
-      const code = new Code({
-        title: template.title,
-        type: template.type,
-        amount: amountPerWeight * (template.amountWeight || 1),
-        customer: user,
-        adultsCount: template.adultsCount,
-        kidsCount: template.kidsCount
-      });
-      console.log(`[USR] Code amount is ${code.amount}`);
-      codes.push(code);
-      user.codes.push(code);
-    }
-    return codes;
-  }, []);
-
   if (level.freePlayFrom && level.freePlayTo) {
     user.freePlayFrom = level.freePlayFrom;
     user.freePlayTo = level.freePlayTo;
@@ -168,36 +128,9 @@ User.methods.depositSuccess = async function(levelName: string) {
     );
   }
 
-  await Promise.all([Code.insertMany(codes), user.save()]);
-
-  if (codes.length) {
-    const codeAmount = +codes
-      .reduce((codeAmount, code) => codeAmount + (code.amount || 0), 0)
-      .toFixed(2);
-
-    await user.updateCodeAmount();
-
-    console.log(
-      `[USR] ${codes.length} codes was rewarded to user ${user.id}, amount: ${codeAmount}, user total: ${user.codeAmount}.`
-    );
-  }
+  await user.save();
 
   // send user notification
-
-  return user;
-};
-
-User.methods.updateCodeAmount = async function(save = true) {
-  const user = this as IUser;
-  await user.populate("codes").execPopulate();
-  user.codeAmount = +user.codes
-    .filter(c => !c.used)
-    .reduce((codeAmount, code) => codeAmount + (code.amount || 0), 0)
-    .toFixed(2);
-
-  if (save) {
-    await user.save();
-  }
 
   return user;
 };
@@ -224,13 +157,10 @@ export interface IUser extends mongoose.Document {
   freePlayFrom: Date;
   freePlayTo: Date;
   freePlay: boolean;
-  codeAmount?: number;
   cardType?: string;
   cardNo?: string;
-  codes?: ICode[];
   depositSuccess: (level: string) => Promise<IUser>;
   membershipUpgradeSuccess: (cardTypeName: string) => Promise<IUser>;
-  updateCodeAmount: (save?: boolean) => Promise<IUser>;
 }
 
 export default mongoose.model<IUser>("User", User);

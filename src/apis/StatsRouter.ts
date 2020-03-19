@@ -57,7 +57,6 @@ export default router => {
         .line(`充值收入：${stats.depositAmount}`)
         .line(`收款方式：`)
         .line(`- 余额：${stats.paidAmountByGateways[Gateways.Credit] || 0}`)
-        .line(`- 券码：${stats.paidAmountByGateways[Gateways.Code] || 0}`)
         .line(`- 扫码：${stats.paidAmountByGateways[Gateways.Scan] || 0}`)
         .line(`- 现金：${stats.paidAmountByGateways[Gateways.Cash] || 0}`)
         .line(`- 刷卡：${stats.paidAmountByGateways[Gateways.Card] || 0}`);
@@ -66,15 +65,6 @@ export default router => {
       if (stats.couponsCount.length) {
         stats.couponsCount.forEach(couponCount => {
           encoder.line(`- ${couponCount.name}：${couponCount.count}`);
-        });
-      } else {
-        encoder.line("- 无");
-      }
-
-      encoder.line(`次卡券码：`);
-      if (stats.codesCount.length) {
-        stats.codesCount.forEach(codeCount => {
-          encoder.line(`- ${codeCount.title}：${codeCount.count}`);
         });
       } else {
         encoder.line("- 无");
@@ -129,26 +119,18 @@ export default router => {
         couponPaid: stats.paidAmountByGateways.coupon,
         tbAmount: stats.tbAmount,
         partyAmount: stats.partyAmount,
-        creditAndCodeAmount:
-          (stats.paidAmountByGateways.credit || 0) +
-          (stats.paidAmountByGateways.code || 0),
         restaurantAmount: "",
         drinkAmount: "",
         socksAmount: stats.socksAmount,
-        codeDepositAmount: stats.codeDepositAmount,
 
         customerCountM: statsM.customerCount,
         bookingAmountM: statsM.paidAmount - statsM.socksAmount,
         couponPaidM: statsM.paidAmountByGateways.coupon,
         tbAmountM: statsM.tbAmount,
         partyAmountM: statsM.partyAmount,
-        creditAndCodeAmountM:
-          (statsM.paidAmountByGateways.credit || 0) +
-          (statsM.paidAmountByGateways.code || 0),
         restaurantAmountM: "",
         drinkAmountM: "",
         socksAmountM: statsM.socksAmount,
-        codeDepositAmountM: statsM.codeDepositAmount,
         freePlayDepositAmountM: ""
       };
       Object.keys(data).forEach(key => {
