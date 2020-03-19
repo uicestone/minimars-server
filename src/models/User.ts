@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
 import { config } from "./Config";
 import Store, { IStore } from "./Store";
+import autoPopulate from "./plugins/autoPopulate";
 
 const User = new Schema({
   role: { type: String, default: "customer" },
@@ -67,6 +68,7 @@ User.virtual("freePlay").get(function() {
 });
 
 User.plugin(updateTimes);
+User.plugin(autoPopulate, ["store"]);
 
 User.pre("validate", function(next) {
   const user = this as IUser;
