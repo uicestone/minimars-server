@@ -170,7 +170,7 @@ Booking.methods.createPayment = async function(
       amountForceDeposit: booking.socksCount * config.sockPrice,
       title,
       attach,
-      gateway: Gateways.Credit
+      gateway: Gateways.Balance
     });
 
     await balancePayment.save();
@@ -218,13 +218,13 @@ Booking.methods.createRefundPayment = async function() {
 
   const balanceAndCardPayments = booking.payments.filter(
     p =>
-      [Gateways.Credit, Gateways.Card].includes(p.gateway) &&
+      [Gateways.Balance, Gateways.Card].includes(p.gateway) &&
       p.amount > 0 &&
       p.paid
   );
   const extraPayments = booking.payments.filter(
     p =>
-      ![Gateways.Credit, Gateways.Card].includes(p.gateway) &&
+      ![Gateways.Balance, Gateways.Card].includes(p.gateway) &&
       p.amount > 0 &&
       p.paid
   );

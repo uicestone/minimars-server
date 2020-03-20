@@ -102,7 +102,7 @@ export default async (
       if (!amountByGateways[payment.gateway]) {
         amountByGateways[payment.gateway] = 0;
       }
-      if (payment.gateway === Gateways.Credit) {
+      if (payment.gateway === Gateways.Balance) {
         amountByGateways[payment.gateway] += payment.amountDeposit;
       } else {
         amountByGateways[payment.gateway] += payment.amount;

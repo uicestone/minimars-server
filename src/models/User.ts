@@ -97,7 +97,7 @@ User.methods.depositSuccess = async function(levelName: string) {
 
   user.cardType = level.cardType;
 
-  if (level.depositCredit || level.rewardCredit) {
+  if (level.depositBalance || level.rewardBalance) {
     if (!user.balanceDeposit) {
       user.balanceDeposit = 0;
     }
@@ -109,12 +109,12 @@ User.methods.depositSuccess = async function(levelName: string) {
       `[USR] User ${user.id} balance was ${user.balanceDeposit}:${user.balanceReward}.`
     );
 
-    if (level.depositCredit) {
-      user.balanceDeposit += level.depositCredit;
+    if (level.depositBalance) {
+      user.balanceDeposit += level.depositBalance;
     }
 
-    if (level.rewardCredit) {
-      user.balanceReward += level.rewardCredit;
+    if (level.rewardBalance) {
+      user.balanceReward += level.rewardBalance;
     }
 
     console.log(

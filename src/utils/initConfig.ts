@@ -29,8 +29,8 @@ const initConfig: IConfig = {
       price: 1000,
       cardType: "",
       isGift: true,
-      depositCredit: 1000,
-      rewardCredit: 200
+      depositBalance: 1000,
+      rewardBalance: 200
     },
     {
       slug: "year-2020",

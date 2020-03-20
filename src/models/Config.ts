@@ -32,8 +32,8 @@ export interface IConfig {
     price: number;
     cardType: string;
     isGift?: boolean;
-    depositCredit?: number;
-    rewardCredit?: number;
+    depositBalance?: number;
+    rewardBalance?: number;
     freePlayFrom?: Date;
     freePlayTo?: Date;
   }[];

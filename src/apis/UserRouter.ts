@@ -119,13 +119,13 @@ export default router => {
         }
 
         let total = await query.countDocuments();
-        const [{ totalCredit } = { totalCredit: 0 }] = await User.aggregate([
+        const [{ totalBalance } = { totalBalance: 0 }] = await User.aggregate([
           //@ts-ignore
           { $match: query._conditions },
           {
             $group: {
               _id: null,
-              totalCredit: {
+              totalBalance: {
                 $sum: { $sum: ["$balanceDeposit"] }
               }
             }
@@ -143,7 +143,7 @@ export default router => {
           total = skip + page.length;
         }
 
-        res.set("total-balance", Math.round(totalCredit));
+        res.set("total-balance", Math.round(totalBalance));
 
         res.paginatify(limit, skip, total).json(page);
       })

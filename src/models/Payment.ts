@@ -122,7 +122,7 @@ Payment.pre("save", async function(next) {
         payment.attach
       );
       break;
-    case Gateways.Credit:
+    case Gateways.Balance:
       if (customer.balance < payment.amount) {
         throw new Error("insufficient_balance");
       }
@@ -160,7 +160,7 @@ Payment.pre("save", async function(next) {
       payment.amountDeposit = depositPaymentAmount;
 
       console.log(
-        `[DEBUG] Credit payment saved, customer balance is now ${customer.balance}`
+        `[DEBUG] Balance payment saved, customer balance is now ${customer.balance}`
       );
 
       payment.paid = true;
@@ -196,7 +196,7 @@ export interface IPayment extends mongoose.Document {
 }
 
 export enum Gateways {
-  Credit = "balance",
+  Balance = "balance",
   Card = "card",
   Coupon = "coupon",
   Scan = "scan",
@@ -207,7 +207,7 @@ export enum Gateways {
 }
 
 export const gatewayNames = {
-  [Gateways.Credit]: "充值余额",
+  [Gateways.Balance]: "充值余额",
   [Gateways.Coupon]: "团购优惠券",
   [Gateways.Scan]: "现场扫码",
   [Gateways.Card]: "会员卡",
