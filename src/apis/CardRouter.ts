@@ -4,6 +4,7 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Card, { ICard } from "../models/Card";
 import CardType from "../models/CardType";
+import { CardPostBody, CardPutBody, CardQuery } from "./interfaces";
 
 export default router => {
   // Card CURD
@@ -13,7 +14,7 @@ export default router => {
     // create a card
     .post(
       handleAsyncErrors(async (req, res) => {
-        const card = new Card(req.body);
+        const card = new Card(req.body as CardPostBody);
         const cardType = await CardType.findOne({ slug: card.slug });
         if (!cardType) {
           throw new HttpError(404, `CardType '${card.slug}' not exists.`);
@@ -39,9 +40,10 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
+        const queryParams = req.query as CardQuery;
         const { limit, skip } = req.pagination;
         const query = Card.find().populate("customer");
-        const sort = parseSortString(req.query.order) || {
+        const sort = parseSortString(queryParams) || {
           createdAt: -1
         };
 
@@ -86,15 +88,7 @@ export default router => {
     .put(
       handleAsyncErrors(async (req, res) => {
         const card = req.item as ICard;
-        if (req.body.type && req.body.type !== req.item.type) {
-          card.set({
-            start: undefined,
-            end: undefined,
-            balance: undefined,
-            times: undefined
-          });
-        }
-        card.set(req.body);
+        card.set(req.body as CardPutBody);
         await card.save();
         res.json(card);
       })

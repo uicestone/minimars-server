@@ -11,6 +11,13 @@ import { Image } from "canvas";
 import Payment, { gatewayNames } from "../models/Payment";
 import { config } from "../models/Config";
 import stringWidth from "string-width";
+import {
+  BookingPostBody,
+  BookingPostQuery,
+  BookingPutBody,
+  BookingQuery,
+  BookingPricePostBody
+} from "./interfaces";
 
 setTimeout(async () => {
   // const u = await User.findOne({ name: "测试用户2" });
@@ -25,11 +32,14 @@ export default router => {
     // create a booking
     .post(
       handleAsyncErrors(async (req, res) => {
-        if (req.body.status && req.user.role !== "admin") {
+        const body = req.body as BookingPostBody;
+        const query = req.query as BookingPostQuery;
+
+        if (body.status && req.user.role !== "admin") {
           throw new HttpError(403, "Only admin can set status directly.");
         }
 
-        const booking = new Booking(req.body);
+        const booking = new Booking(body);
 
         if (!booking.customer) {
           booking.customer = req.user;
@@ -67,7 +77,7 @@ export default router => {
           throw new HttpError(403, "只能为自己预订");
         }
 
-        if (req.body.adultsCount === 0 && req.body.kidsCount === 0) {
+        if (body.adultsCount === 0 && body.kidsCount === 0) {
           throw new HttpError(400, "成人和儿童数不能都为0");
         }
 
@@ -84,8 +94,8 @@ export default router => {
 
         try {
           await booking.createPayment({
-            paymentGateway: req.query.paymentGateway,
-            useBalance: req.query.useBalance !== "false",
+            paymentGateway: query.paymentGateway,
+            useBalance: query.useBalance !== "false",
             adminAddWithoutPayment: req.user.role === "admin"
           });
         } catch (err) {
@@ -109,9 +119,10 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
+        const queryParams = req.query as BookingQuery;
         const { limit, skip } = req.pagination;
         const query = Booking.find();
-        const sort = parseSortString(req.query.order) || {
+        const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
 
@@ -123,32 +134,34 @@ export default router => {
         }
 
         ["type", "store", "date", "customer"].forEach(field => {
-          if (req.query[field]) {
-            query.find({ [field]: req.query[field] });
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
           }
         });
 
-        if (req.query.status) {
+        if (queryParams.status) {
           query.find({
             status: {
-              $in: req.query.status.split(",").map(s => s.toUpperCase())
+              $in: queryParams.status
+                .split(",")
+                .map(s => s.toUpperCase()) as BookingStatuses[]
             }
           });
         }
 
-        if (req.query.customerKeyword) {
+        if (queryParams.customerKeyword) {
           const matchCustomers = await User.find({
             $or: [
-              { name: new RegExp(req.query.customerKeyword, "i") },
-              { mobile: new RegExp(req.query.customerKeyword) },
-              { cardNo: new RegExp(req.query.customerKeyword) }
+              { name: new RegExp(queryParams.customerKeyword, "i") },
+              { mobile: new RegExp(queryParams.customerKeyword) },
+              { cardNo: new RegExp(queryParams.customerKeyword) }
             ]
           });
           query.find({ customer: { $in: matchCustomers } });
         }
 
-        if (req.query.coupon) {
-          query.find({ coupon: new RegExp(req.query.coupon) });
+        if (queryParams.coupon) {
+          query.find({ coupon: new RegExp(queryParams.coupon) });
         }
 
         // restrict self store bookings for managers
@@ -213,7 +226,7 @@ export default router => {
 
         const statusWas = booking.status;
 
-        booking.set(req.body);
+        booking.set(req.body as BookingPutBody);
 
         await booking.populate("customer").execPopulate();
         await booking.populate("store").execPopulate();
@@ -430,7 +443,7 @@ export default router => {
 
   router.route("/booking-price").post(
     handleAsyncErrors(async (req, res) => {
-      const booking = new Booking(req.body);
+      const booking = new Booking(req.body as BookingPricePostBody);
 
       if (!booking.customer) {
         booking.customer = req.user;

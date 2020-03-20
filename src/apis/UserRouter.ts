@@ -6,8 +6,8 @@ import User, { IUser } from "../models/User";
 import { hashPwd } from "../utils/helper";
 import { config } from "../models/Config";
 import Payment, { Gateways } from "../models/Payment";
-import Store from "../models/Store";
 import idCard from "idcard";
+import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
 
 const { DEBUG } = process.env;
 
@@ -19,42 +19,43 @@ export default router => {
     // create a user
     .post(
       handleAsyncErrors(async (req, res) => {
+        const body = req.body as UserPostBody;
         if (req.user.role !== "admin") {
           ["role", "openid", "cardType", "balance"].forEach(f => {
-            delete req.body[f];
+            delete body[f];
           });
         }
-        if (req.body.password) {
-          req.body.password = await hashPwd(req.body.password);
+        if (body.password) {
+          body.password = await hashPwd(body.password);
         }
-        if (req.body.mobile) {
+        if (body.mobile) {
           const userMobileExists = await User.findOne({
-            mobile: req.body.mobile
+            mobile: body.mobile
           });
           if (userMobileExists) {
-            throw new HttpError(409, `手机号${req.body.mobile}已被使用.`);
+            throw new HttpError(409, `手机号${body.mobile}已被使用.`);
           }
         }
-        if (req.body.cardNo) {
+        if (body.cardNo) {
           const userCardNoExists = await User.findOne({
-            cardNo: req.body.cardNo
+            cardNo: body.cardNo
           });
           if (userCardNoExists) {
-            throw new HttpError(409, `会员卡号${req.body.cardNo}已被使用.`);
+            throw new HttpError(409, `会员卡号${body.cardNo}已被使用.`);
           }
         }
-        if (req.body.idCardNo) {
-          req.body.idCardNo = req.body.idCardNo.replace("*", "X").toUpperCase();
+        if (body.idCardNo) {
+          body.idCardNo = body.idCardNo.replace("*", "X").toUpperCase();
           const userIdCardNoExists = await User.findOne({
-            idCardNo: req.body.idCardNo
+            idCardNo: body.idCardNo
           });
           if (userIdCardNoExists) {
-            throw new HttpError(409, `身份证号${req.body.idCardNo}已被使用.`);
+            throw new HttpError(409, `身份证号${body.idCardNo}已被使用.`);
           }
         }
-        const user = new User(req.body);
-        if (req.body.idCardNo) {
-          const idCardInfo = idCard.info(req.body.idCardNo);
+        const user = new User(body);
+        if (body.idCardNo) {
+          const idCardInfo = idCard.info(body.idCardNo);
           if (!idCardInfo.valid) {
             throw new HttpError(400, `非法身份证号`);
           }
@@ -79,39 +80,40 @@ export default router => {
           // TODO should restrict manager user list to own store booking
           throw new HttpError(403);
         }
+        const queryParams = req.query as UserQuery;
         const { limit, skip } = req.pagination;
         const query = User.find();
-        const sort = parseSortString(req.query.order) || {
+        const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
 
         const $and = []; // combine all $or conditions into one $and
 
-        if (req.query.keyword) {
+        if (queryParams.keyword) {
           $and.push({
             $or: [
-              { name: new RegExp(req.query.keyword, "i") },
-              { mobile: new RegExp(req.query.keyword) },
-              { cardNo: new RegExp(req.query.keyword) }
+              { name: new RegExp(queryParams.keyword, "i") },
+              { mobile: new RegExp(queryParams.keyword) },
+              { cardNo: new RegExp(queryParams.keyword) }
             ]
           });
         }
 
-        if (req.query.role) {
-          query.find({ role: req.query.role });
+        if (queryParams.role) {
+          query.find({ role: queryParams.role });
         }
 
-        if (req.query.membership) {
+        if (queryParams.membership) {
           const membershipConditions = {
             deposit: { balanceDeposit: { $gt: 0 } }
           };
           $and.push({
-            $or: req.query.membership.map(type => membershipConditions[type])
+            $or: queryParams.membership.map(type => membershipConditions[type])
           });
         }
 
-        if (req.query.cardTypes) {
-          query.find({ cardType: { $in: req.query.cardTypes } });
+        if (queryParams.cardTypes) {
+          query.find({ cardType: { $in: queryParams.cardTypes } });
         }
 
         if ($and.length) {
@@ -179,6 +181,7 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
+        const body = req.body as UserPutBody;
         if (req.user.role !== "admin") {
           [
             "role",
@@ -187,57 +190,57 @@ export default router => {
             "balanceDeposit",
             "balanceReward"
           ].forEach(f => {
-            delete req.body[f];
+            delete body[f];
           });
         }
         if (!["admin", "manager"].includes(req.user.role)) {
           ["cardNo"].forEach(f => {
-            delete req.body[f];
+            delete body[f];
           });
         }
         const user = req.item as IUser;
-        if (req.body.password) {
+        if (body.password) {
           console.log(`[USR] User ${user.id} password reset.`);
-          req.body.password = await hashPwd(req.body.password);
+          body.password = await hashPwd(body.password);
         }
-        if (req.body.mobile) {
+        if (body.mobile) {
           const userMobileExists = await User.findOne({
-            mobile: req.body.mobile,
+            mobile: body.mobile,
             _id: { $ne: user.id }
           });
           if (userMobileExists) {
-            throw new HttpError(409, `手机号${req.body.mobile}已被使用`);
+            throw new HttpError(409, `手机号${body.mobile}已被使用`);
           }
         }
-        if (req.body.cardNo) {
+        if (body.cardNo) {
           const userCardNoExists = await User.findOne({
-            cardNo: req.body.cardNo,
+            cardNo: body.cardNo,
             _id: { $ne: user.id }
           });
           if (userCardNoExists) {
-            throw new HttpError(409, `会员卡号${req.body.cardNo}已被使用`);
+            throw new HttpError(409, `会员卡号${body.cardNo}已被使用`);
           }
         }
-        if (req.body.idCardNo) {
-          req.body.idCardNo = req.body.idCardNo.replace("*", "X").toUpperCase();
+        if (body.idCardNo) {
+          body.idCardNo = body.idCardNo.replace("*", "X").toUpperCase();
           const userIdCardNoExists = await User.findOne({
-            idCardNo: req.body.idCardNo,
+            idCardNo: body.idCardNo,
             _id: { $ne: user.id }
           });
           if (userIdCardNoExists) {
-            throw new HttpError(409, `身份证号${req.body.idCardNo}已被使用`);
+            throw new HttpError(409, `身份证号${body.idCardNo}已被使用`);
           }
         }
-        if (req.body.isForeigner) {
-          if (!req.body.country) {
+        if (body.isForeigner) {
+          if (!body.country) {
             throw new HttpError(400, "外籍用户必须录入国籍");
           }
         }
 
-        user.set(req.body);
+        user.set(body);
 
-        if (req.body.idCardNo) {
-          const idCardInfo = idCard.info(req.body.idCardNo);
+        if (body.idCardNo) {
+          const idCardInfo = idCard.info(body.idCardNo);
           if (!idCardInfo.valid) {
             throw new HttpError(400, `非法身份证号`);
           }
@@ -249,7 +252,7 @@ export default router => {
             .replace(/^(\d{4})(\d{2})(\d{2})$/, "$1-$2-$3");
         }
 
-        if (req.body.cardNo) {
+        if (body.cardNo) {
           console.log(
             `[USR] User ${user.id} card number set to ${user.cardNo}.`
           );

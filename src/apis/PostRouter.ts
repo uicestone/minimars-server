@@ -4,6 +4,7 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Post from "../models/Post";
 import { isValidHexObjectId } from "../utils/helper";
+import { PostQuery, PostPostBody, PostPutBody } from "./interfaces";
 
 export default router => {
   // Post CURD
@@ -13,7 +14,7 @@ export default router => {
     // create a post
     .post(
       handleAsyncErrors(async (req, res) => {
-        const post = new Post(req.body);
+        const post = new Post(req.body as PostPostBody);
         post.author = req.user;
         await post.save();
         res.json(post);
@@ -26,18 +27,19 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
+        const queryParams = req.query as PostQuery;
         const { limit, skip } = req.pagination;
         const query = Post.find().populate("customer");
-        const sort = parseSortString(req.query.order) || {
+        const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
 
-        if (req.query.slug) {
-          query.find({ slug: new RegExp("^" + req.query.slug) });
+        if (queryParams.slug) {
+          query.find({ slug: new RegExp("^" + queryParams.slug) });
         }
 
-        if (req.query.tag) {
-          query.find({ tags: req.query.tag });
+        if (queryParams.tag) {
+          query.find({ tags: queryParams.tag });
         }
 
         let total = await query.countDocuments();
@@ -85,7 +87,7 @@ export default router => {
     .put(
       handleAsyncErrors(async (req, res) => {
         const post = req.item;
-        post.set(req.body);
+        post.set(req.body as PostPutBody);
         await post.save();
         res.json(post);
       })

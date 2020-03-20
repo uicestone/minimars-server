@@ -3,6 +3,7 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Gift from "../models/Gift";
+import { GiftQuery, GiftPostBody, GiftPutBody } from "./interfaces";
 
 export default router => {
   // Gift CURD
@@ -12,7 +13,7 @@ export default router => {
     // create a gift
     .post(
       handleAsyncErrors(async (req, res) => {
-        const gift = new Gift(req.body);
+        const gift = new Gift(req.body as GiftPostBody);
         await gift.save();
         res.json(gift);
       })
@@ -22,12 +23,10 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
-        if (req.user.role !== "admin") {
-          throw new HttpError(403);
-        }
+        const queryParams = req.query as GiftQuery;
         const { limit, skip } = req.pagination;
         const query = Gift.find().populate("customer");
-        const sort = parseSortString(req.query.order) || {
+        const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
 
@@ -75,7 +74,7 @@ export default router => {
     .put(
       handleAsyncErrors(async (req, res) => {
         const gift = req.item;
-        gift.set(req.body);
+        gift.set(req.body as GiftPutBody);
         await gift.save();
         res.json(gift);
       })

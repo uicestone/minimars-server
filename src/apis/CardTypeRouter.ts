@@ -3,6 +3,7 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import CardType, { ICardType } from "../models/CardType";
+import { EventQuery, CardTypeQuery, CardTypePutBody } from "./interfaces";
 
 export default router => {
   // CardType CURD
@@ -22,9 +23,10 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
+        const queryParams = req.query as CardTypeQuery;
         const { limit, skip } = req.pagination;
         const query = CardType.find().populate("customer");
-        const sort = parseSortString(req.query.order) || {
+        const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
 
@@ -72,7 +74,8 @@ export default router => {
     .put(
       handleAsyncErrors(async (req, res) => {
         const cardType = req.item as ICardType;
-        if (req.body.type && req.body.type !== req.item.type) {
+        const body = req.body as CardTypePutBody;
+        if (body.type && body.type !== cardType.type) {
           cardType.set({
             start: undefined,
             end: undefined,
@@ -80,7 +83,7 @@ export default router => {
             times: undefined
           });
         }
-        cardType.set(req.body);
+        cardType.set(body);
         await cardType.save();
         res.json(cardType);
       })

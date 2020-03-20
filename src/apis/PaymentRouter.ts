@@ -4,6 +4,7 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Payment from "../models/Payment";
 import moment from "moment";
+import { PaymentQuery, PaymentPutBody } from "./interfaces";
 
 export default router => {
   // Payment CURD
@@ -17,51 +18,52 @@ export default router => {
         if (!["admin", "manager"].includes(req.user.role)) {
           throw new HttpError(403);
         }
+        const queryParams = req.query as PaymentQuery;
         const { limit, skip } = req.pagination;
         const query = Payment.find();
-        const sort = parseSortString(req.query.order) || {
+        const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
 
-        if (req.query.date) {
-          const startOfDay = moment(req.query.date).startOf("day");
-          const endOfDay = moment(req.query.date).endOf("day");
+        if (queryParams.date) {
+          const startOfDay = moment(queryParams.date).startOf("day");
+          const endOfDay = moment(queryParams.date).endOf("day");
           query.find({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
         }
 
-        if (req.query.paid) {
-          if (req.query.paid === "false") {
+        if (queryParams.paid) {
+          if (queryParams.paid === "false") {
             query.find({ paid: false });
           } else {
             query.find({ paid: true });
           }
         }
 
-        if (req.query.customer) {
-          query.find({ customer: req.query.customer });
+        if (queryParams.customer) {
+          query.find({ customer: queryParams.customer });
         }
 
-        if (req.query.attach) {
-          query.find({ attach: new RegExp("^" + req.query.attach) });
+        if (queryParams.attach) {
+          query.find({ attach: new RegExp("^" + queryParams.attach) });
         }
 
-        if (req.query.gateway) {
+        if (queryParams.gateway) {
           query.find({
             gateway: {
-              $in: Array.isArray(req.query.gateway)
-                ? req.query.gateway
-                : [req.query.gateway]
+              $in: Array.isArray(queryParams.gateway)
+                ? queryParams.gateway
+                : [queryParams.gateway]
             }
           });
         }
 
-        if (req.query.direction === "payment") {
+        if (queryParams.direction === "payment") {
           query.find({
             amount: { $gt: 0 }
           });
         }
 
-        if (req.query.direction === "refund") {
+        if (queryParams.direction === "refund") {
           query.find({
             amount: { $lt: 0 }
           });
@@ -131,7 +133,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         // TODO should restrict write access for manager
         const payment = req.item;
-        payment.set(req.body);
+        payment.set(req.body as PaymentPutBody);
         await payment.save();
         // sendConfirmEmail(payment);
         res.json(payment);

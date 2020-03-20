@@ -3,6 +3,7 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Event from "../models/Event";
+import { EventPostBody, EventPutBody, EventQuery } from "./interfaces";
 
 export default router => {
   // Event CURD
@@ -12,7 +13,7 @@ export default router => {
     // create an event
     .post(
       handleAsyncErrors(async (req, res) => {
-        const event = new Event(req.body);
+        const event = new Event(req.body as EventPostBody);
         await event.save();
         res.json(event);
       })
@@ -22,12 +23,10 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
-        if (req.user.role !== "admin") {
-          throw new HttpError(403);
-        }
+        const queryParams = req.query as EventQuery;
         const { limit, skip } = req.pagination;
         const query = Event.find().populate("customer");
-        const sort = parseSortString(req.query.order) || {
+        const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
 
@@ -75,7 +74,7 @@ export default router => {
     .put(
       handleAsyncErrors(async (req, res) => {
         const event = req.item;
-        event.set(req.body);
+        event.set(req.body as EventPutBody);
         await event.save();
         res.json(event);
       })

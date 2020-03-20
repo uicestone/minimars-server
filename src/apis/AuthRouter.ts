@@ -2,21 +2,27 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import User from "../models/User";
 import HttpError from "../utils/HttpError";
 import { signToken, comparePwd, hashPwd } from "../utils/helper";
+import {
+  AuthLoginPostBody,
+  AuthLoginResponseBody,
+  AuthTokenUserIdResponseBody
+} from "./interfaces";
 
 // bluebird.promisifyAll(redisClient);
 
 export default router => {
   router.route("/auth/login").post(
     handleAsyncErrors(async (req, res) => {
-      if (!req.body.login) {
+      const body = req.body as AuthLoginPostBody;
+      if (!body.login) {
         throw new HttpError(400, "请输入用户名");
       }
 
-      if (!req.body.password) {
+      if (!body.password) {
         throw new HttpError(400, "请输入密码");
       }
 
-      const user = await User.findOne({ login: req.body.login }).select([
+      const user = await User.findOne({ login: body.login }).select([
         "+password"
       ]);
 
@@ -24,7 +30,7 @@ export default router => {
         throw new HttpError(404, "用户不存在");
       }
       const validPassword = await comparePwd(
-        req.body.password,
+        body.password,
         user.password || ""
       );
 
@@ -36,7 +42,7 @@ export default router => {
 
       user.password = undefined;
 
-      res.json({ token, user });
+      res.json({ token, user } as AuthLoginResponseBody);
 
       let authLog = `[USR] 用户 ${user.name || user.login} (${
         user._id
@@ -81,7 +87,7 @@ export default router => {
       if (!user) {
         throw new HttpError(404, "用户不存在");
       }
-      res.json({ token: signToken(user), user });
+      res.json({ token: signToken(user), user } as AuthTokenUserIdResponseBody);
     })
   );
 

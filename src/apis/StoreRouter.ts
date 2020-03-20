@@ -3,6 +3,7 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Store from "../models/Store";
+import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
 
 export default router => {
   // Store CURD
@@ -15,7 +16,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const store = new Store(req.body);
+        const store = new Store(req.body as StorePostBody);
         await store.save();
         res.json(store);
       })
@@ -25,9 +26,10 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
+        const queryParams = req.query as StoreQuery;
         const { limit, skip } = req.pagination;
         const query = Store.find();
-        const sort = parseSortString(req.query.order) || {
+        const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
 
@@ -75,7 +77,7 @@ export default router => {
     .put(
       handleAsyncErrors(async (req, res) => {
         const store = req.item;
-        store.set(req.body);
+        store.set(req.body as StorePutBody);
         await store.save();
         res.json(store);
       })

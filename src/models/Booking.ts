@@ -11,12 +11,12 @@ import { ICard } from "./Card";
 const { DEBUG } = process.env;
 
 export enum BookingStatuses {
-  PENDING = "PENDING",
-  BOOKED = "BOOKED",
-  IN_SERVICE = "IN_SERVICE",
-  PENDING_REFUND = "PENDING_REFUND",
-  FINISHED = "FINISHED",
-  CANCELED = "CANCELED"
+  PENDING = "pending",
+  BOOKED = "booked",
+  IN_SERVICE = "in_service",
+  PENDING_REFUND = "pending_refund",
+  FINISHED = "finished",
+  CANCELED = "canceled"
 }
 
 export const liveBookingStatuses = [
