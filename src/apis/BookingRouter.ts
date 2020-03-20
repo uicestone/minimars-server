@@ -85,15 +85,15 @@ export default router => {
         try {
           await booking.createPayment({
             paymentGateway: req.query.paymentGateway,
-            useCredit: req.query.useCredit !== "false",
+            useBalance: req.query.useBalance !== "false",
             adminAddWithoutPayment: req.user.role === "admin"
           });
         } catch (err) {
           switch (err.message) {
             case "no_customer_openid":
               throw new HttpError(400, "Customer openid is missing.");
-            case "insufficient_credit":
-              throw new HttpError(400, "Customer credit is insufficient.");
+            case "insufficient_balance":
+              throw new HttpError(400, "Customer balance is insufficient.");
             default:
               throw err;
           }
@@ -379,19 +379,19 @@ export default router => {
           " ".repeat(3) + `合计：￥${booking.price.toFixed(2)}` + " ".repeat(4)
         );
 
-      const creditPayment = booking.payments.filter(
-        p => p.gateway === "credit" && p.paid
+      const balancePayment = booking.payments.filter(
+        p => p.gateway === "balance" && p.paid
       )[0];
-      if (creditPayment) {
+      if (balancePayment) {
         encoder.line(
           " ".repeat(3) +
-            `余额支付：￥${creditPayment.amount.toFixed(2)}` +
+            `余额支付：￥${balancePayment.amount.toFixed(2)}` +
             " ".repeat(4)
         );
       }
 
       const extraPayment = booking.payments.filter(
-        p => p.gateway !== "credit" && p.paid
+        p => p.gateway !== "balance" && p.paid
       )[0];
 
       if (extraPayment) {

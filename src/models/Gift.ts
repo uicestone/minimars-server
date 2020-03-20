@@ -7,7 +7,7 @@ const Gift = new Schema({
   content: { type: String, default: "" },
   posterUrl: { type: String, required: true },
   quantity: { type: Number, default: 0 },
-  priceInCredit: { type: Number, required: true },
+  priceInPoints: { type: Number, required: true },
   priceInCny: { type: Number },
   store: { type: Schema.Types.ObjectId, ref: "Store", required: true }
 });
@@ -28,7 +28,7 @@ export interface IGift extends mongoose.Document {
   content: string;
   posterUrl: string;
   quantity: number;
-  priceInCredit: number;
+  priceInPoints: number;
   priceInCny?: number;
 }
 

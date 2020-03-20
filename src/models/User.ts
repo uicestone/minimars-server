@@ -39,8 +39,8 @@ const User = new Schema({
   idCardNo: String,
   openid: { type: String, index: { unique: true, sparse: true } },
   store: { type: Schema.Types.ObjectId, ref: Store }, // manager only
-  creditDeposit: Number, // below for customer only
-  creditReward: Number,
+  balanceDeposit: Number, // below for customer only
+  balanceReward: Number,
   freePlayFrom: Date,
   freePlayTo: Date,
   cardType: { type: String },
@@ -52,12 +52,12 @@ const User = new Schema({
 //   return (process.env.CDN_URL || req.baseUrl )+ this.avatarUri;
 // });
 
-User.virtual("credit").get(function() {
+User.virtual("balance").get(function() {
   const user = this as IUser;
-  if (user.creditDeposit === undefined && user.creditReward === undefined) {
+  if (user.balanceDeposit === undefined && user.balanceReward === undefined) {
     return undefined;
   }
-  return +((user.creditDeposit || 0) + (user.creditReward || 0)).toFixed(2);
+  return +((user.balanceDeposit || 0) + (user.balanceReward || 0)).toFixed(2);
 });
 
 User.virtual("freePlay").get(function() {
@@ -72,7 +72,7 @@ User.plugin(autoPopulate, ["store"]);
 
 User.pre("validate", function(next) {
   const user = this as IUser;
-  ["creditDeposit", "creditReward"].forEach(field => {
+  ["balanceDeposit", "balanceReward"].forEach(field => {
     if (user[field]) {
       user[field] = +user[field].toFixed(2);
     }
@@ -98,27 +98,27 @@ User.methods.depositSuccess = async function(levelName: string) {
   user.cardType = level.cardType;
 
   if (level.depositCredit || level.rewardCredit) {
-    if (!user.creditDeposit) {
-      user.creditDeposit = 0;
+    if (!user.balanceDeposit) {
+      user.balanceDeposit = 0;
     }
-    if (!user.creditReward) {
-      user.creditReward = 0;
+    if (!user.balanceReward) {
+      user.balanceReward = 0;
     }
 
     console.log(
-      `[USR] User ${user.id} credit was ${user.creditDeposit}:${user.creditReward}.`
+      `[USR] User ${user.id} balance was ${user.balanceDeposit}:${user.balanceReward}.`
     );
 
     if (level.depositCredit) {
-      user.creditDeposit += level.depositCredit;
+      user.balanceDeposit += level.depositCredit;
     }
 
     if (level.rewardCredit) {
-      user.creditReward += level.rewardCredit;
+      user.balanceReward += level.rewardCredit;
     }
 
     console.log(
-      `[USR] Deposit success ${user.id}, credit is now ${user.creditDeposit}:${user.creditReward}.`
+      `[USR] Deposit success ${user.id}, balance is now ${user.balanceDeposit}:${user.balanceReward}.`
     );
   }
 
@@ -153,9 +153,9 @@ export interface IUser extends mongoose.Document {
   idCardNo?: string;
   openid?: string;
   store?: IStore;
-  creditDeposit?: number;
-  creditReward?: number;
-  credit?: number;
+  balanceDeposit?: number;
+  balanceReward?: number;
+  balance?: number;
   freePlayFrom: Date;
   freePlayTo: Date;
   freePlay: boolean;

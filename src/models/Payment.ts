@@ -123,12 +123,12 @@ Payment.pre("save", async function(next) {
       );
       break;
     case Gateways.Credit:
-      if (customer.credit < payment.amount) {
-        throw new Error("insufficient_credit");
+      if (customer.balance < payment.amount) {
+        throw new Error("insufficient_balance");
       }
 
       console.log(
-        `[PAY] D:R was ${customer.creditDeposit}:${customer.creditReward}.`
+        `[PAY] D:R was ${customer.balanceDeposit}:${customer.balanceReward}.`
       );
 
       if (!payment.amountForceDeposit) {
@@ -141,8 +141,8 @@ Payment.pre("save", async function(next) {
           +(
             payment.amountForceDeposit +
             ((payment.amount - payment.amountForceDeposit) *
-              customer.creditDeposit) /
-              customer.credit
+              customer.balanceDeposit) /
+              customer.balance
           ).toFixed(2),
           0.01
         );
@@ -155,18 +155,18 @@ Payment.pre("save", async function(next) {
         `[PAY] Payment amount D:R is ${depositPaymentAmount}:${rewardPaymentAmount}.`
       );
 
-      customer.creditDeposit -= depositPaymentAmount;
-      customer.creditReward -= rewardPaymentAmount;
+      customer.balanceDeposit -= depositPaymentAmount;
+      customer.balanceReward -= rewardPaymentAmount;
       payment.amountDeposit = depositPaymentAmount;
 
       console.log(
-        `[DEBUG] Credit payment saved, customer credit is now ${customer.credit}`
+        `[DEBUG] Credit payment saved, customer balance is now ${customer.balance}`
       );
 
       payment.paid = true;
       // await payment.paidSuccess();
       // we don't trigger paidSuccess or booking.paidSuccess here cause booking may not be saved
-      // we need to change booking status manually after credit payment
+      // we need to change booking status manually after balance payment
       await customer.save();
       break;
     case Gateways.Card:
@@ -196,7 +196,7 @@ export interface IPayment extends mongoose.Document {
 }
 
 export enum Gateways {
-  Credit = "credit",
+  Credit = "balance",
   Card = "card",
   Coupon = "coupon",
   Scan = "scan",

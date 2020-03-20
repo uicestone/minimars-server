@@ -20,7 +20,7 @@ export default router => {
     .post(
       handleAsyncErrors(async (req, res) => {
         if (req.user.role !== "admin") {
-          ["role", "openid", "cardType", "credit"].forEach(f => {
+          ["role", "openid", "cardType", "balance"].forEach(f => {
             delete req.body[f];
           });
         }
@@ -103,7 +103,7 @@ export default router => {
 
         if (req.query.membership) {
           const membershipConditions = {
-            deposit: { creditDeposit: { $gt: 0 } }
+            deposit: { balanceDeposit: { $gt: 0 } }
           };
           $and.push({
             $or: req.query.membership.map(type => membershipConditions[type])
@@ -126,7 +126,7 @@ export default router => {
             $group: {
               _id: null,
               totalCredit: {
-                $sum: { $sum: ["$creditDeposit"] }
+                $sum: { $sum: ["$balanceDeposit"] }
               }
             }
           }
@@ -143,7 +143,7 @@ export default router => {
           total = skip + page.length;
         }
 
-        res.set("total-credit", Math.round(totalCredit));
+        res.set("total-balance", Math.round(totalCredit));
 
         res.paginatify(limit, skip, total).json(page);
       })
@@ -184,8 +184,8 @@ export default router => {
             "role",
             "openid",
             "cardType",
-            "creditDeposit",
-            "creditReward"
+            "balanceDeposit",
+            "balanceReward"
           ].forEach(f => {
             delete req.body[f];
           });

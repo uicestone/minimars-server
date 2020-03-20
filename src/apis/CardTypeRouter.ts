@@ -76,7 +76,7 @@ export default router => {
           cardType.set({
             start: undefined,
             end: undefined,
-            credit: undefined,
+            balance: undefined,
             times: undefined
           });
         }

@@ -5,13 +5,13 @@ import autoPopulate from "./plugins/autoPopulate";
 
 const CardType = new Schema({
   title: { type: String, required: true },
-  type: { type: String, enum: ["times", "period", "credit"], required: true },
+  type: { type: String, enum: ["times", "period", "balance"], required: true },
   store: { type: Schema.Types.ObjectId, ref: "Store" },
   content: { type: String },
   times: { type: Number },
   start: { type: Date },
   end: { type: Date },
-  credit: { type: Number },
+  balance: { type: Number },
   price: { type: Number, required: true },
   maxKids: { type: Number, requried: true },
   freeParentsPerKid: { type: Number, requried: true }
@@ -36,7 +36,7 @@ export interface ICardType extends mongoose.Document {
   times: number;
   start: Date;
   end: Date;
-  credit: number;
+  balance: number;
   price: number;
   maxKids: number;
   freeParentsPerKid: number;

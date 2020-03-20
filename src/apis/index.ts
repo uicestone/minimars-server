@@ -50,7 +50,7 @@ export default (app, router) => {
         "items-start",
         "items-end",
         "total-amount",
-        "total-credit"
+        "total-balance"
       ]
     }),
     methodOverride(),

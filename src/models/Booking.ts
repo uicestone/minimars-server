@@ -142,7 +142,7 @@ Booking.methods.calculatePrice = async function() {
 Booking.methods.createPayment = async function(
   {
     paymentGateway = Gateways.WechatPay,
-    useCredit = true,
+    useBalance = true,
     adminAddWithoutPayment = false
   } = {},
   amount?: number
@@ -151,7 +151,7 @@ Booking.methods.createPayment = async function(
 
   let totalPayAmount = amount || booking.price;
 
-  let creditPayAmount = 0;
+  let balancePayAmount = 0;
 
   let attach = `booking ${booking._id}`;
 
@@ -159,25 +159,25 @@ Booking.methods.createPayment = async function(
 
   if (
     totalPayAmount >= 0.01 &&
-    useCredit &&
-    booking.customer.credit &&
+    useBalance &&
+    booking.customer.balance &&
     !adminAddWithoutPayment
   ) {
-    creditPayAmount = Math.min(totalPayAmount, booking.customer.credit);
-    const creditPayment = new Payment({
+    balancePayAmount = Math.min(totalPayAmount, booking.customer.balance);
+    const balancePayment = new Payment({
       customer: booking.customer,
-      amount: creditPayAmount,
+      amount: balancePayAmount,
       amountForceDeposit: booking.socksCount * config.sockPrice,
       title,
       attach,
       gateway: Gateways.Credit
     });
 
-    await creditPayment.save();
-    booking.payments.push(creditPayment);
+    await balancePayment.save();
+    booking.payments.push(balancePayment);
   }
 
-  const extraPayAmount = totalPayAmount - creditPayAmount;
+  const extraPayAmount = totalPayAmount - balancePayAmount;
   console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
   if (extraPayAmount < 0.01 || adminAddWithoutPayment) {
@@ -216,7 +216,7 @@ Booking.methods.createRefundPayment = async function() {
   // repopulate payments with customers
   await booking.populate("payments").execPopulate();
 
-  const creditAndCardPayments = booking.payments.filter(
+  const balanceAndCardPayments = booking.payments.filter(
     p =>
       [Gateways.Credit, Gateways.Card].includes(p.gateway) &&
       p.amount > 0 &&
@@ -229,7 +229,7 @@ Booking.methods.createRefundPayment = async function() {
       p.paid
   );
 
-  for (const p of creditAndCardPayments) {
+  for (const p of balanceAndCardPayments) {
     const refundPayment = new Payment({
       customer: p.customer,
       amount: -p.amount,
@@ -350,7 +350,7 @@ export interface IBooking extends mongoose.Document {
   createPayment: (
     Object: {
       paymentGateway?: Gateways;
-      useCredit?: boolean;
+      useBalance?: boolean;
       adminAddWithoutPayment?: boolean;
     },
     amount?: number

@@ -106,7 +106,7 @@ queries: `?`
 
 `paymentGateway=scan|cash|card`
 
-`useCredit=false`
+`useBalance=false`
 
 创建预约后会自动生成`booking.payments`，如果其中包含`paid:false`的`payment`则需要客户端对其手动处理支付，支付完成后通过`更新支付`接口上报支付状态。当所有`payments.paid`为`true`时，`booking`状态会自动更新为`BOOKED`
 
@@ -120,7 +120,7 @@ queries: `?`
 
 `paymentGateway=scan|cash|card`
 
-`useCredit=false`
+`useBalance=false`
 
 手动签到入场即`status`由`BOOKED`改为`IN_SERVICE`
 
