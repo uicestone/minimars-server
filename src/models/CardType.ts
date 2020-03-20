@@ -5,6 +5,7 @@ import autoPopulate from "./plugins/autoPopulate";
 
 const CardType = new Schema({
   title: { type: String, required: true },
+  slug: { type: String, required: true, unique: true },
   type: { type: String, enum: ["times", "period", "balance"], required: true },
   store: { type: Schema.Types.ObjectId, ref: "Store" },
   content: { type: String },
@@ -30,6 +31,7 @@ CardType.set("toJSON", {
 
 export interface ICardType extends mongoose.Document {
   title: string;
+  slug: string;
   type: string;
   store?: IStore;
   content: string;

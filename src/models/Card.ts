@@ -9,6 +9,7 @@ const Card = new Schema({
   bound: { type: Boolean },
   num: { type: String },
   title: { type: String, required: true },
+  slug: { type: String, required: true },
   type: { type: String, enum: ["times", "period", "balance"], required: true },
   store: { type: Schema.Types.ObjectId, ref: "Store" },
   content: { type: String },
@@ -37,6 +38,7 @@ export interface ICard extends mongoose.Document {
   bound: boolean;
   num?: string;
   title: string;
+  slug: string;
   type: string;
   store?: IStore;
   content: string;

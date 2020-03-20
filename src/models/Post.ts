@@ -5,7 +5,7 @@ import autoPopulate from "./plugins/autoPopulate";
 
 const Post = new Schema({
   title: { type: String, required: true },
-  slug: { type: String },
+  slug: { type: String, unique: true, sparse: true },
   tags: { type: [String] },
   content: { type: String },
   posterUrl: { type: String },
@@ -25,7 +25,7 @@ Post.set("toJSON", {
 
 export interface IPost extends mongoose.Document {
   title: string;
-  slug: string;
+  slug?: string;
   content: string;
   tags: string[];
   posterUrl: string;
