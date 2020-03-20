@@ -7,6 +7,7 @@ const CardType = new Schema({
   title: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
   type: { type: String, enum: ["times", "period", "balance"], required: true },
+  isGift: { type: Boolean, default: false },
   store: { type: Schema.Types.ObjectId, ref: "Store" },
   content: { type: String },
   times: { type: Number },
@@ -14,8 +15,8 @@ const CardType = new Schema({
   end: { type: Date },
   balance: { type: Number },
   price: { type: Number, required: true },
-  maxKids: { type: Number, requried: true },
-  freeParentsPerKid: { type: Number, requried: true }
+  maxKids: { type: Number, required: true },
+  freeParentsPerKid: { type: Number, required: true }
 });
 
 CardType.plugin(updateTimes);
@@ -33,6 +34,7 @@ export interface ICardType extends mongoose.Document {
   title: string;
   slug: string;
   type: string;
+  isGift: boolean;
   store?: IStore;
   content: string;
   times: number;

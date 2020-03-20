@@ -7,6 +7,7 @@ import {
   unifiedOrder as wechatUnifiedOrder,
   payArgs as wechatPayArgs
 } from "../utils/wechat";
+import Card from "./Card";
 
 const Payment = new Schema({
   customer: { type: Schema.Types.ObjectId, ref: User, required: true },
@@ -67,6 +68,11 @@ Payment.methods.paidSuccess = async function() {
         await booking.refundSuccess();
         console.log(`[PAY] Booking refund success, id: ${booking._id}.`);
       }
+      break;
+    case "card":
+      const card = await Card.findOne({ _id: paymentAttach[1] });
+      await card.paymentSuccess();
+      console.log(`[PAY] Card purchase success, id: ${card._id}.`);
       break;
     case "deposit":
       const depositUser = await User.findOne({ _id: paymentAttach[1] });
@@ -197,6 +203,7 @@ export interface IPayment extends mongoose.Document {
 
 export enum Gateways {
   Balance = "balance",
+  Points = "points",
   Card = "card",
   Coupon = "coupon",
   Scan = "scan",
@@ -207,7 +214,8 @@ export enum Gateways {
 }
 
 export const gatewayNames = {
-  [Gateways.Balance]: "充值余额",
+  [Gateways.Balance]: "账户余额",
+  [Gateways.Points]: "账户积分",
   [Gateways.Coupon]: "团购优惠券",
   [Gateways.Scan]: "现场扫码",
   [Gateways.Card]: "会员卡",

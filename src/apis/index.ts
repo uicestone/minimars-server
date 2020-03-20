@@ -15,12 +15,14 @@ import StatsRouter from "./StatsRouter";
 import StoreRouter from "./StoreRouter";
 import UserRouter from "./UserRouter";
 import WechatRouter from "./WechatRouter";
+import CardRouter from "./CardRouter";
 
 export default (app, router) => {
   // register routes
   [
     AuthRouter,
     BookingRouter,
+    CardRouter,
     CardTypeRouter,
     ConfigRouter,
     EventRouter,
