@@ -88,8 +88,8 @@ export interface PostPostBody extends IPost {}
 export interface PostPutBody extends IPost {}
 
 export interface PostQuery extends ListQuery {
-  slug: string;
-  tag: string;
+  slug?: string;
+  tag?: string;
 }
 
 export interface StorePostBody extends IStore {}
