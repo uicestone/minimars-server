@@ -72,17 +72,6 @@ export default async (
 
   const socksAmount = socksCount * config.sockPrice;
 
-  const tbAmount = bookingsPaid
-    .filter(booking => booking.type === "tb")
-    .reduce(
-      (amount, booking) =>
-        amount +
-        booking.payments
-          .filter(p => p.paid)
-          .reduce((a, p) => a + (p.amountDeposit || p.amount), 0),
-      0
-    );
-
   const partyAmount = bookingsPaid
     .filter(booking => booking.type === "party")
     .reduce(
@@ -347,7 +336,6 @@ export default async (
     kidsCount,
     paidAmount,
     partyAmount,
-    tbAmount,
     depositAmount,
     socksCount,
     socksAmount,

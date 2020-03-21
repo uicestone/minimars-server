@@ -3,7 +3,11 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Booking, { IBooking, BookingStatus } from "../models/Booking";
+import Booking, {
+  IBooking,
+  BookingStatus,
+  BookingType
+} from "../models/Booking";
 import User from "../models/User";
 import Store from "../models/Store";
 import EscPosEncoder from "esc-pos-encoder-canvas";
@@ -332,7 +336,7 @@ export default router => {
             " ".repeat(2)
         );
 
-      if (booking.type === "play" && !booking.coupon) {
+      if (booking.type === BookingType.PLAY && !booking.coupon) {
         encoder.line(
           "自由游玩" +
             " ".repeat(2) +

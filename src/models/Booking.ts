@@ -19,6 +19,13 @@ export enum BookingStatus {
   CANCELED = "canceled"
 }
 
+export enum BookingType {
+  PLAY = "play",
+  PARTY = "party",
+  EVENT = "event",
+  GIFT = "gift"
+}
+
 export const liveBookingStatus = [
   BookingStatus.PENDING,
   BookingStatus.BOOKED,
@@ -41,7 +48,7 @@ export const paidBookingStatus = [
 const Booking = new Schema({
   customer: { type: Schema.Types.ObjectId, ref: User, required: true },
   store: { type: Schema.Types.ObjectId, ref: Store, required: true },
-  type: { type: String, enum: ["play", "party"], default: "play" },
+  type: { type: String, enum: Object.values(BookingType), required: true },
   date: { type: String, required: true },
   checkInAt: { type: String, required: true },
   adultsCount: { type: Number, default: 1 },
@@ -332,7 +339,7 @@ Booking.methods.finish = async function(save = true) {
 export interface IBooking extends mongoose.Document {
   customer: IUser;
   store: IStore;
-  type: string;
+  type: BookingType;
   date: string;
   checkInAt: string;
   adultsCount: number;
