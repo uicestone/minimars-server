@@ -1,9 +1,6 @@
 import moment from "moment";
 import { config } from "../models/Config";
-import Booking, {
-  paidBookingStatuses,
-  BookingStatuses
-} from "../models/Booking";
+import Booking, { paidBookingStatus, BookingStatus } from "../models/Booking";
 import Payment, { Gateways } from "../models/Payment";
 
 export default async (
@@ -30,7 +27,7 @@ export default async (
 
   const bookingsPaid = await Booking.find({
     date: dateStrFrom ? { $gte: dateStrFrom, $lte: dateStr } : dateStr,
-    status: { $in: paidBookingStatuses }
+    status: { $in: paidBookingStatus }
   });
 
   const payments = await Payment.find({
@@ -41,7 +38,7 @@ export default async (
     paid: true
   });
   const bookingServing = await Booking.find({
-    status: BookingStatuses.IN_SERVICE
+    status: BookingStatus.IN_SERVICE
   });
 
   const checkedInCount = bookingServing.reduce(

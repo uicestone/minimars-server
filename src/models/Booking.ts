@@ -10,7 +10,7 @@ import { ICard } from "./Card";
 
 const { DEBUG } = process.env;
 
-export enum BookingStatuses {
+export enum BookingStatus {
   PENDING = "pending",
   BOOKED = "booked",
   IN_SERVICE = "in_service",
@@ -19,23 +19,23 @@ export enum BookingStatuses {
   CANCELED = "canceled"
 }
 
-export const liveBookingStatuses = [
-  BookingStatuses.PENDING,
-  BookingStatuses.BOOKED,
-  BookingStatuses.IN_SERVICE,
-  BookingStatuses.PENDING_REFUND
+export const liveBookingStatus = [
+  BookingStatus.PENDING,
+  BookingStatus.BOOKED,
+  BookingStatus.IN_SERVICE,
+  BookingStatus.PENDING_REFUND
 ];
 
-export const deadBookingStatuses = [
-  BookingStatuses.FINISHED,
-  BookingStatuses.CANCELED
+export const deadBookingStatus = [
+  BookingStatus.FINISHED,
+  BookingStatus.CANCELED
 ];
 
-export const paidBookingStatuses = [
-  BookingStatuses.BOOKED,
-  BookingStatuses.IN_SERVICE,
-  BookingStatuses.PENDING_REFUND,
-  BookingStatuses.FINISHED
+export const paidBookingStatus = [
+  BookingStatus.BOOKED,
+  BookingStatus.IN_SERVICE,
+  BookingStatus.PENDING_REFUND,
+  BookingStatus.FINISHED
 ];
 
 const Booking = new Schema({
@@ -49,8 +49,8 @@ const Booking = new Schema({
   socksCount: { type: Number, default: 0 },
   status: {
     type: String,
-    enum: Object.values(BookingStatuses),
-    default: BookingStatuses.PENDING
+    enum: Object.values(BookingStatus),
+    default: BookingStatus.PENDING
   },
   price: { type: Number, default: 0 },
   card: { type: Schema.Types.ObjectId, ref: "Card" },
@@ -181,7 +181,7 @@ Booking.methods.createPayment = async function(
   console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
   if (extraPayAmount < 0.01 || adminAddWithoutPayment) {
-    booking.status = BookingStatuses.BOOKED;
+    booking.status = BookingStatus.BOOKED;
   } else {
     const extraPayment = new Payment({
       customer: booking.customer,
@@ -205,7 +205,7 @@ Booking.methods.createPayment = async function(
 
 Booking.methods.paymentSuccess = async function() {
   const booking = this as IBooking;
-  booking.status = BookingStatuses.BOOKED;
+  booking.status = BookingStatus.BOOKED;
   await booking.save();
   // send user notification
 };
@@ -251,7 +251,7 @@ Booking.methods.createRefundPayment = async function() {
   }
 
   if (!extraPayments.length) {
-    booking.status = BookingStatuses.CANCELED;
+    booking.status = BookingStatus.CANCELED;
   } else {
     await Promise.all(
       extraPayments.map(async p => {
@@ -272,14 +272,14 @@ Booking.methods.createRefundPayment = async function() {
 
 Booking.methods.refundSuccess = async function() {
   const booking = this as IBooking;
-  booking.status = BookingStatuses.CANCELED;
+  booking.status = BookingStatus.CANCELED;
   await booking.save();
   // send user notification
 };
 
 Booking.methods.checkIn = async function(save = true) {
   const booking = this as IBooking;
-  booking.status = BookingStatuses.IN_SERVICE;
+  booking.status = BookingStatus.IN_SERVICE;
   booking.checkInAt = moment().format("HH:mm:ss");
   if (save) {
     await booking.save();
@@ -292,24 +292,22 @@ Booking.methods.cancel = async function(save = true) {
   const booking = this as IBooking;
 
   if (
-    [BookingStatuses.CANCELED, BookingStatuses.PENDING_REFUND].includes(
+    [BookingStatus.CANCELED, BookingStatus.PENDING_REFUND].includes(
       booking.status
     )
   )
     return;
 
-  if (
-    ![BookingStatuses.PENDING, BookingStatuses.BOOKED].includes(booking.status)
-  ) {
+  if (![BookingStatus.PENDING, BookingStatus.BOOKED].includes(booking.status)) {
     throw new Error("uncancelable_booking_status");
   }
   if (booking.payments.filter(p => p.paid).length) {
     console.log(`[BOK] Refund booking ${booking._id}.`);
     // we don't directly change status to canceled, will auto change on refund fullfil
-    booking.status = BookingStatuses.PENDING_REFUND;
+    booking.status = BookingStatus.PENDING_REFUND;
     await booking.createRefundPayment();
   } else {
-    booking.status = BookingStatuses.CANCELED;
+    booking.status = BookingStatus.CANCELED;
   }
 
   console.log(`[BOK] Cancel booking ${booking._id}.`);
@@ -322,7 +320,7 @@ Booking.methods.cancel = async function(save = true) {
 Booking.methods.finish = async function(save = true) {
   const booking = this as IBooking;
 
-  booking.status = BookingStatuses.FINISHED;
+  booking.status = BookingStatus.FINISHED;
 
   console.log(`[BOK] Finish booking ${booking._id}.`);
 
@@ -340,7 +338,7 @@ export interface IBooking extends mongoose.Document {
   adultsCount: number;
   kidsCount: number;
   socksCount: number;
-  status: BookingStatuses;
+  status: BookingStatus;
   price?: number;
   card?: ICard;
   coupon?: string;

@@ -3,7 +3,7 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Booking, { IBooking, BookingStatuses } from "../models/Booking";
+import Booking, { IBooking, BookingStatus } from "../models/Booking";
 import User from "../models/User";
 import Store from "../models/Store";
 import EscPosEncoder from "esc-pos-encoder-canvas";
@@ -144,7 +144,7 @@ export default router => {
             status: {
               $in: queryParams.status
                 .split(",")
-                .map(s => s.toUpperCase()) as BookingStatuses[]
+                .map(s => s.toUpperCase()) as BookingStatus[]
             }
           });
         }
@@ -232,7 +232,7 @@ export default router => {
         await booking.populate("store").execPopulate();
 
         if (
-          booking.status === BookingStatuses.CANCELED &&
+          booking.status === BookingStatus.CANCELED &&
           req.user.role !== "admin"
         ) {
           // TODO refund permission should be restricted

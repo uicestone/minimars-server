@@ -1,6 +1,6 @@
 import Agenda from "agenda";
 import moment from "moment";
-import Booking, { BookingStatuses } from "../models/Booking";
+import Booking, { BookingStatus } from "../models/Booking";
 import { MongoClient } from "mongodb";
 
 let agenda: Agenda;
@@ -18,7 +18,7 @@ export const initAgenda = async () => {
   agenda.define("cancel expired pending bookings", async (job, done) => {
     console.log(`[CRO] Cancel expired pending bookings.`);
     const bookings = await Booking.find({
-      status: BookingStatuses.PENDING,
+      status: BookingStatus.PENDING,
       createdAt: {
         $lt: moment()
           .subtract(1, "day")
@@ -36,7 +36,7 @@ export const initAgenda = async () => {
   agenda.define("cancel expired booked bookings", async (job, done) => {
     console.log(`[CRO] Cancel expired booked bookings.`);
     const bookings = await Booking.find({
-      status: BookingStatuses.BOOKED,
+      status: BookingStatus.BOOKED,
       date: {
         $lt: moment().format("YYYY-MM-DD")
       }
