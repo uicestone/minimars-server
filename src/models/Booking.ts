@@ -7,6 +7,8 @@ import Payment, { IPayment, Gateways } from "./Payment";
 import User, { IUser } from "./User";
 import Store, { IStore } from "./Store";
 import { ICard } from "./Card";
+import { IEvent } from "./Event";
+import { IGift } from "./Gift";
 
 const { DEBUG } = process.env;
 
@@ -62,6 +64,8 @@ const Booking = new Schema({
   price: { type: Number, default: 0 },
   card: { type: Schema.Types.ObjectId, ref: "Card" },
   coupon: { type: String },
+  event: { type: Schema.Types.ObjectId, ref: "Event" },
+  gift: { type: Schema.Types.ObjectId, ref: "Gift" },
   payments: [{ type: Schema.Types.ObjectId, ref: Payment }],
   remarks: String
 });
@@ -147,13 +151,15 @@ Booking.methods.calculatePrice = async function() {
 };
 
 Booking.methods.createPayment = async function(
-  {
-    paymentGateway = Gateways.WechatPay,
-    useBalance = true,
-    adminAddWithoutPayment = false
-  } = {},
+  { paymentGateway, useBalance = true, adminAddWithoutPayment = false } = {
+    paymentGateway: Gateways
+  },
   amount?: number
 ) {
+  if (!paymentGateway) {
+    throw new Error("missing_gateway");
+  }
+
   const booking = this as IBooking;
 
   let totalPayAmount = amount || booking.price;
@@ -195,7 +201,7 @@ Booking.methods.createPayment = async function(
       amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
       title,
       attach,
-      gateway: paymentGateway || Gateways.WechatPay
+      gateway: paymentGateway
     });
 
     console.log(`[PAY] Extra payment: `, JSON.stringify(extraPayment));
@@ -349,6 +355,8 @@ export interface IBooking extends mongoose.Document {
   price?: number;
   card?: ICard;
   coupon?: string;
+  event?: IEvent;
+  gift?: IGift;
   payments?: IPayment[];
   remarks?: string;
   calculatePrice: () => Promise<IBooking>;

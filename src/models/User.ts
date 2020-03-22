@@ -39,8 +39,8 @@ const User = new Schema({
   idCardNo: String,
   openid: { type: String, index: { unique: true, sparse: true } },
   store: { type: Schema.Types.ObjectId, ref: Store }, // manager only
-  balanceDeposit: Number, // below for customer only
-  balanceReward: Number,
+  balanceDeposit: { type: Number, default: 0 }, // below for customer only
+  balanceReward: { type: Number, default: 0 },
   freePlayFrom: Date,
   freePlayTo: Date,
   cardType: { type: String },

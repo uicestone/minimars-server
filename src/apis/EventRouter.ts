@@ -30,6 +30,10 @@ export default router => {
           createdAt: -1
         };
 
+        if (queryParams.keyword) {
+          query.find({ title: new RegExp(queryParams.keyword, "i") });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()
@@ -51,9 +55,6 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        if (req.user.role !== "admin") {
-          throw new HttpError(403);
-        }
         const event = await Event.findById(req.params.eventId);
         if (!event) {
           throw new HttpError(404, `Event not found: ${req.params.eventId}`);

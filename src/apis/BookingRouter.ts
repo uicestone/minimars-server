@@ -12,7 +12,7 @@ import User from "../models/User";
 import Store from "../models/Store";
 import EscPosEncoder from "esc-pos-encoder-canvas";
 import { Image } from "canvas";
-import Payment, { gatewayNames } from "../models/Payment";
+import Payment, { gatewayNames, Gateways } from "../models/Payment";
 import { config } from "../models/Config";
 import stringWidth from "string-width";
 import {
@@ -40,18 +40,19 @@ export default router => {
         const query = req.query as BookingPostQuery;
 
         if (body.status && req.user.role !== "admin") {
-          throw new HttpError(403, "Only admin can set status directly.");
+          delete body.status;
+          // throw new HttpError(403, "Only admin can set status directly.");
         }
 
         const booking = new Booking(body);
 
-        if (!booking.customer) {
+        if (!booking.customer && req.user.role === "customer") {
           booking.customer = req.user;
         }
         await booking.populate("customer").execPopulate();
 
         if (!booking.customer) {
-          throw new HttpError(401, "客户信息错误");
+          throw new HttpError(400, "客户信息错误");
         }
 
         if (!booking.store) {
@@ -98,16 +99,20 @@ export default router => {
 
         try {
           await booking.createPayment({
-            paymentGateway: query.paymentGateway,
+            paymentGateway:
+              query.paymentGateway ||
+              (req.isWechat ? Gateways.WechatPay : undefined),
             useBalance: query.useBalance !== "false",
             adminAddWithoutPayment: req.user.role === "admin"
           });
         } catch (err) {
           switch (err.message) {
             case "no_customer_openid":
-              throw new HttpError(400, "Customer openid is missing.");
+              throw new HttpError(400, "缺少客户openid");
             case "insufficient_balance":
-              throw new HttpError(400, "Customer balance is insufficient.");
+              throw new HttpError(400, "客户账户余额不足");
+            case "missing_gateway":
+              throw new HttpError(400, "Undefined payment gateway.");
             default:
               throw err;
           }

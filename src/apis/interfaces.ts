@@ -62,7 +62,9 @@ export interface EventPostBody extends IEvent {}
 
 export interface EventPutBody extends IEvent {}
 
-export interface EventQuery extends ListQuery {}
+export interface EventQuery extends ListQuery {
+  keyword?: string;
+}
 
 export interface GiftPostBody extends IGift {}
 

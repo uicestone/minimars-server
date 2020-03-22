@@ -16,6 +16,7 @@ import StoreRouter from "./StoreRouter";
 import UserRouter from "./UserRouter";
 import WechatRouter from "./WechatRouter";
 import CardRouter from "./CardRouter";
+import detectUa from "../middlewares/detectUa";
 
 export default (app, router) => {
   // register routes
@@ -58,6 +59,7 @@ export default (app, router) => {
     methodOverride(),
     authenticate,
     castEmbedded,
+    detectUa,
     router
   );
 };
