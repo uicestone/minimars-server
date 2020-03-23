@@ -1,5 +1,6 @@
-import sha1 from "sha1";
 import multer, { diskStorage } from "multer";
+import { createHash } from "crypto";
+import { renameSync } from "fs";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import File, { IFile } from "../models/File";
 import HttpError from "../utils/HttpError";
@@ -9,8 +10,20 @@ const storage = diskStorage({
     cb(null, process.cwd() + "/uploads/");
   },
   filename: function(req: any, file, cb) {
+    const hash = createHash("sha1");
     const extension = file.originalname.match(/^.*(\..*?)$/)[1];
-    cb(null, sha1(req.user._id + Date.now()).substr(0, 16) + extension);
+    // @ts-ignore/
+    file.stream.on("data", data => {
+      hash.update(data);
+    });
+    // @ts-ignore/
+    file.stream.on("end", () => {
+      const hex = hash.digest("hex");
+      // @ts-ignore
+      file.hashedFullName = hex + extension;
+      console.log("file hashed");
+    });
+    cb(null, `tmp-${Date.now()}-${file.originalname}`);
   }
 });
 
@@ -25,12 +38,15 @@ export default router => {
     .post(
       upload.single("file"),
       handleAsyncErrors(async (req, res) => {
-        const filePathRelative = req.file.path.replace(process.cwd() + "/", "");
-        console.log(filePathRelative);
+        console.log("renaming file...");
+        renameSync(
+          req.file.path,
+          req.file.destination + req.file.hashedFullName
+        );
+        const fileUriPrefix = "uploads/" + req.file.hashedFullName;
         const file = new File() as IFile;
         file.name = req.file.originalname;
-        file.uri = filePathRelative;
-
+        file.uri = fileUriPrefix;
         await file.save();
         res.json(file);
       })
