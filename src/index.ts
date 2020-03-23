@@ -28,7 +28,7 @@ initAgenda();
 
 app.use(bodyParser.json({ limit: "100mb" }));
 app.use(bodyParser.raw({ type: "text/xml" }));
-app.use("/uploads/", express.static(`${process.cwd()}/../uploads`));
+app.use("/uploads/", express.static(`${process.cwd()}/uploads`));
 
 app.set("trust proxy", "loopback");
 applyRoutes(app, router);
