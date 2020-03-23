@@ -55,10 +55,6 @@ export default router => {
           throw new HttpError(400, "客户信息错误");
         }
 
-        if (!booking.store) {
-          booking.store = await Store.findOne();
-          // TODO booking default store should be disabled
-        }
         await booking.populate("store").execPopulate();
 
         if (!booking.store || !booking.store.name) {
@@ -103,7 +99,8 @@ export default router => {
               query.paymentGateway ||
               (req.isWechat ? Gateways.WechatPay : undefined),
             useBalance: query.useBalance !== "false",
-            adminAddWithoutPayment: req.user.role === "admin"
+            adminAddWithoutPayment:
+              req.user.role === "admin" && query.adminAddWithoutPayment
           });
         } catch (err) {
           switch (err.message) {

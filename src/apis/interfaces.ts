@@ -32,6 +32,7 @@ export interface BookingPutBody extends IBooking {}
 export interface BookingPostQuery {
   paymentGateway?: Gateways;
   useBalance?: "false";
+  adminAddWithoutPayment?: boolean;
 }
 
 export interface BookingQuery extends ListQuery {
