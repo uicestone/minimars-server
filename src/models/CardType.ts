@@ -16,7 +16,7 @@ const CardType = new Schema({
   balance: { type: Number },
   price: { type: Number, required: true },
   maxKids: { type: Number, required: true },
-  freeParentsPerKid: { type: Number, required: true }
+  freeParentsPerKid: { type: Number, default: 2 }
 });
 
 CardType.plugin(updateTimes);

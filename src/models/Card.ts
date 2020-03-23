@@ -7,10 +7,10 @@ import Payment, { IPayment, Gateways } from "./Payment";
 const { DEBUG } = process.env;
 
 export enum CardStatuses {
-  PENDING = "PENDING", // pending payment for the card
-  VALID = "VALID", // paid gift card before activated
-  ACTIVATED = "ACTIVATED", // paid non-gift card / activated gift card
-  EXPIRED = "EXPIRED" // expired period, times empty, credit deposit to user
+  PENDING = "pending", // pending payment for the card
+  VALID = "valid", // paid gift card before activated
+  ACTIVATED = "activated", // paid non-gift card / activated gift card
+  EXPIRED = "expired" // expired period, times empty, credit deposit to user
 }
 
 const Card = new Schema({
@@ -48,10 +48,11 @@ Card.set("toJSON", {
   }
 });
 
-Card.methods.createPayment = async function({
-  paymentGateway = Gateways.WechatPay,
-  adminAddWithoutPayment = false
-} = {}) {
+Card.methods.createPayment = async function(
+  { paymentGateway, adminAddWithoutPayment = false } = {
+    paymentGateway: Gateways
+  }
+) {
   const card = this as ICard;
 
   let totalPayAmount = card.price;
@@ -68,7 +69,7 @@ Card.methods.createPayment = async function({
       amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
       title,
       attach,
-      gateway: paymentGateway || Gateways.WechatPay
+      gateway: paymentGateway
     });
     console.log(`[PAY] Card payment: `, JSON.stringify(payment));
 

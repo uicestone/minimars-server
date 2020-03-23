@@ -4,7 +4,13 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Card, { ICard } from "../models/Card";
 import CardType from "../models/CardType";
-import { CardPostBody, CardPutBody, CardQuery } from "./interfaces";
+import {
+  CardPostBody,
+  CardPutBody,
+  CardQuery,
+  CardPostQuery
+} from "./interfaces";
+import { Gateways } from "../models/Payment";
 
 export default router => {
   // Card CURD
@@ -15,6 +21,7 @@ export default router => {
     .post(
       handleAsyncErrors(async (req, res) => {
         const card = new Card(req.body as CardPostBody);
+        const query = req.query as CardPostQuery;
         const cardType = await CardType.findOne({ slug: card.slug });
         if (!cardType) {
           throw new HttpError(404, `CardType '${card.slug}' not exists.`);
@@ -31,6 +38,25 @@ export default router => {
           card.timesLeft = cardType.times;
         }
 
+        try {
+          await card.createPayment({
+            paymentGateway:
+              query.paymentGateway ||
+              (req.isWechat ? Gateways.WechatPay : undefined),
+            adminAddWithoutPayment:
+              req.user.role === "admin" && query.adminAddWithoutPayment
+          });
+        } catch (err) {
+          switch (err.message) {
+            case "no_customer_openid":
+              throw new HttpError(400, "缺少客户openid");
+            case "missing_gateway":
+              throw new HttpError(400, "Undefined payment gateway.");
+            default:
+              throw err;
+          }
+        }
+
         await card.save();
         res.json(card);
       })
@@ -43,9 +69,15 @@ export default router => {
         const queryParams = req.query as CardQuery;
         const { limit, skip } = req.pagination;
         const query = Card.find().populate("customer");
-        const sort = parseSortString(queryParams) || {
+        const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
+
+        ["customer"].forEach(field => {
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
+          }
+        });
 
         let total = await query.countDocuments();
         const page = await query

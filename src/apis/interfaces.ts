@@ -51,7 +51,14 @@ export interface CardPostBody extends ICard {}
 
 export interface CardPutBody extends ICard {}
 
-export interface CardQuery extends ListQuery {}
+export interface CardPostQuery {
+  paymentGateway?: Gateways;
+  adminAddWithoutPayment?: boolean;
+}
+
+export interface CardQuery extends ListQuery {
+  customer?: string;
+}
 
 export interface CardTypePostBody extends ICardType {}
 
