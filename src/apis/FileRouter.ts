@@ -6,7 +6,7 @@ import HttpError from "../utils/HttpError";
 
 const storage = diskStorage({
   destination: function(req, file, cb) {
-    cb(null, __dirname + "/../../uploads/");
+    cb(null, process.cwd() + "/uploads/");
   },
   filename: function(req: any, file, cb) {
     const extension = file.originalname.match(/^.*(\..*?)$/)[1];
@@ -25,10 +25,7 @@ export default router => {
     .post(
       upload.single("file"),
       handleAsyncErrors(async (req, res) => {
-        const filePathRelative = req.file.path.replace(
-          __dirname.replace("/src/apis", "") + "/",
-          ""
-        );
+        const filePathRelative = req.file.path.replace(process.cwd() + "/", "");
         console.log(filePathRelative);
         const file = new File() as IFile;
         file.name = req.file.originalname;
