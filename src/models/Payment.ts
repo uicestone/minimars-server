@@ -176,6 +176,34 @@ Payment.pre("save", async function(next) {
       await customer.save();
       break;
     case Gateways.Card:
+      if (
+        !payment.gatewayData ||
+        !payment.gatewayData.bookingId ||
+        !payment.gatewayData.cardId ||
+        !payment.gatewayData.times
+      ) {
+        throw new Error("invalid_card_payment_gateway_data");
+      }
+      const card = await Card.findOne({ _id: payment.gatewayData.cardId });
+
+      if (payment.gatewayData.cardRefund) {
+        card.timesLeft += payment.gatewayData.times;
+        await card.save();
+        // await customer.updateCardBalance();
+        console.log(
+          `[PAY] Card ${card.id} refunded, time left: ${card.timesLeft}.`
+        );
+        payment.paid = true;
+      } else {
+        card.timesLeft -= payment.gatewayData.times;
+        await card.save();
+        // await customer.updateCardBalance();
+        console.log(
+          `[PAY] Card ${card.id} used in ${payment.gatewayData.bookingId}, times left: ${card.timesLeft}.`
+        );
+        payment.paid = true;
+      }
+
       break;
     case Gateways.Scan:
       break;

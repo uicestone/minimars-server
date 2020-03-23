@@ -100,7 +100,7 @@ Booking.methods.calculatePrice = async function() {
   );
 
   if (booking.card) {
-    if (!booking.card.id) {
+    if (!booking.card.title) {
       await booking.populate("card").execPopulate();
     }
     kidsCount = Math.max(0, booking.kidsCount - booking.card.maxKids);
@@ -156,11 +156,11 @@ Booking.methods.createPayment = async function(
   },
   amount?: number
 ) {
-  if (!paymentGateway) {
+  const booking = this as IBooking;
+
+  if (!paymentGateway && !booking.card) {
     throw new Error("missing_gateway");
   }
-
-  const booking = this as IBooking;
 
   let totalPayAmount = amount || booking.price;
 
@@ -169,6 +169,23 @@ Booking.methods.createPayment = async function(
   let attach = `booking ${booking._id}`;
 
   const title = `预定${booking.store.name} ${booking.date} ${booking.checkInAt}入场`;
+
+  if (booking.card && booking.card.type === "times") {
+    const cardPayment = new Payment({
+      customer: booking.customer,
+      amount: (booking.card.price / booking.card.times) * booking.kidsCount,
+      title,
+      attach,
+      gateway: Gateways.Card,
+      gatewayData: {
+        cardId: booking.card.id,
+        bookingId: booking.id,
+        times: booking.kidsCount
+      }
+    });
+    await cardPayment.save();
+    booking.payments.push(cardPayment);
+  }
 
   if (
     totalPayAmount >= 0.01 &&
