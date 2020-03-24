@@ -68,6 +68,8 @@ export default router => {
         }
         await user.save();
 
+        user.password = undefined;
+
         res.json(user);
       })
     )
@@ -263,6 +265,9 @@ export default router => {
           );
         }
         await user.save();
+
+        user.password = undefined;
+
         res.json(user);
       })
     )
