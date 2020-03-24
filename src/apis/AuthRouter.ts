@@ -42,6 +42,10 @@ export default router => {
 
       user.password = undefined;
 
+      if (user.cards.length) {
+        await user.populate("cards").execPopulate();
+      }
+
       res.json({ token, user } as AuthLoginResponseBody);
 
       let authLog = `[USR] 用户 ${user.name || user.login} (${
@@ -73,6 +77,10 @@ export default router => {
       });
 
       console.log(authLog);
+
+      if (user.cards.length) {
+        await user.populate("cards").execPopulate();
+      }
 
       res.json(user);
     })

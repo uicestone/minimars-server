@@ -3,6 +3,7 @@ import updateTimes from "./plugins/updateTimes";
 import { config } from "./Config";
 import Store, { IStore } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
+import { ICard } from "./Card";
 
 const User = new Schema({
   role: { type: String, default: "customer" },
@@ -44,7 +45,8 @@ const User = new Schema({
   freePlayFrom: Date,
   freePlayTo: Date,
   cardType: { type: String },
-  cardNo: { type: String }
+  cardNo: { type: String },
+  cards: [{ type: Schema.Types.ObjectId, ref: "Card" }]
 });
 
 // User.virtual("avatarUrl").get(function(req) {
@@ -161,6 +163,7 @@ export interface IUser extends mongoose.Document {
   freePlay: boolean;
   cardType?: string;
   cardNo?: string;
+  cards: ICard[];
   depositSuccess: (level: string) => Promise<IUser>;
   membershipUpgradeSuccess: (cardTypeName: string) => Promise<IUser>;
 }

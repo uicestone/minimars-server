@@ -11,6 +11,7 @@ import {
   CardPostQuery
 } from "./interfaces";
 import { Gateways } from "../models/Payment";
+import User from "../models/User";
 
 export default router => {
   // Card CURD
@@ -30,7 +31,9 @@ export default router => {
           card.customer = req.user;
         }
 
-        if (!card.customer) {
+        const customer = await User.findOne({ _id: card.customer });
+
+        if (!customer) {
           throw new HttpError(400, "Invalid card customer.");
         }
 
@@ -51,13 +54,16 @@ export default router => {
             case "no_customer_openid":
               throw new HttpError(400, "缺少客户openid");
             case "missing_gateway":
-              throw new HttpError(400, "Undefined payment gateway.");
+              throw new HttpError(400, "未选择支付方式");
             default:
               throw err;
           }
         }
 
         await card.save();
+        customer.cards.push(card);
+        await customer.save();
+
         res.json(card);
       })
     )
@@ -68,7 +74,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as CardQuery;
         const { limit, skip } = req.pagination;
-        const query = Card.find().populate("customer");
+        const query = Card.find();
         const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
