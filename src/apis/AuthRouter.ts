@@ -22,9 +22,9 @@ export default router => {
         throw new HttpError(400, "请输入密码");
       }
 
-      const user = await User.findOne({ login: body.login }).select([
-        "+password"
-      ]);
+      const user = await User.findOne({ login: body.login })
+        .select(["+password"])
+        .populate("cards");
 
       if (!user) {
         throw new HttpError(404, "用户不存在");
@@ -41,10 +41,6 @@ export default router => {
       const token = signToken(user);
 
       user.password = undefined;
-
-      if (user.cards.length) {
-        await user.populate("cards").execPopulate();
-      }
 
       res.json({ token, user } as AuthLoginResponseBody);
 
@@ -64,7 +60,7 @@ export default router => {
 
   router.route("/auth/user").get(
     handleAsyncErrors(async (req, res) => {
-      const user = await User.findOne({ _id: req.user });
+      const user = await User.findOne({ _id: req.user }).populate("cards");
       if (!user) {
         throw new HttpError(401, "用户未登录");
       }
@@ -77,10 +73,6 @@ export default router => {
       });
 
       console.log(authLog);
-
-      if (user.cards.length) {
-        await user.populate("cards").execPopulate();
-      }
 
       res.json(user);
     })
