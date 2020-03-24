@@ -14,6 +14,7 @@ const Payment = new Schema({
   amount: { type: Number, required: true },
   amountForceDeposit: { type: Number },
   amountDeposit: { type: Number },
+  amountInPoints: { type: Number },
   paid: { type: Boolean, default: false },
   title: { type: String, default: " " },
   attach: { type: String },
@@ -209,6 +210,14 @@ Payment.pre("save", async function(next) {
       break;
     case Gateways.Cash:
       break;
+    case Gateways.Points:
+      if (payment.amountInPoints > customer.points) {
+        throw new Error("insufficient_points");
+      }
+      customer.points -= payment.amountInPoints;
+      await customer.save();
+      payment.paid = true;
+      break;
     default:
       throw new Error("unsupported_payment_gateway");
   }
@@ -220,6 +229,7 @@ export interface IPayment extends mongoose.Document {
   amount: number;
   amountForceDeposit?: number;
   amountDeposit?: number;
+  amountInPoints?: number;
   paid: boolean;
   title: string;
   attach: string;

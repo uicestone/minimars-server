@@ -61,7 +61,8 @@ const Booking = new Schema({
     enum: Object.values(BookingStatus),
     default: BookingStatus.PENDING
   },
-  price: { type: Number, default: 0 },
+  price: { type: Number },
+  priceInPoints: { type: Number },
   card: { type: Schema.Types.ObjectId, ref: "Card" },
   coupon: { type: String },
   event: { type: Schema.Types.ObjectId, ref: "Event" },
@@ -93,61 +94,76 @@ Booking.methods.calculatePrice = async function() {
 
   await booking.populate("customer").execPopulate();
 
-  let kidsCount = booking.kidsCount;
-  let extraAdultsCount = Math.max(
-    0,
-    booking.adultsCount - booking.kidsCount * config.freeParentsPerKid
-  );
-
-  if (booking.card) {
-    if (!booking.card.title) {
-      await booking.populate("card").execPopulate();
-    }
-    kidsCount = Math.max(0, booking.kidsCount - booking.card.maxKids);
-    extraAdultsCount = Math.max(
+  if (booking.type === "play") {
+    let kidsCount = booking.kidsCount;
+    let extraAdultsCount = Math.max(
       0,
-      booking.adultsCount - booking.kidsCount * booking.card.freeParentsPerKid
+      booking.adultsCount - booking.kidsCount * config.freeParentsPerKid
     );
-    // TODO check card valid times
-    // TODO check card valid period
-  }
 
-  let coupon;
-
-  if (booking.coupon) {
-    coupon = config.coupons.find(c => c.slug === booking.coupon);
-    if (!coupon) {
-      throw new Error("coupon_not_found");
+    if (booking.card) {
+      if (!booking.card.title) {
+        await booking.populate("card").execPopulate();
+      }
+      kidsCount = Math.max(0, booking.kidsCount - booking.card.maxKids);
+      extraAdultsCount = Math.max(
+        0,
+        booking.adultsCount - booking.kidsCount * booking.card.freeParentsPerKid
+      );
+      // TODO check card valid times
+      // TODO check card valid period
     }
-  }
 
-  if (coupon) {
-    // fullDay hours with coupon
-    booking.price = 0;
-  } else {
-    // fullDay hours standard
-    booking.price =
-      config.extraParentFullDayPrice * extraAdultsCount +
-      config.kidFullDayPrice * kidsCount;
-  }
+    let coupon;
 
-  if (coupon && coupon.price) {
-    booking.price += coupon.price;
-  }
+    if (booking.coupon) {
+      coupon = config.coupons.find(c => c.slug === booking.coupon);
+      if (!coupon) {
+        throw new Error("coupon_not_found");
+      }
+    }
 
-  if (coupon && coupon.discountAmount) {
-    booking.price -= coupon.discountAmount;
-    if (booking.price < 0) {
+    if (coupon) {
+      // fullDay hours with coupon
       booking.price = 0;
+    } else {
+      // fullDay hours standard
+      booking.price =
+        config.extraParentFullDayPrice * extraAdultsCount +
+        config.kidFullDayPrice * kidsCount;
+    }
+
+    if (coupon && coupon.price) {
+      booking.price += coupon.price;
+    }
+
+    if (coupon && coupon.discountAmount) {
+      booking.price -= coupon.discountAmount;
+      if (booking.price < 0) {
+        booking.price = 0;
+      }
+    }
+
+    if (coupon && coupon.discountRate) {
+      booking.price = booking.price * (1 - coupon.discountRate);
+    }
+
+    booking.price += booking.socksCount * config.sockPrice;
+    booking.price = +booking.price.toFixed(2);
+  } else if (booking.type === "event") {
+    if (!booking.populated("event")) {
+      await booking.populate("event").execPopulate();
+    }
+    const event = booking.event;
+    if (!event) {
+      return;
+      // throw new Error("invalid_event");
+    }
+    booking.priceInPoints = event.priceInPoints;
+    if (event.price) {
+      booking.price = event.price;
     }
   }
-
-  if (coupon && coupon.discountRate) {
-    booking.price = booking.price * (1 - coupon.discountRate);
-  }
-
-  booking.price += booking.socksCount * config.sockPrice;
-  booking.price = +booking.price.toFixed(2);
 };
 
 Booking.methods.createPayment = async function(
@@ -208,11 +224,11 @@ Booking.methods.createPayment = async function(
   }
 
   const extraPayAmount = totalPayAmount - balancePayAmount;
-  console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
+  // console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
   if (extraPayAmount < 0.01 || adminAddWithoutPayment) {
     booking.status = BookingStatus.BOOKED;
-  } else {
+  } else if (extraPayAmount >= 0.01) {
     const extraPayment = new Payment({
       customer: booking.customer,
       amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
@@ -231,12 +247,40 @@ Booking.methods.createPayment = async function(
 
     booking.payments.push(extraPayment);
   }
+
+  if (booking.priceInPoints) {
+    const pointsPayment = new Payment({
+      customer: booking.customer,
+      amount: 0,
+      amountInPoints: booking.priceInPoints,
+      title,
+      attach,
+      gateway: paymentGateway
+    });
+
+    try {
+      await pointsPayment.save();
+      booking.status = BookingStatus.BOOKED;
+    } catch (err) {
+      throw err;
+    }
+
+    booking.payments.push(pointsPayment);
+  }
 };
 
 Booking.methods.paymentSuccess = async function() {
   const booking = this as IBooking;
   booking.status = BookingStatus.BOOKED;
   await booking.save();
+  if (!booking.populated("customer")) {
+    await booking.populate("customer").execPopulate();
+  }
+  if (!booking.customer.points) {
+    booking.customer.points = 0;
+  }
+  booking.customer.points += 1 * booking.price;
+  await booking.customer.save();
   // send user notification
 };
 
@@ -370,6 +414,7 @@ export interface IBooking extends mongoose.Document {
   socksCount: number;
   status: BookingStatus;
   price?: number;
+  priceInPoints?: number;
   card?: ICard;
   coupon?: string;
   event?: IEvent;

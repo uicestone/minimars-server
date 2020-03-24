@@ -9,7 +9,7 @@ const Event = new Schema({
   posterUrl: { type: String, required: true },
   props: { type: Object },
   priceInPoints: { type: Number, required: true },
-  priceInCny: { type: Number },
+  price: { type: Number },
   date: { type: Date, required: true },
   store: { type: Schema.Types.ObjectId, ref: "Store", required: true }
 });
@@ -31,7 +31,7 @@ export interface IEvent extends mongoose.Document {
   posterUrl: string;
   props?: Object;
   priceInPoints: number;
-  priceInCny?: number;
+  price?: number;
   date: Date;
   store: IStore;
 }

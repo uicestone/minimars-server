@@ -42,6 +42,7 @@ const User = new Schema({
   store: { type: Schema.Types.ObjectId, ref: Store }, // manager only
   balanceDeposit: { type: Number, default: 0 }, // below for customer only
   balanceReward: { type: Number, default: 0 },
+  points: { type: Number },
   freePlayFrom: Date,
   freePlayTo: Date,
   cardType: { type: String },
@@ -158,6 +159,7 @@ export interface IUser extends mongoose.Document {
   balanceDeposit?: number;
   balanceReward?: number;
   balance?: number;
+  points?: number;
   freePlayFrom: Date;
   freePlayTo: Date;
   freePlay: boolean;

@@ -20,7 +20,8 @@ import {
   BookingPostQuery,
   BookingPutBody,
   BookingQuery,
-  BookingPricePostBody
+  BookingPricePostBody,
+  BookingPriceResponseBody
 } from "./interfaces";
 
 setTimeout(async () => {
@@ -491,7 +492,12 @@ export default router => {
         }
       }
 
-      res.json({ price: booking.price });
+      const result = {
+        price: booking.price,
+        priceInPoints: booking.priceInPoints || undefined
+      } as BookingPriceResponseBody;
+
+      res.json(result);
     })
   );
 

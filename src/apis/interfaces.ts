@@ -47,6 +47,11 @@ export interface BookingQuery extends ListQuery {
 
 export interface BookingPricePostBody extends IBooking {}
 
+export interface BookingPriceResponseBody {
+  price: number;
+  priceInPoints?: number;
+}
+
 export interface CardPostBody extends ICard {}
 
 export interface CardPutBody extends ICard {}
