@@ -18,7 +18,7 @@ export default (router: Router) => {
         { openid },
         {},
         { upsert: true, new: true }
-      );
+      ).populate("cards");
 
       res.json({
         user,
@@ -57,7 +57,7 @@ export default (router: Router) => {
           region: `${country} ${province} ${city}`
         },
         { upsert: true, new: true }
-      );
+      ).populate("cards");
 
       await user.save();
 
