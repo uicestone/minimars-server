@@ -109,8 +109,10 @@ export default router => {
               throw new HttpError(400, "缺少客户openid");
             case "insufficient_balance":
               throw new HttpError(400, "客户账户余额不足");
+            case "insufficient_points":
+              throw new HttpError(400, "客户账户积分不足");
             case "missing_gateway":
-              throw new HttpError(400, "Undefined payment gateway.");
+              throw new HttpError(400, "未选择支付方式");
             default:
               throw err;
           }
