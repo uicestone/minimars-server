@@ -98,7 +98,7 @@ export default router => {
           await booking.createPayment({
             paymentGateway:
               query.paymentGateway ||
-              (req.isWechat ? Gateways.WechatPay : undefined),
+              (req.ua.isWechat ? Gateways.WechatPay : undefined),
             useBalance: query.useBalance !== "false",
             adminAddWithoutPayment:
               req.user.role === "admin" && query.adminAddWithoutPayment

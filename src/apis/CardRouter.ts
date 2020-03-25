@@ -45,7 +45,7 @@ export default router => {
           await card.createPayment({
             paymentGateway:
               query.paymentGateway ||
-              (req.isWechat ? Gateways.WechatPay : undefined),
+              (req.ua.isWechat ? Gateways.WechatPay : undefined),
             adminAddWithoutPayment:
               req.user.role === "admin" && query.adminAddWithoutPayment
           });
