@@ -9,8 +9,6 @@ import {
 } from "./interfaces";
 import { CardStatuses } from "../models/Card";
 
-// bluebird.promisifyAll(redisClient);
-
 export default router => {
   router.route("/auth/login").post(
     handleAsyncErrors(async (req, res) => {
