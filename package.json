@@ -3,8 +3,8 @@
   "version": "0.7.0",
   "description": "MINI MARS server apis.",
   "scripts": {
-    "dev": "nodemon --watch src -e ts --exec 'ts-node ./src/'",
-    "start": "yarn dev",
+    "dev": "ts-node-dev --no-notify --respawn --transpileOnly src/index.ts",
+    "start": "ts-node src",
     "test": "echo \"No test specified.\" && exit 0",
     "build": "tsc && cp -r src/resource build/",
     "lint": "eslint ./src/*.ts ./src/*/*.ts ./src/*/*/*.ts"
@@ -48,8 +48,8 @@
     "eslint": "^6.3.0",
     "eslint-plugin-vue": "^5.0.0",
     "lint-staged": "^8.1.5",
-    "nodemon": "^1.19.0",
     "ts-node": "^8.1.0",
+    "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.4.5"
   },
   "eslintConfig": {
