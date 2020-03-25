@@ -40,11 +40,13 @@ const Card = new Schema({
 });
 
 Card.plugin(updateTimes);
-Card.plugin(autoPopulate, {
-  path: "payments",
-  options: { sort: { _id: -1 } },
-  select: "-customer"
-});
+Card.plugin(autoPopulate, [
+  {
+    path: "payments",
+    options: { sort: { _id: -1 } },
+    select: "-customer"
+  }
+]);
 
 Card.set("toJSON", {
   getters: true,
