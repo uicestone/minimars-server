@@ -23,7 +23,7 @@ const Card = new Schema({
     enum: Object.values(CardStatuses),
     default: CardStatuses.PENDING
   },
-  payments: [{ type: Schema.Types.ObjectId, ref: Payment }],
+  payments: [{ type: Schema.Types.ObjectId, ref: "Payment" }],
   title: { type: String, required: true },
   slug: { type: String, required: true },
   type: { type: String, enum: ["times", "period", "balance"], required: true },

@@ -4,8 +4,8 @@ import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { config } from "../models/Config";
 import Payment, { IPayment, Gateways } from "./Payment";
-import User, { IUser } from "./User";
-import Store, { IStore } from "./Store";
+import { IUser } from "./User";
+import { IStore } from "./Store";
 import { ICard } from "./Card";
 import { IEvent } from "./Event";
 import { IGift } from "./Gift";
@@ -48,8 +48,8 @@ export const paidBookingStatus = [
 ];
 
 const Booking = new Schema({
-  customer: { type: Schema.Types.ObjectId, ref: User, required: true },
-  store: { type: Schema.Types.ObjectId, ref: Store, required: true },
+  customer: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  store: { type: Schema.Types.ObjectId, ref: "Store", required: true },
   type: { type: String, enum: Object.values(BookingType), required: true },
   date: { type: String, required: true },
   checkInAt: { type: String, required: true },
@@ -67,7 +67,7 @@ const Booking = new Schema({
   coupon: { type: String },
   event: { type: Schema.Types.ObjectId, ref: "Event" },
   gift: { type: Schema.Types.ObjectId, ref: "Gift" },
-  payments: [{ type: Schema.Types.ObjectId, ref: Payment }],
+  payments: [{ type: Schema.Types.ObjectId, ref: "Payment" }],
   remarks: String
 });
 

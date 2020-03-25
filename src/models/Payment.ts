@@ -10,7 +10,7 @@ import {
 import Card from "./Card";
 
 const Payment = new Schema({
-  customer: { type: Schema.Types.ObjectId, ref: User, required: true },
+  customer: { type: Schema.Types.ObjectId, ref: "User", required: true },
   amount: { type: Number, required: true },
   amountForceDeposit: { type: Number },
   amountDeposit: { type: Number },
@@ -264,4 +264,4 @@ export const gatewayNames = {
   [Gateways.UnionPay]: "银联"
 };
 
-export default mongoose.model<IPayment>("payment", Payment);
+export default mongoose.model<IPayment>("Payment", Payment);

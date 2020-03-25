@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
 import { config } from "./Config";
-import Store, { IStore } from "./Store";
+import { IStore } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 import { ICard } from "./Card";
 
@@ -39,7 +39,7 @@ const User = new Schema({
   constellation: String,
   idCardNo: String,
   openid: { type: String, index: { unique: true, sparse: true } },
-  store: { type: Schema.Types.ObjectId, ref: Store }, // manager only
+  store: { type: Schema.Types.ObjectId, ref: "Store" }, // manager only
   balanceDeposit: { type: Number, default: 0 }, // below for customer only
   balanceReward: { type: Number, default: 0 },
   points: { type: Number },
