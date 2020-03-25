@@ -7,6 +7,7 @@ import {
   AuthLoginResponseBody,
   AuthTokenUserIdResponseBody
 } from "./interfaces";
+import { CardStatuses } from "../models/Card";
 
 // bluebird.promisifyAll(redisClient);
 
@@ -24,7 +25,12 @@ export default router => {
 
       const user = await User.findOne({ login: body.login })
         .select(["+password"])
-        .populate("cards");
+        .populate({
+          path: "cards",
+          match: { status: { $ne: CardStatuses.PENDING } },
+          options: { sort: { _id: -1 } },
+          select: "-payments"
+        });
 
       if (!user) {
         throw new HttpError(404, "用户不存在");
@@ -60,7 +66,12 @@ export default router => {
 
   router.route("/auth/user").get(
     handleAsyncErrors(async (req, res) => {
-      const user = await User.findOne({ _id: req.user }).populate("cards");
+      const user = await User.findOne({ _id: req.user }).populate({
+        path: "cards",
+        match: { status: { $ne: CardStatuses.PENDING } },
+        options: { sort: { _id: -1 } },
+        select: "-payments"
+      });
       if (!user) {
         throw new HttpError(401, "用户未登录");
       }

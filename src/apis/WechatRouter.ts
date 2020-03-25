@@ -6,6 +6,7 @@ import HttpError from "../utils/HttpError";
 import { utils } from "@sigodenjs/wechatpay";
 import { signToken } from "../utils/helper";
 import Payment from "../models/Payment";
+import { CardStatuses } from "../models/Card";
 
 export default (router: Router) => {
   router.route("/wechat/login").post(
@@ -18,7 +19,12 @@ export default (router: Router) => {
         { openid },
         {},
         { upsert: true, new: true }
-      ).populate("cards");
+      ).populate({
+        path: "cards",
+        match: { status: { $ne: CardStatuses.PENDING } },
+        options: { sort: { _id: -1 } },
+        select: "-payments"
+      });
 
       res.json({
         user,
@@ -57,7 +63,12 @@ export default (router: Router) => {
           region: `${country} ${province} ${city}`
         },
         { upsert: true, new: true }
-      ).populate("cards");
+      ).populate({
+        path: "cards",
+        match: { status: { $ne: CardStatuses.PENDING } },
+        options: { sort: { _id: -1 } },
+        select: "-payments"
+      });
 
       await user.save();
 

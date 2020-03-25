@@ -169,10 +169,6 @@ export default router => {
           throw new HttpError(404, `User not found: ${req.params.userId}`);
         }
 
-        if (user.cards.length) {
-          await user.populate("cards").execPopulate();
-        }
-
         req.item = user;
         next();
       })
