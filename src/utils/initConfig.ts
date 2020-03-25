@@ -7,7 +7,7 @@ const { DEBUG } = process.env;
 export default async (config: IConfig) => {
   const existingConfig = reduceConfig(await Config.find());
   const initConfigItemsInsert = Object.keys(initConfig)
-    .filter(key => !existingConfig[key])
+    .filter(key => existingConfig[key] === undefined)
     .map(initKey => ({ [initKey]: initConfig[initKey] }));
   if (initConfigItemsInsert.length) {
     await Config.insertMany(initConfigItemsInsert);
