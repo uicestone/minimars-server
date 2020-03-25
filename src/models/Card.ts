@@ -3,6 +3,7 @@ import updateTimes from "./plugins/updateTimes";
 import { IUser } from "./User";
 import { IStore } from "./Store";
 import Payment, { IPayment, Gateways } from "./Payment";
+import autoPopulate from "./plugins/autoPopulate";
 
 const { DEBUG } = process.env;
 
@@ -39,6 +40,11 @@ const Card = new Schema({
 });
 
 Card.plugin(updateTimes);
+Card.plugin(autoPopulate, {
+  path: "payments",
+  options: { sort: { _id: -1 } },
+  select: "-customer"
+});
 
 Card.set("toJSON", {
   getters: true,
