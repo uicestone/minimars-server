@@ -38,7 +38,6 @@ export default router => {
     .post(
       upload.single("file"),
       handleAsyncErrors(async (req, res) => {
-        console.log("renaming file...");
         renameSync(
           req.file.path,
           req.file.destination + req.file.hashedFullName

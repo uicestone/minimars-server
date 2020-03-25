@@ -151,9 +151,7 @@ export default router => {
         if (queryParams.status) {
           query.find({
             status: {
-              $in: queryParams.status
-                .split(",")
-                .map(s => s.toUpperCase()) as BookingStatus[]
+              $in: queryParams.status.split(",") as BookingStatus[]
             }
           });
         }
