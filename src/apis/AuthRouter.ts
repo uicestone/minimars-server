@@ -7,7 +7,7 @@ import {
   AuthLoginResponseBody,
   AuthTokenUserIdResponseBody
 } from "./interfaces";
-import { CardStatus } from "../models/Card";
+import { userVisibleCardStatus } from "../models/Card";
 
 export default router => {
   router.route("/auth/login").post(
@@ -25,7 +25,7 @@ export default router => {
         .select(["+password"])
         .populate({
           path: "cards",
-          match: { status: { $ne: CardStatus.PENDING } },
+          match: { status: { $in: userVisibleCardStatus } },
           options: { sort: { _id: -1 } },
           select: "-payments"
         });
@@ -66,7 +66,7 @@ export default router => {
     handleAsyncErrors(async (req, res) => {
       const user = await User.findOne({ _id: req.user }).populate({
         path: "cards",
-        match: { status: { $ne: CardStatus.PENDING } },
+        match: { status: { $in: userVisibleCardStatus } },
         options: { sort: { _id: -1 } },
         select: "-payments"
       });

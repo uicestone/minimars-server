@@ -2,6 +2,7 @@ import Agenda from "agenda";
 import moment from "moment";
 import Booking, { BookingStatus } from "../models/Booking";
 import { MongoClient } from "mongodb";
+import Card, { CardStatus } from "../models/Card";
 
 let agenda: Agenda;
 
@@ -48,6 +49,25 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("cancel expired pending cards", async (job, done) => {
+    console.log(`[CRO] Cancel expired pending cards.`);
+    const cards = await Card.find({
+      status: CardStatus.PENDING,
+      createdAt: {
+        $lt: moment()
+          .subtract(1, "day")
+          .toDate()
+      }
+    });
+
+    for (const card of cards) {
+      card.status = CardStatus.CANCELED;
+      await card.save();
+    }
+
+    done();
+  });
+
   agenda.define("test", async (job, done) => {
     console.log(`[CRO] Test cron job.`);
 
@@ -57,7 +77,8 @@ export const initAgenda = async () => {
   agenda.start();
 
   agenda.on("ready", () => {
-    agenda.every("1 hour", "cancel expired pending bookings");
+    agenda.every("4 hours", "cancel expired pending bookings");
+    agenda.every("4 hours", "cancel expired pending cards");
     // agenda.every("10 seconds", "test");
     // agenda.every("1 day", "cancel expired booked bookings");
     // agenda.now("generate 8 digit card no");

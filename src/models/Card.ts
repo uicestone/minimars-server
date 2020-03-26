@@ -11,8 +11,15 @@ export enum CardStatus {
   PENDING = "pending", // pending payment for the card
   VALID = "valid", // paid gift card before activated
   ACTIVATED = "activated", // paid non-gift card / activated gift card
-  EXPIRED = "expired" // expired period, times empty, credit deposit to user
+  EXPIRED = "expired", // expired period, times empty, credit deposit to user
+  CANCELED = "canceled" // never used and will never be activated
 }
+
+export const userVisibleCardStatus = [
+  CardStatus.VALID,
+  CardStatus.ACTIVATED,
+  CardStatus.EXPIRED
+];
 
 const Card = new Schema({
   customer: { type: Schema.Types.ObjectId, ref: "User", required: true },
