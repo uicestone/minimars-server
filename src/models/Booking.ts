@@ -67,6 +67,7 @@ const Booking = new Schema({
   coupon: { type: String },
   event: { type: Schema.Types.ObjectId, ref: "Event" },
   gift: { type: Schema.Types.ObjectId, ref: "Gift" },
+  quantity: { type: Number }, // quantity of gifts
   payments: [{ type: Schema.Types.ObjectId, ref: "Payment" }],
   remarks: String
 });
@@ -259,8 +260,18 @@ Booking.methods.createPayment = async function(
     });
 
     try {
-      await pointsPayment.save();
+      if (!booking.populated("event")) {
+        await booking.populate("event").execPopulate();
+      }
+      if (!booking.event) {
+        throw new Error("invalid_event");
+      }
+      if (booking.event.kidsCountMax) {
+        booking.event.kidsCountLeft -= booking.kidsCount;
+        await booking.event.save();
+      }
       booking.status = BookingStatus.BOOKED;
+      await pointsPayment.save();
     } catch (err) {
       throw err;
     }
@@ -419,6 +430,7 @@ export interface IBooking extends mongoose.Document {
   coupon?: string;
   event?: IEvent;
   gift?: IGift;
+  quantity?: number;
   payments?: IPayment[];
   remarks?: string;
   calculatePrice: () => Promise<IBooking>;

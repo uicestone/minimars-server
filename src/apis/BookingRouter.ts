@@ -83,6 +83,33 @@ export default router => {
           throw new HttpError(400, "成人和儿童数不能都为0");
         }
 
+        if (body.type === BookingType.EVENT) {
+          if (!booking.populated("event")) {
+            await booking.populate("event").execPopulate();
+          }
+          if (!booking.event) {
+            throw new HttpError(400, "活动信息错误");
+          }
+          if (
+            booking.event.kidsCountLeft &&
+            booking.event.kidsCountLeft < body.kidsCount
+          ) {
+            throw new HttpError(400, "活动儿童人数名额不足");
+          }
+        }
+
+        if (body.type === BookingType.GIFT) {
+          if (!booking.populated("gift")) {
+            await booking.populate("gift").execPopulate();
+          }
+          if (!booking.gift) {
+            throw new HttpError(400, "礼品信息错误");
+          }
+          if (booking.gift.quantity && booking.gift.quantity < body.quantity) {
+            throw new HttpError(400, "礼品库存不足");
+          }
+        }
+
         try {
           await booking.calculatePrice();
         } catch (err) {

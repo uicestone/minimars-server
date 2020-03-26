@@ -7,6 +7,16 @@ const Event = new Schema({
   title: { type: String, required: true },
   content: { type: String },
   posterUrl: { type: String, required: true },
+  kidsCountMax: {
+    type: Schema.Types.Mixed,
+    default: null,
+    set(v) {
+      if (!v) {
+        return null;
+      } else return +v;
+    }
+  },
+  kidsCountLeft: { type: Number },
   props: { type: Object },
   priceInPoints: { type: Number, required: true },
   price: { type: Number },
@@ -25,10 +35,26 @@ Event.set("toJSON", {
   }
 });
 
+Event.pre("validate", function(next) {
+  const event = this as IEvent;
+  if (
+    event.kidsCountMax !== null &&
+    (event.kidsCountLeft === null || event.kidsCountLeft === undefined)
+  ) {
+    event.kidsCountLeft = event.kidsCountMax;
+  }
+  if (event.kidsCountLeft !== null && event.kidsCountMax === null) {
+    event.kidsCountLeft = null;
+  }
+  next();
+});
+
 export interface IEvent extends mongoose.Document {
   title: string;
   content?: string;
   posterUrl: string;
+  kidsCountMax: number | null;
+  kidsCountLeft: number | null;
   props?: Object;
   priceInPoints: number;
   price?: number;
