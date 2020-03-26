@@ -2,6 +2,7 @@ import moment from "moment";
 import { config } from "../models/Config";
 import Booking, { paidBookingStatus, BookingStatus } from "../models/Booking";
 import Payment, { PaymentGateway } from "../models/Payment";
+import Card from "../models/Card";
 
 export default async (
   dateInput?: string | Date,
@@ -37,6 +38,7 @@ export default async (
     },
     paid: true
   });
+
   const bookingServing = await Booking.find({
     status: BookingStatus.IN_SERVICE
   });
@@ -61,8 +63,8 @@ export default async (
     .filter(p => p.attach.match(/^booking /))
     .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
 
-  const depositAmount = payments
-    .filter(p => p.attach.match(/^deposit /))
+  const cardAmount = payments
+    .filter(p => p.attach.match(/^card /))
     .reduce((amount, p) => amount + p.amount, 0);
 
   const socksCount = bookingsPaid.reduce(
@@ -129,39 +131,40 @@ export default async (
 
   paidAmountByGateways.coupon = couponsCount.reduce((a, c) => a + c.amount, 0);
 
-  const depositsCount: {
+  const cardTypesCount: {
     slug: string;
-    desc: string;
+    title: string;
     price: number;
-    cardType: string;
     count: number;
   }[] = [];
 
-  payments
-    .filter(p => p.attach.match(/^deposit /))
-    .reduce((depositsCount, payment) => {
-      const [, levelSlug] = payment.attach.match(
-        /^deposit [\d\w]+ ([\d\w\-]+)/
-      );
-      let depositCount = depositsCount.find(c => c.slug === levelSlug);
-      if (!depositCount) {
-        const level = config.depositLevels.find(l => l.slug === levelSlug);
-        if (!level) {
-          throw new Error(
-            `Level not found for slug ${levelSlug}, ${payment.attach}`
-          );
-        }
+  const cardIds = payments
+    .filter(p => p.attach.match(/^card /))
+    .map(p => {
+      return p.attach.split(" ")[1];
+    });
 
-        depositCount = {
-          ...level,
-          count: 0
-        };
+  const cards = await Card.find({ _id: { $in: cardIds } });
 
-        depositsCount.push(depositCount);
-      }
-      depositCount.count++;
-      return depositsCount;
-    }, depositsCount);
+  for (const card of cards) {
+    const cardTypeCount = cardTypesCount.find(t => t.slug === card.slug);
+    if (cardTypesCount) {
+      cardTypeCount.count++;
+    } else {
+      cardTypesCount.push({
+        slug: card.slug,
+        title: card.title,
+        price: card.price,
+        count: 1
+      });
+    }
+  }
+
+  for (const cardPayment of payments.filter(p => p.attach.match(/^card /))) {
+    const paymentAttach = cardPayment.attach.split(" ");
+    const cardId = paymentAttach[1];
+    await Card.findOne({ _id: cardId });
+  }
 
   const dailyCustomers = await Booking.aggregate([
     { $match: { date: { $gte: dateRangeStartStr, $lte: dateStr } } },
@@ -336,12 +339,12 @@ export default async (
     kidsCount,
     paidAmount,
     partyAmount,
-    depositAmount,
+    cardAmount,
     socksCount,
     socksAmount,
     paidAmountByGateways,
     couponsCount,
-    depositsCount,
+    cardTypesCount,
     dailyCustomers,
     dailyBookingPayment,
     dailyDepositPayment

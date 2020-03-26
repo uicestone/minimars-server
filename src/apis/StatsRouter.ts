@@ -54,12 +54,16 @@ export default router => {
         .line(`儿童数：${stats.kidsCount}`)
         .line(`袜子数：${stats.socksCount}`)
         .line(`门票收入：${stats.paidAmount - stats.socksAmount}`)
-        .line(`充值收入：${stats.depositAmount}`)
+        .line(`售卡收入：${stats.cardTypesCount}`)
         .line(`收款方式：`)
-        .line(`- 余额：${stats.paidAmountByGateways[Gateways.Balance] || 0}`)
-        .line(`- 扫码：${stats.paidAmountByGateways[Gateways.Scan] || 0}`)
-        .line(`- 现金：${stats.paidAmountByGateways[Gateways.Cash] || 0}`)
-        .line(`- 刷卡：${stats.paidAmountByGateways[Gateways.Card] || 0}`);
+        .line(
+          `- 余额：${stats.paidAmountByGateways[PaymentGateway.Balance] || 0}`
+        )
+        .line(`- 扫码：${stats.paidAmountByGateways[PaymentGateway.Scan] || 0}`)
+        .line(`- 现金：${stats.paidAmountByGateways[PaymentGateway.Cash] || 0}`)
+        .line(
+          `- 刷卡：${stats.paidAmountByGateways[PaymentGateway.Card] || 0}`
+        );
 
       encoder.line(`优惠人数：`);
       if (stats.couponsCount.length) {
@@ -70,11 +74,11 @@ export default router => {
         encoder.line("- 无");
       }
 
-      encoder.line(`充值开卡：`);
-      if (stats.depositsCount.length) {
-        stats.depositsCount.forEach(depositCount => {
+      encoder.line(`充值售卡：`);
+      if (stats.cardTypesCount.length) {
+        stats.cardTypesCount.forEach(depositCount => {
           encoder.line(
-            `- ${depositCount.desc}（${depositCount.price}）：${depositCount.count}`
+            `- ${depositCount.title}（${depositCount.price}）：${depositCount.count}`
           );
         });
       } else {
