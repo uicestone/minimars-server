@@ -15,15 +15,16 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
-        if (!["admin", "manager"].includes(req.user.role)) {
-          throw new HttpError(403);
-        }
         const queryParams = req.query as PaymentQuery;
         const { limit, skip } = req.pagination;
         const query = Payment.find();
         const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
+
+        if (req.user.role === "customer") {
+          query.find({ customer: req.user });
+        }
 
         if (queryParams.date) {
           const startOfDay = moment(queryParams.date).startOf("day");
