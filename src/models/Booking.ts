@@ -159,9 +159,9 @@ Booking.methods.calculatePrice = async function() {
       return;
       // throw new Error("invalid_event");
     }
-    booking.priceInPoints = event.priceInPoints;
+    booking.priceInPoints = event.priceInPoints * booking.kidsCount;
     if (event.price) {
-      booking.price = event.price;
+      booking.price = event.price * booking.kidsCount;
     }
   }
 };
