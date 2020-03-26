@@ -4,7 +4,7 @@ import HttpError from "../utils/HttpError";
 import EscPosEncoder from "esc-pos-encoder-canvas";
 import User from "../models/User";
 import getStats from "../utils/getStats";
-import { Gateways } from "../models/Payment";
+import { PaymentGateway } from "../models/Payment";
 import { Image } from "canvas";
 import XlsxPopulate from "xlsx-populate";
 

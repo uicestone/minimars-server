@@ -12,7 +12,7 @@ import User from "../models/User";
 import Store from "../models/Store";
 import EscPosEncoder from "esc-pos-encoder-canvas";
 import { Image } from "canvas";
-import Payment, { gatewayNames, Gateways } from "../models/Payment";
+import Payment, { gatewayNames, PaymentGateway } from "../models/Payment";
 import { config } from "../models/Config";
 import stringWidth from "string-width";
 import {
@@ -125,7 +125,7 @@ export default router => {
           await booking.createPayment({
             paymentGateway:
               query.paymentGateway ||
-              (req.ua.isWechat ? Gateways.WechatPay : undefined),
+              (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
             useBalance: query.useBalance !== "false",
             adminAddWithoutPayment:
               req.user.role === "admin" && query.adminAddWithoutPayment

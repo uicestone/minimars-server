@@ -10,7 +10,7 @@ import {
   CardQuery,
   CardPostQuery
 } from "./interfaces";
-import { Gateways } from "../models/Payment";
+import { PaymentGateway } from "../models/Payment";
 import User from "../models/User";
 
 export default router => {
@@ -45,7 +45,7 @@ export default router => {
           await card.createPayment({
             paymentGateway:
               query.paymentGateway ||
-              (req.ua.isWechat ? Gateways.WechatPay : undefined),
+              (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
             adminAddWithoutPayment:
               req.user.role === "admin" && query.adminAddWithoutPayment
           });

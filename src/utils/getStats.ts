@@ -1,7 +1,7 @@
 import moment from "moment";
 import { config } from "../models/Config";
 import Booking, { paidBookingStatus, BookingStatus } from "../models/Booking";
-import Payment, { Gateways } from "../models/Payment";
+import Payment, { PaymentGateway } from "../models/Payment";
 
 export default async (
   dateInput?: string | Date,
@@ -88,7 +88,7 @@ export default async (
       if (!amountByGateways[payment.gateway]) {
         amountByGateways[payment.gateway] = 0;
       }
-      if (payment.gateway === Gateways.Balance) {
+      if (payment.gateway === PaymentGateway.Balance) {
         amountByGateways[payment.gateway] += payment.amountDeposit;
       } else {
         amountByGateways[payment.gateway] += payment.amount;

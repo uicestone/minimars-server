@@ -30,7 +30,7 @@ Payment.plugin(updateTimes);
 
 Payment.virtual("payArgs").get(function() {
   const payment = this as IPayment;
-  if (payment.gateway === Gateways.WechatPay && !payment.paid) {
+  if (payment.gateway === PaymentGateway.WechatPay && !payment.paid) {
     if (
       !payment.gatewayData ||
       !payment.gatewayData.nonce_str ||
@@ -116,7 +116,7 @@ Payment.pre("save", async function(next) {
   const customer = payment.customer;
 
   switch (payment.gateway) {
-    case Gateways.WechatPay:
+    case PaymentGateway.WechatPay:
       if (payment.gatewayData) return next();
       await payment.populate("customer").execPopulate();
       if (!payment.customer.openid) {
@@ -130,7 +130,7 @@ Payment.pre("save", async function(next) {
         payment.attach
       );
       break;
-    case Gateways.Balance:
+    case PaymentGateway.Balance:
       if (customer.balance < payment.amount) {
         throw new Error("insufficient_balance");
       }
@@ -177,7 +177,7 @@ Payment.pre("save", async function(next) {
       // we need to change booking status manually after balance payment
       await customer.save();
       break;
-    case Gateways.Card:
+    case PaymentGateway.Card:
       if (
         !payment.gatewayData ||
         !payment.gatewayData.bookingId ||
@@ -207,11 +207,11 @@ Payment.pre("save", async function(next) {
       }
 
       break;
-    case Gateways.Scan:
+    case PaymentGateway.Scan:
       break;
-    case Gateways.Cash:
+    case PaymentGateway.Cash:
       break;
-    case Gateways.Points:
+    case PaymentGateway.Points:
       if (payment.amountInPoints > customer.points) {
         throw new Error("insufficient_points");
       }
@@ -234,13 +234,13 @@ export interface IPayment extends mongoose.Document {
   paid: boolean;
   title: string;
   attach: string;
-  gateway: Gateways;
+  gateway: PaymentGateway;
   gatewayData?: { [key: string]: any };
   original?: string;
   paidSuccess: () => Promise<IPayment>;
 }
 
-export enum Gateways {
+export enum PaymentGateway {
   Balance = "balance",
   Points = "points",
   Card = "card",
@@ -253,15 +253,15 @@ export enum Gateways {
 }
 
 export const gatewayNames = {
-  [Gateways.Balance]: "账户余额",
-  [Gateways.Points]: "账户积分",
-  [Gateways.Coupon]: "团购优惠券",
-  [Gateways.Scan]: "现场扫码",
-  [Gateways.Card]: "会员卡",
-  [Gateways.Cash]: "现场现金",
-  [Gateways.WechatPay]: "微信小程序",
-  [Gateways.Alipay]: "支付宝",
-  [Gateways.UnionPay]: "银联"
+  [PaymentGateway.Balance]: "账户余额",
+  [PaymentGateway.Points]: "账户积分",
+  [PaymentGateway.Coupon]: "团购优惠券",
+  [PaymentGateway.Scan]: "现场扫码",
+  [PaymentGateway.Card]: "会员卡",
+  [PaymentGateway.Cash]: "现场现金",
+  [PaymentGateway.WechatPay]: "微信小程序",
+  [PaymentGateway.Alipay]: "支付宝",
+  [PaymentGateway.UnionPay]: "银联"
 };
 
 export default mongoose.model<IPayment>("Payment", Payment);

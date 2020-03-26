@@ -6,7 +6,7 @@ import HttpError from "../utils/HttpError";
 import { utils } from "@sigodenjs/wechatpay";
 import { signToken } from "../utils/helper";
 import Payment from "../models/Payment";
-import { CardStatuses } from "../models/Card";
+import { CardStatus } from "../models/Card";
 
 export default (router: Router) => {
   router.route("/wechat/login").post(
@@ -21,7 +21,7 @@ export default (router: Router) => {
         { upsert: true, new: true }
       ).populate({
         path: "cards",
-        match: { status: { $ne: CardStatuses.PENDING } },
+        match: { status: { $ne: CardStatus.PENDING } },
         options: { sort: { _id: -1 } },
         select: "-payments"
       });
@@ -65,7 +65,7 @@ export default (router: Router) => {
         { upsert: true, new: true }
       ).populate({
         path: "cards",
-        match: { status: { $ne: CardStatuses.PENDING } },
+        match: { status: { $ne: CardStatus.PENDING } },
         options: { sort: { _id: -1 } },
         select: "-payments"
       });

@@ -2,12 +2,12 @@ import mongoose, { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
 import { IUser } from "./User";
 import { IStore } from "./Store";
-import Payment, { IPayment, Gateways } from "./Payment";
+import Payment, { IPayment, PaymentGateway } from "./Payment";
 import autoPopulate from "./plugins/autoPopulate";
 
 const { DEBUG } = process.env;
 
-export enum CardStatuses {
+export enum CardStatus {
   PENDING = "pending", // pending payment for the card
   VALID = "valid", // paid gift card before activated
   ACTIVATED = "activated", // paid non-gift card / activated gift card
@@ -20,8 +20,8 @@ const Card = new Schema({
   num: { type: String },
   status: {
     type: String,
-    enum: Object.values(CardStatuses),
-    default: CardStatuses.PENDING
+    enum: Object.values(CardStatus),
+    default: CardStatus.PENDING
   },
   payments: [{ type: Schema.Types.ObjectId, ref: "Payment" }],
   title: { type: String, required: true },
@@ -58,7 +58,7 @@ Card.set("toJSON", {
 
 Card.methods.createPayment = async function(
   { paymentGateway, adminAddWithoutPayment = false } = {
-    paymentGateway: Gateways
+    paymentGateway: PaymentGateway
   }
 ) {
   const card = this as ICard;
@@ -70,7 +70,7 @@ Card.methods.createPayment = async function(
   const title = `${card.title}`;
 
   if (adminAddWithoutPayment) {
-    card.status = card.isGift ? CardStatuses.VALID : CardStatuses.ACTIVATED;
+    card.status = card.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
   } else {
     const payment = new Payment({
       customer: card.customer,
@@ -93,7 +93,7 @@ Card.methods.createPayment = async function(
 
 Card.methods.paymentSuccess = async function() {
   const card = this as ICard;
-  card.status = card.isGift ? CardStatuses.VALID : CardStatuses.ACTIVATED;
+  card.status = card.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
   await card.save();
   // send user notification
 };
@@ -102,7 +102,7 @@ export interface ICard extends mongoose.Document {
   customer: IUser;
   timesLeft: number;
   num?: string;
-  status: CardStatuses;
+  status: CardStatus;
   payments?: IPayment[];
   title: string;
   slug: string;
@@ -119,7 +119,7 @@ export interface ICard extends mongoose.Document {
   freeParentsPerKid: number;
   createPayment: (
     Object: {
-      paymentGateway?: Gateways;
+      paymentGateway?: PaymentGateway;
       adminAddWithoutPayment?: boolean;
     },
     amount?: number

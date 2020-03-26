@@ -1,5 +1,5 @@
 import { IBooking } from "../models/Booking";
-import { Gateways, IPayment } from "../models/Payment";
+import { PaymentGateway, IPayment } from "../models/Payment";
 import { ICard } from "../models/Card";
 import { ICardType } from "../models/CardType";
 import { IEvent } from "../models/Event";
@@ -30,7 +30,7 @@ export interface BookingPostBody extends IBooking {}
 export interface BookingPutBody extends IBooking {}
 
 export interface BookingPostQuery {
-  paymentGateway?: Gateways;
+  paymentGateway?: PaymentGateway;
   useBalance?: "false";
   adminAddWithoutPayment?: boolean;
 }
@@ -57,7 +57,7 @@ export interface CardPostBody extends ICard {}
 export interface CardPutBody extends ICard {}
 
 export interface CardPostQuery {
-  paymentGateway?: Gateways;
+  paymentGateway?: PaymentGateway;
   adminAddWithoutPayment?: boolean;
 }
 
@@ -94,7 +94,7 @@ export interface PaymentQuery extends ListQuery {
   paid?: "false";
   customer?: IUser;
   attach?: string;
-  gateway?: Gateways;
+  gateway?: PaymentGateway;
   direction?: "payment" | "refund";
 }
 

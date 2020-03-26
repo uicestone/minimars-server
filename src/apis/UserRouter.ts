@@ -5,7 +5,7 @@ import HttpError from "../utils/HttpError";
 import User, { IUser } from "../models/User";
 import { hashPwd } from "../utils/helper";
 import { config } from "../models/Config";
-import Payment, { Gateways } from "../models/Payment";
+import Payment, { PaymentGateway } from "../models/Payment";
 import idCard from "idcard";
 import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
 
@@ -306,7 +306,7 @@ export default router => {
         amount: DEBUG ? level.price / 1e4 : level.price,
         title: `${level.desc}`,
         attach: `deposit ${customer.id} ${level.slug}`,
-        gateway: req.query.paymentGateway || Gateways.WechatPay // TODO more payment options
+        gateway: req.query.paymentGateway || PaymentGateway.WechatPay // TODO more payment options
       });
 
       try {

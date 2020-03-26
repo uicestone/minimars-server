@@ -3,7 +3,7 @@ import moment from "moment";
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { config } from "../models/Config";
-import Payment, { IPayment, Gateways } from "./Payment";
+import Payment, { IPayment, PaymentGateway } from "./Payment";
 import { IUser } from "./User";
 import { IStore } from "./Store";
 import { ICard } from "./Card";
@@ -169,7 +169,7 @@ Booking.methods.calculatePrice = async function() {
 
 Booking.methods.createPayment = async function(
   { paymentGateway, useBalance = true, adminAddWithoutPayment = false } = {
-    paymentGateway: Gateways
+    paymentGateway: PaymentGateway
   },
   amount?: number
 ) {
@@ -193,7 +193,7 @@ Booking.methods.createPayment = async function(
       amount: (booking.card.price / booking.card.times) * booking.kidsCount,
       title,
       attach,
-      gateway: Gateways.Card,
+      gateway: PaymentGateway.Card,
       gatewayData: {
         cardId: booking.card.id,
         bookingId: booking.id,
@@ -217,7 +217,7 @@ Booking.methods.createPayment = async function(
       amountForceDeposit: booking.socksCount * config.sockPrice,
       title,
       attach,
-      gateway: Gateways.Balance
+      gateway: PaymentGateway.Balance
     });
 
     await balancePayment.save();
@@ -303,13 +303,13 @@ Booking.methods.createRefundPayment = async function() {
 
   const balanceAndCardPayments = booking.payments.filter(
     p =>
-      [Gateways.Balance, Gateways.Card].includes(p.gateway) &&
+      [PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
       p.amount > 0 &&
       p.paid
   );
   const extraPayments = booking.payments.filter(
     p =>
-      ![Gateways.Balance, Gateways.Card].includes(p.gateway) &&
+      ![PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
       p.amount > 0 &&
       p.paid
   );
@@ -328,7 +328,7 @@ Booking.methods.createRefundPayment = async function() {
       gatewayData: p.gatewayData,
       original: p.id
     });
-    if (p.gateway === Gateways.Card) {
+    if (p.gateway === PaymentGateway.Card) {
       p.gatewayData.cardRefund = true;
     }
     await refundPayment.save();
@@ -436,7 +436,7 @@ export interface IBooking extends mongoose.Document {
   calculatePrice: () => Promise<IBooking>;
   createPayment: (
     Object: {
-      paymentGateway?: Gateways;
+      paymentGateway?: PaymentGateway;
       useBalance?: boolean;
       adminAddWithoutPayment?: boolean;
     },
