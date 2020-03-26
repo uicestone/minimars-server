@@ -36,12 +36,14 @@ export interface BookingPostQuery {
 }
 
 export interface BookingQuery extends ListQuery {
-  status?: string;
+  status?: string; // support comma separated values
   customerKeyword?: string;
   type?: string;
   store?: string;
   date?: string;
   customer?: string;
+  event?: string;
+  gift?: string;
   coupon?: string;
 }
 
@@ -62,6 +64,7 @@ export interface CardPostQuery {
 }
 
 export interface CardQuery extends ListQuery {
+  status?: string; // support comma separated values
   customer?: string;
 }
 

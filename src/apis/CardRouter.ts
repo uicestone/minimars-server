@@ -2,7 +2,7 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Card, { ICard } from "../models/Card";
+import Card, { ICard, CardStatus } from "../models/Card";
 import CardType from "../models/CardType";
 import {
   CardPostBody,
@@ -84,6 +84,14 @@ export default router => {
             query.find({ [field]: queryParams[field] });
           }
         });
+
+        if (queryParams.status) {
+          query.find({
+            status: {
+              $in: queryParams.status.split(",") as CardStatus[]
+            }
+          });
+        }
 
         let total = await query.countDocuments();
         const page = await query

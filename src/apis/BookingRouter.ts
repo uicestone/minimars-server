@@ -169,11 +169,13 @@ export default router => {
           query.find({ customer: req.user._id });
         }
 
-        ["type", "store", "date", "customer"].forEach(field => {
-          if (queryParams[field]) {
-            query.find({ [field]: queryParams[field] });
+        ["type", "store", "date", "customer", "event", "gift"].forEach(
+          field => {
+            if (queryParams[field]) {
+              query.find({ [field]: queryParams[field] });
+            }
           }
-        });
+        );
 
         if (queryParams.status) {
           query.find({
