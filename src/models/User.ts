@@ -80,6 +80,9 @@ User.pre("validate", function(next) {
       user[field] = +user[field].toFixed(2);
     }
   });
+  if (user.role === "customer" && user.points === undefined) {
+    user.points = 0;
+  }
   next();
 });
 

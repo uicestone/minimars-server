@@ -80,13 +80,17 @@ export interface EventPutBody extends IEvent {}
 
 export interface EventQuery extends ListQuery {
   keyword?: string;
+  store?: string;
 }
 
 export interface GiftPostBody extends IGift {}
 
 export interface GiftPutBody extends IGift {}
 
-export interface GiftQuery extends ListQuery {}
+export interface GiftQuery extends ListQuery {
+  keyword?: string;
+  store?: string;
+}
 
 export interface PaymentPostBody extends IPayment {}
 

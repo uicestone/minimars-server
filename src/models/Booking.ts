@@ -78,7 +78,9 @@ Booking.plugin(autoPopulate, [
   { path: "customer", select: "name avatarUrl mobile" },
   { path: "store", select: "name" },
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
-  { path: "card" }
+  { path: "card" },
+  { path: "event" },
+  { path: "gift" }
 ]);
 Booking.plugin(updateTimes);
 
@@ -163,6 +165,19 @@ Booking.methods.calculatePrice = async function() {
     booking.priceInPoints = event.priceInPoints * booking.kidsCount;
     if (event.price) {
       booking.price = event.price * booking.kidsCount;
+    }
+  } else if (booking.type === "gift") {
+    if (!booking.populated("gift")) {
+      await booking.populate("gift").execPopulate();
+    }
+    const gift = booking.gift;
+    if (!gift) {
+      return;
+      // throw new Error("invalid_gift");
+    }
+    booking.priceInPoints = gift.priceInPoints * booking.quantity;
+    if (gift.price) {
+      booking.price = gift.price * booking.quantity;
     }
   }
 };
@@ -260,15 +275,28 @@ Booking.methods.createPayment = async function(
     });
 
     try {
-      if (!booking.populated("event")) {
-        await booking.populate("event").execPopulate();
-      }
-      if (!booking.event) {
-        throw new Error("invalid_event");
-      }
-      if (booking.event.kidsCountMax) {
-        booking.event.kidsCountLeft -= booking.kidsCount;
-        await booking.event.save();
+      if (booking.type === "event") {
+        if (!booking.populated("event")) {
+          await booking.populate("event").execPopulate();
+        }
+        if (!booking.event) {
+          throw new Error("invalid_event");
+        }
+        if (booking.event.kidsCountMax) {
+          booking.event.kidsCountLeft -= booking.kidsCount;
+          await booking.event.save();
+        }
+      } else if (booking.type === "gift") {
+        if (!booking.populated("gift")) {
+          await booking.populate("gift").execPopulate();
+        }
+        if (!booking.gift) {
+          throw new Error("invalid_gift");
+        }
+        if (booking.gift.quantity) {
+          booking.gift.quantity -= booking.quantity;
+          await booking.gift.save();
+        }
       }
       booking.status = BookingStatus.BOOKED;
       await pointsPayment.save();

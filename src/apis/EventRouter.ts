@@ -34,6 +34,12 @@ export default router => {
           query.find({ title: new RegExp(queryParams.keyword, "i") });
         }
 
+        ["store"].forEach(field => {
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
+          }
+        });
+
         let total = await query.countDocuments();
         const page = await query
           .find()
