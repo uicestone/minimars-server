@@ -279,11 +279,11 @@ export default async (
     }
   ]);
 
-  const dailyDepositPayment = await Payment.aggregate([
+  const dailyCardPayment = await Payment.aggregate([
     {
       $match: {
         createdAt: { $gte: startOfDateRange, $lte: endOfDay },
-        attach: { $regex: /^deposit / },
+        attach: { $regex: /^card / },
         paid: true
       }
     },
@@ -347,6 +347,6 @@ export default async (
     cardTypesCount,
     dailyCustomers,
     dailyBookingPayment,
-    dailyDepositPayment
+    dailyCardPayment
   };
 };
