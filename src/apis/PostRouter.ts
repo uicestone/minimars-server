@@ -24,9 +24,6 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
-        if (req.user.role !== "admin") {
-          throw new HttpError(403);
-        }
         const queryParams = req.query as PostQuery;
         const { limit, skip } = req.pagination;
         const query = Post.find().populate("customer");
