@@ -148,7 +148,7 @@ export default async (
 
   for (const card of cards) {
     const cardTypeCount = cardTypesCount.find(t => t.slug === card.slug);
-    if (cardTypesCount) {
+    if (cardTypeCount) {
       cardTypeCount.count++;
     } else {
       cardTypesCount.push({
