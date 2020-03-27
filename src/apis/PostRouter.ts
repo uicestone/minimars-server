@@ -14,6 +14,9 @@ export default router => {
     // create a post
     .post(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const post = new Post(req.body as PostPostBody);
         post.author = req.user;
         await post.save();
@@ -83,6 +86,9 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const post = req.item;
         post.set(req.body as PostPutBody);
         await post.save();
@@ -93,6 +99,9 @@ export default router => {
     // delete the post with this id
     .delete(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const post = req.item;
         await post.remove();
         res.end();

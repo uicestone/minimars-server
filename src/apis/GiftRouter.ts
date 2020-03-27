@@ -13,6 +13,9 @@ export default router => {
     // create a gift
     .post(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const gift = new Gift(req.body as GiftPostBody);
         await gift.save();
         res.json(gift);
@@ -61,9 +64,6 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        if (req.user.role !== "admin") {
-          throw new HttpError(403);
-        }
         const gift = await Gift.findById(req.params.giftId);
         if (!gift) {
           throw new HttpError(404, `Gift not found: ${req.params.giftId}`);
@@ -83,6 +83,9 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const gift = req.item;
         gift.set(req.body as GiftPutBody);
         await gift.save();
@@ -93,6 +96,9 @@ export default router => {
     // delete the gift with this id
     .delete(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const gift = req.item;
         await gift.remove();
         res.end();

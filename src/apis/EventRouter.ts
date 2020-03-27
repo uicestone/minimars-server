@@ -13,6 +13,9 @@ export default router => {
     // create an event
     .post(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const event = new Event(req.body as EventPostBody);
         await event.save();
         res.json(event);
@@ -80,6 +83,9 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const event = req.item;
         event.set(req.body as EventPutBody);
         await event.save();
@@ -90,6 +96,9 @@ export default router => {
     // delete the event with this id
     .delete(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const event = req.item;
         await event.remove();
         res.end();

@@ -13,6 +13,9 @@ export default router => {
     // create a cardType
     .post(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const cardType = new CardType(req.body);
         await cardType.save();
         res.json(cardType);
@@ -73,6 +76,9 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const cardType = req.item as ICardType;
         const body = req.body as CardTypePutBody;
         if (body.type && body.type !== cardType.type) {
@@ -92,6 +98,9 @@ export default router => {
     // delete the cardType with this id
     .delete(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const cardType = req.item;
         await cardType.remove();
         res.end();
