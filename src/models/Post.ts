@@ -9,6 +9,7 @@ const Post = new Schema({
   tags: { type: [String] },
   content: { type: String },
   posterUrl: { type: String },
+  target: { type: String },
   author: { type: Schema.Types.ObjectId, ref: "User", required: true }
 });
 
@@ -29,6 +30,7 @@ export interface IPost extends mongoose.Document {
   content: string;
   tags: string[];
   posterUrl: string;
+  target?: string;
   author: IUser;
 }
 
