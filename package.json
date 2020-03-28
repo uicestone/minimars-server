@@ -1,6 +1,6 @@
 {
   "name": "minimars-server",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "MINI MARS server apis.",
   "scripts": {
     "dev": "ts-node-dev --no-notify --respawn --transpileOnly src/index.ts",
@@ -13,6 +13,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@sigodenjs/wechatpay": "^2.1.1",
+    "@typegoose/typegoose": "^6.4.0",
     "@types/agenda": "^2.0.6",
     "@types/bcryptjs": "^2.4.2",
     "@types/cors": "^2.8.5",

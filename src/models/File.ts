@@ -1,31 +1,34 @@
-import mongoose, { Schema } from "mongoose";
+import { prop, getModelForClass, plugin } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 
-const File = new Schema({
-  uri: String,
-  thumbnailUrl: String,
-  name: String
-});
+@plugin(updateTimes)
+export class File {
+  @prop()
+  uri: string;
 
-File.virtual("url").get(function() {
-  const uploadBase = process.env.UPLOAD_BASE;
-  if (!uploadBase) return;
-  return uploadBase + this.uri;
-});
+  @prop()
+  thumbnailUrl: string;
 
-File.plugin(updateTimes);
+  @prop()
+  name: string;
 
-File.set("toJSON", {
-  getters: true,
-  transform: function(doc, ret, options) {
-    delete ret._id;
+  get url() {
+    const uploadBase = process.env.UPLOAD_BASE;
+    if (!uploadBase) return;
+    return uploadBase + this.uri;
+  }
+}
+
+const fileModel = getModelForClass(File, {
+  schemaOptions: {
+    toJSON: {
+      getters: true,
+      transform: function(doc, ret, options) {
+        delete ret._id;
+        delete ret.__v;
+      }
+    }
   }
 });
 
-export interface IFile extends mongoose.Document {
-  uri: string;
-  thumbnailUrl: string;
-  name: string;
-}
-
-export default mongoose.model("File", File);
+export default fileModel;

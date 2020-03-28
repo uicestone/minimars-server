@@ -1,37 +1,49 @@
-import mongoose, { Schema } from "mongoose";
+import {
+  prop,
+  getModelForClass,
+  plugin,
+  index,
+  DocumentType
+} from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
-import { IUser } from "./User";
+import { User } from "./User";
 import autoPopulate from "./plugins/autoPopulate";
 
-const Post = new Schema({
-  title: { type: String, required: true },
-  slug: { type: String, unique: true, sparse: true },
-  tags: { type: [String] },
-  content: { type: String },
-  posterUrl: { type: String },
-  target: { type: String },
-  author: { type: Schema.Types.ObjectId, ref: "User", required: true }
-});
+@plugin(updateTimes)
+@plugin(autoPopulate, ["author"])
+export class Post {
+  @prop({ required: true })
+  title: string;
 
-Post.plugin(updateTimes);
-Post.plugin(autoPopulate, ["author"]);
+  @prop({ unique: true, sparse: true })
+  slug?: string;
 
-Post.set("toJSON", {
-  getters: true,
-  transform: function(doc, ret, options) {
-    delete ret._id;
-    delete ret.__v;
+  @prop()
+  content: string;
+
+  @prop()
+  tags: string[];
+
+  @prop({ type: String })
+  posterUrl: string;
+
+  @prop({ type: String })
+  target?: string;
+
+  @prop({ ref: "User", required: true })
+  author: DocumentType<User>;
+}
+
+const postModel = getModelForClass(Post, {
+  schemaOptions: {
+    toJSON: {
+      getters: true,
+      transform: function(doc, ret, options) {
+        delete ret._id;
+        delete ret.__v;
+      }
+    }
   }
 });
 
-export interface IPost extends mongoose.Document {
-  title: string;
-  slug?: string;
-  content: string;
-  tags: string[];
-  posterUrl: string;
-  target?: string;
-  author: IUser;
-}
-
-export default mongoose.model<IPost>("Post", Post);
+export default postModel;

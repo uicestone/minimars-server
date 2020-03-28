@@ -2,7 +2,7 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Card, { ICard, CardStatus } from "../models/Card";
+import Card, { Card as ICard, CardStatus } from "../models/Card";
 import CardType from "../models/CardType";
 import {
   CardPostBody,
@@ -12,6 +12,8 @@ import {
 } from "./interfaces";
 import { PaymentGateway } from "../models/Payment";
 import User from "../models/User";
+import { Types } from "mongoose";
+import { DocumentType } from "@typegoose/typegoose";
 
 export default router => {
   // Card CURD
@@ -31,7 +33,9 @@ export default router => {
           card.customer = req.user;
         }
 
-        const customer = await User.findOne({ _id: card.customer });
+        const customer = await User.findOne({
+          _id: card.customer as Types.ObjectId
+        });
 
         if (!customer) {
           throw new HttpError(400, "Invalid card customer.");
@@ -133,7 +137,7 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
-        const card = req.item as ICard;
+        const card = req.item as DocumentType<ICard>;
         card.set(req.body as CardPutBody);
         await card.save();
         res.json(card);

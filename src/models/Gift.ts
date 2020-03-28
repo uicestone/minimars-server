@@ -1,35 +1,49 @@
-import mongoose, { Schema } from "mongoose";
+import {
+  prop,
+  getModelForClass,
+  plugin,
+  Ref,
+  DocumentType
+} from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
+import { Store } from "./Store";
 
-const Gift = new Schema({
-  title: { type: String, required: true },
-  content: { type: String, default: "" },
-  posterUrl: { type: String, required: true },
-  quantity: { type: Number, default: 0 },
-  priceInPoints: { type: Number, required: true },
-  price: { type: Number },
-  store: { type: Schema.Types.ObjectId, ref: "Store", required: true }
-});
+@plugin(updateTimes)
+@plugin(autoPopulate, ["store"])
+export class Gift {
+  @prop({ required: true })
+  title: string;
 
-Gift.plugin(updateTimes);
-Gift.plugin(autoPopulate, ["store"]);
+  @prop({ default: "" })
+  content: string;
 
-Gift.set("toJSON", {
-  getters: true,
-  transform: function(doc, ret, options) {
-    delete ret._id;
-    delete ret.__v;
+  @prop({ required: true })
+  posterUrl: string;
+
+  @prop({ default: 0 })
+  quantity: number;
+
+  @prop({ required: true })
+  priceInPoints: number;
+
+  @prop()
+  price?: number;
+
+  @prop({ ref: "Store", required: true })
+  store: DocumentType<Store>;
+}
+
+const giftModel = getModelForClass(Gift, {
+  schemaOptions: {
+    toJSON: {
+      getters: true,
+      transform: function(doc, ret, options) {
+        delete ret._id;
+        delete ret.__v;
+      }
+    }
   }
 });
 
-export interface IGift extends mongoose.Document {
-  title: string;
-  content: string;
-  posterUrl: string;
-  quantity: number;
-  priceInPoints: number;
-  price?: number;
-}
-
-export default mongoose.model<IGift>("Gift", Gift);
+export default giftModel;

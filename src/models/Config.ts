@@ -1,31 +1,36 @@
-import mongoose, { Schema } from "mongoose";
+import { prop, getModelForClass, plugin } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 
-const configSchema = new Schema(
-  {
-    desc: String
-  },
-  { strict: false }
-);
+@plugin(updateTimes)
+class ConfigDocument {
+  @prop()
+  desc: string;
 
-configSchema.plugin(updateTimes);
+  @prop()
+  value: any;
 
-configSchema.set("toJSON", {
-  getters: true,
-  transform: function(doc, ret, options) {
-    delete ret._id;
-    delete ret.__v;
+  public static async get(key: string, defaults: any) {
+    const doc = await configModel.findOne({ key });
+    return doc ? doc.value : defaults;
+  }
+}
+
+const configModel = getModelForClass(ConfigDocument, {
+  schemaOptions: {
+    strict: false,
+    toJSON: {
+      getters: true,
+      transform: function(doc, ret, options) {
+        delete ret._id;
+        delete ret.__v;
+      }
+    }
   }
 });
 
-configSchema.statics.get = async function(key, defaults) {
-  const doc = await this.findOne({ key });
-  return doc ? doc.value : defaults;
-};
+export default configModel;
 
-export default mongoose.model("Config", configSchema);
-
-export interface IConfig {
+export class Config {
   depositLevels?: {
     slug: string;
     desc: string;
@@ -57,4 +62,4 @@ export interface IConfig {
   }[];
 }
 
-export const config: IConfig = {};
+export const config: Config = {};

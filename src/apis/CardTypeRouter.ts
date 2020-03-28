@@ -2,8 +2,9 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import CardType, { ICardType } from "../models/CardType";
+import CardType, { CardType as ICardType } from "../models/CardType";
 import { EventQuery, CardTypeQuery, CardTypePutBody } from "./interfaces";
+import { DocumentType } from "@typegoose/typegoose";
 
 export default router => {
   // CardType CURD
@@ -79,7 +80,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const cardType = req.item as ICardType;
+        const cardType = req.item as DocumentType<ICardType>;
         const body = req.body as CardTypePutBody;
         if (body.type && body.type !== cardType.type) {
           cardType.set({

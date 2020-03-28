@@ -2,8 +2,9 @@ import multer, { diskStorage } from "multer";
 import { createHash } from "crypto";
 import { renameSync } from "fs";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
-import File, { IFile } from "../models/File";
+import File, { File as IFile } from "../models/File";
 import HttpError from "../utils/HttpError";
+import { DocumentType } from "@typegoose/typegoose";
 
 const storage = diskStorage({
   destination: function(req, file, cb) {
@@ -43,7 +44,7 @@ export default router => {
           req.file.destination + req.file.hashedFullName
         );
         const fileUriPrefix = "uploads/" + req.file.hashedFullName;
-        const file = new File() as IFile;
+        const file = new File() as DocumentType<IFile>;
         file.name = req.file.originalname;
         file.uri = fileUriPrefix;
         await file.save();

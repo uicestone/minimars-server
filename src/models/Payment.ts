@@ -1,104 +1,23 @@
-import mongoose, { Schema } from "mongoose";
+import {
+  prop,
+  getModelForClass,
+  plugin,
+  pre,
+  Ref,
+  DocumentType
+} from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
-import User, { IUser } from "./User";
+import { User } from "./User";
 import Booking from "./Booking";
 import {
   unifiedOrder as wechatUnifiedOrder,
   payArgs as wechatPayArgs
 } from "../utils/wechat";
-import Card from "./Card";
+import cardModel, { Card } from "./Card";
 
-const Payment = new Schema({
-  customer: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  amount: { type: Number, required: true },
-  amountForceDeposit: { type: Number },
-  amountDeposit: { type: Number },
-  amountInPoints: { type: Number },
-  paid: { type: Boolean, default: false },
-  title: { type: String, default: " " },
-  attach: { type: String },
-  gateway: { type: String, required: true },
-  gatewayData: Object,
-  original: { type: Schema.Types.ObjectId }
-});
-
-Payment.plugin(autoPopulate, [
-  { path: "customer", select: "name avatarUrl mobile" }
-]);
-Payment.plugin(updateTimes);
-
-Payment.virtual("payArgs").get(function() {
-  const payment = this as IPayment;
-  if (payment.gateway === PaymentGateway.WechatPay && !payment.paid) {
-    if (
-      !payment.gatewayData ||
-      !payment.gatewayData.nonce_str ||
-      !payment.gatewayData.prepay_id
-    ) {
-      if (payment.isNew) return;
-      else throw new Error(`incomplete_gateway_data`);
-    }
-    const wechatGatewayData = payment.gatewayData as {
-      nonce_str: string;
-      prepay_id: string;
-    };
-    return wechatPayArgs(wechatGatewayData);
-  }
-});
-
-Payment.set("toJSON", {
-  getters: true,
-  transform: function(doc, ret, options) {
-    delete ret._id;
-    delete ret.__v;
-  }
-});
-
-Payment.methods.paidSuccess = async function() {
-  const payment = this as IPayment;
-
-  const paymentAttach = payment.attach.split(" ");
-
-  switch (paymentAttach[0]) {
-    case "booking":
-      const booking = await Booking.findOne({ _id: paymentAttach[1] });
-      if (payment.amount >= 0) {
-        await booking.paymentSuccess();
-        console.log(`[PAY] Booking payment success, id: ${booking._id}.`);
-      } else {
-        await booking.refundSuccess();
-        console.log(`[PAY] Booking refund success, id: ${booking._id}.`);
-      }
-      break;
-    case "card":
-      const card = await Card.findOne({ _id: paymentAttach[1] });
-      await card.paymentSuccess();
-      console.log(`[PAY] Card purchase success, id: ${card._id}.`);
-      break;
-    case "deposit":
-      const depositUser = await User.findOne({ _id: paymentAttach[1] });
-      await depositUser.depositSuccess(paymentAttach[2]);
-      console.log(`[PAY] User deposit success, id: ${depositUser._id}.`);
-      break;
-    case "membership":
-      const membershipUser = await User.findOne({
-        _id: paymentAttach[1]
-      });
-      await membershipUser.membershipUpgradeSuccess(paymentAttach[2]);
-      console.log(
-        `[PAY] User membership upgrade success, id: ${membershipUser._id}.`
-      );
-      break;
-    default:
-      console.error(
-        `[PAY] Unknown payment attach: ${JSON.stringify(payment.attach)}`
-      );
-  }
-};
-
-Payment.pre("save", async function(next) {
-  const payment = this as IPayment;
+@pre("save", async function(next) {
+  const payment = this as DocumentType<Payment>;
 
   if (!payment.isModified("paid") && !payment.isNew) {
     return next();
@@ -113,19 +32,19 @@ Payment.pre("save", async function(next) {
 
   await payment.populate("customer").execPopulate();
 
-  const customer = payment.customer;
+  const customer = payment.customer as DocumentType<User>;
 
   switch (payment.gateway) {
     case PaymentGateway.WechatPay:
       if (payment.gatewayData) return next();
       await payment.populate("customer").execPopulate();
-      if (!payment.customer.openid) {
+      if (!customer.openid) {
         throw new Error("no_customer_openid");
       }
       payment.gatewayData = await wechatUnifiedOrder(
         payment._id.toString(),
         payment.amount,
-        payment.customer.openid,
+        customer.openid,
         payment.title,
         payment.attach
       );
@@ -186,7 +105,7 @@ Payment.pre("save", async function(next) {
       ) {
         throw new Error("invalid_card_payment_gateway_data");
       }
-      const card = await Card.findOne({ _id: payment.gatewayData.cardId });
+      const card = await cardModel.findOne({ _id: payment.gatewayData.cardId });
 
       if (payment.gatewayData.cardRefund) {
         card.timesLeft += payment.gatewayData.times;
@@ -223,21 +142,88 @@ Payment.pre("save", async function(next) {
       throw new Error("unsupported_payment_gateway");
   }
   next();
-});
+})
+@plugin(autoPopulate, [{ path: "customer", select: "name avatarUrl mobile" }])
+@plugin(updateTimes)
+export class Payment {
+  @prop({ ref: "User", required: true })
+  customer: DocumentType<User>;
 
-export interface IPayment extends mongoose.Document {
-  customer: IUser;
+  @prop({ required: true })
   amount: number;
+
+  @prop()
   amountForceDeposit?: number;
+
+  @prop()
   amountDeposit?: number;
+
+  @prop()
   amountInPoints?: number;
+
+  @prop({ default: false })
   paid: boolean;
+
+  @prop({ default: " " })
   title: string;
+
+  @prop({ type: String })
   attach: string;
+
+  @prop({ required: true })
   gateway: PaymentGateway;
-  gatewayData?: { [key: string]: any };
+
+  @prop()
+  gatewayData: { [key: string]: any };
+
+  @prop()
   original?: string;
-  paidSuccess: () => Promise<IPayment>;
+
+  get payArgs(this: DocumentType<Payment>) {
+    const payment = this;
+    if (payment.gateway === PaymentGateway.WechatPay && !payment.paid) {
+      if (
+        !payment.gatewayData ||
+        !payment.gatewayData.nonce_str ||
+        !payment.gatewayData.prepay_id
+      ) {
+        if (payment.isNew) return;
+        else throw new Error(`incomplete_gateway_data`);
+      }
+      const wechatGatewayData = payment.gatewayData as {
+        nonce_str: string;
+        prepay_id: string;
+      };
+      return wechatPayArgs(wechatGatewayData);
+    }
+  }
+  async paidSuccess(this: DocumentType<Payment>) {
+    const payment = this;
+
+    const paymentAttach = payment.attach.split(" ");
+
+    switch (paymentAttach[0]) {
+      case "booking":
+        const booking = await Booking.findOne({ _id: paymentAttach[1] });
+        if (payment.amount >= 0) {
+          await booking.paymentSuccess();
+          console.log(`[PAY] Booking payment success, id: ${booking._id}.`);
+        } else {
+          await booking.refundSuccess();
+          console.log(`[PAY] Booking refund success, id: ${booking._id}.`);
+        }
+        break;
+      case "card":
+        const card = await cardModel.findOne({ _id: paymentAttach[1] });
+        await card.paymentSuccess();
+        console.log(`[PAY] Card purchase success, id: ${card._id}.`);
+        break;
+      default:
+        console.error(
+          `[PAY] Unknown payment attach: ${JSON.stringify(payment.attach)}`
+        );
+    }
+  }
 }
 
 export enum PaymentGateway {
@@ -264,4 +250,16 @@ export const gatewayNames = {
   [PaymentGateway.UnionPay]: "银联"
 };
 
-export default mongoose.model<IPayment>("Payment", Payment);
+const paymentModel = getModelForClass(Payment, {
+  schemaOptions: {
+    toJSON: {
+      getters: true,
+      transform: function(doc, ret, options) {
+        delete ret._id;
+        delete ret.__v;
+      }
+    }
+  }
+});
+
+export default paymentModel;

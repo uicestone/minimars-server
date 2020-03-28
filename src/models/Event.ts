@@ -1,42 +1,18 @@
-import mongoose, { Schema } from "mongoose";
+import {
+  prop,
+  getModelForClass,
+  plugin,
+  pre,
+  Ref,
+  DocumentType
+} from "@typegoose/typegoose";
+import { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
-import { IStore } from "./Store";
+import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 
-const Event = new Schema({
-  title: { type: String, required: true },
-  content: { type: String },
-  posterUrl: { type: String, required: true },
-  kidsCountMax: {
-    type: Schema.Types.Mixed,
-    default: null,
-    set(v) {
-      if (!v) {
-        return null;
-      } else return +v;
-    }
-  },
-  kidsCountLeft: { type: Number },
-  props: { type: Object },
-  priceInPoints: { type: Number, required: true },
-  price: { type: Number },
-  date: { type: Date, required: true },
-  store: { type: Schema.Types.ObjectId, ref: "Store", required: true }
-});
-
-Event.plugin(updateTimes);
-Event.plugin(autoPopulate, ["store"]);
-
-Event.set("toJSON", {
-  getters: true,
-  transform: function(doc, ret, options) {
-    delete ret._id;
-    delete ret.__v;
-  }
-});
-
-Event.pre("validate", function(next) {
-  const event = this as IEvent;
+@pre("validate", function(next) {
+  const event = this as DocumentType<Event>;
   if (
     event.kidsCountMax !== null &&
     (event.kidsCountLeft === null || event.kidsCountLeft === undefined)
@@ -47,19 +23,60 @@ Event.pre("validate", function(next) {
     event.kidsCountLeft = null;
   }
   next();
-});
-
-export interface IEvent extends mongoose.Document {
+})
+@plugin(updateTimes)
+@plugin(autoPopulate, ["store"])
+export class Event {
+  @prop({ required: true })
   title: string;
+
+  @prop()
   content?: string;
+
+  @prop({ required: true })
   posterUrl: string;
+
+  @prop({
+    type: Schema.Types.Mixed,
+    default: null,
+    get: v => v,
+    set(v) {
+      if (!v) {
+        return null;
+      } else return +v;
+    }
+  })
   kidsCountMax: number | null;
+
+  @prop()
   kidsCountLeft: number | null;
+
+  @prop({ type: Object })
   props?: Object;
+
+  @prop({ required: true })
   priceInPoints: number;
+
+  @prop()
   price?: number;
+
+  @prop({ type: Date, required: true })
   date: Date;
-  store: IStore;
+
+  @prop({ ref: "Store", required: true })
+  store: DocumentType<Store>;
 }
 
-export default mongoose.model<IEvent>("Event", Event);
+const eventModel = getModelForClass(Event, {
+  schemaOptions: {
+    toJSON: {
+      getters: true,
+      transform: function(doc, ret, options) {
+        delete ret._id;
+        delete ret.__v;
+      }
+    }
+  }
+});
+
+export default eventModel;

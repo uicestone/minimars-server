@@ -1,12 +1,12 @@
-import { IBooking } from "../models/Booking";
-import { PaymentGateway, IPayment } from "../models/Payment";
-import { ICard } from "../models/Card";
-import { ICardType } from "../models/CardType";
-import { IEvent } from "../models/Event";
-import { IGift } from "../models/Gift";
-import { IPost } from "../models/Post";
-import { IStore } from "../models/Store";
-import { IUser } from "../models/User";
+import { Booking } from "../models/Booking";
+import { PaymentGateway, Payment } from "../models/Payment";
+import { Card } from "../models/Card";
+import { CardType } from "../models/CardType";
+import { Event } from "../models/Event";
+import { Gift } from "../models/Gift";
+import { Post } from "../models/Post";
+import { Store } from "../models/Store";
+import { User } from "../models/User";
 
 export interface AuthLoginPostBody {
   login: string;
@@ -15,7 +15,7 @@ export interface AuthLoginPostBody {
 
 export interface AuthLoginResponseBody {
   token: string;
-  user: IUser;
+  user: User;
 }
 
 export interface ListQuery {
@@ -25,9 +25,9 @@ export interface ListQuery {
 
 export interface AuthTokenUserIdResponseBody extends AuthLoginResponseBody {}
 
-export interface BookingPostBody extends IBooking {}
+export interface BookingPostBody extends Booking {}
 
-export interface BookingPutBody extends IBooking {}
+export interface BookingPutBody extends Booking {}
 
 export interface BookingPostQuery {
   paymentGateway?: PaymentGateway;
@@ -47,16 +47,16 @@ export interface BookingQuery extends ListQuery {
   coupon?: string;
 }
 
-export interface BookingPricePostBody extends IBooking {}
+export interface BookingPricePostBody extends Booking {}
 
 export interface BookingPriceResponseBody {
   price: number;
   priceInPoints?: number;
 }
 
-export interface CardPostBody extends ICard {}
+export interface CardPostBody extends Card {}
 
-export interface CardPutBody extends ICard {}
+export interface CardPutBody extends Card {}
 
 export interface CardPostQuery {
   paymentGateway?: PaymentGateway;
@@ -68,61 +68,61 @@ export interface CardQuery extends ListQuery {
   customer?: string;
 }
 
-export interface CardTypePostBody extends ICardType {}
+export interface CardTypePostBody extends CardType {}
 
-export interface CardTypePutBody extends ICardType {}
+export interface CardTypePutBody extends CardType {}
 
 export interface CardTypeQuery extends ListQuery {}
 
-export interface EventPostBody extends IEvent {}
+export interface EventPostBody extends Event {}
 
-export interface EventPutBody extends IEvent {}
+export interface EventPutBody extends Event {}
 
 export interface EventQuery extends ListQuery {
   keyword?: string;
   store?: string;
 }
 
-export interface GiftPostBody extends IGift {}
+export interface GiftPostBody extends Gift {}
 
-export interface GiftPutBody extends IGift {}
+export interface GiftPutBody extends Gift {}
 
 export interface GiftQuery extends ListQuery {
   keyword?: string;
   store?: string;
 }
 
-export interface PaymentPostBody extends IPayment {}
+export interface PaymentPostBody extends Payment {}
 
-export interface PaymentPutBody extends IPayment {}
+export interface PaymentPutBody extends Payment {}
 
 export interface PaymentQuery extends ListQuery {
   date?: string;
   paid?: "false";
-  customer?: IUser;
+  customer?: string;
   attach?: string;
   gateway?: PaymentGateway;
   direction?: "payment" | "refund";
 }
 
-export interface PostPostBody extends IPost {}
+export interface PostPostBody extends Post {}
 
-export interface PostPutBody extends IPost {}
+export interface PostPutBody extends Post {}
 
 export interface PostQuery extends ListQuery {
   slug?: string;
   tag?: string;
 }
 
-export interface StorePostBody extends IStore {}
+export interface StorePostBody extends Store {}
 
-export interface StorePutBody extends IStore {}
+export interface StorePutBody extends Store {}
 
 export interface StoreQuery extends ListQuery {}
 
-export interface UserPostBody extends IUser {}
+export interface UserPostBody extends User {}
 
-export interface UserPutBody extends IUser {}
+export interface UserPutBody extends User {}
 
 export interface UserQuery extends ListQuery {
   keyword: string;

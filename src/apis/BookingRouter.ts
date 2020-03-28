@@ -4,7 +4,7 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Booking, {
-  IBooking,
+  Booking as IBooking,
   BookingStatus,
   BookingType
 } from "../models/Booking";
@@ -23,10 +23,27 @@ import {
   BookingPricePostBody,
   BookingPriceResponseBody
 } from "./interfaces";
+import { DocumentType } from "@typegoose/typegoose";
 
 setTimeout(async () => {
-  // const u = await User.findOne({ name: "测试用户2" });
+  // const u = await User.findOne({ name: "陆秋石" });
   // u.depositSuccess("deposit-1000");
+  // const s = await Store.findOne();
+  // const b = new Booking({
+  //   customer: u,
+  //   store: s,
+  //   checkInAt: moment().format("HH:mm:ss"),
+  //   date: "2020-03-28",
+  //   type: "play"
+  // });
+  // const p = new Payment({
+  //   customer: u,
+  //   amount: 999,
+  //   gateway: PaymentGateway.Cash
+  // });
+  // await p.save();
+  // b.payments.push(p);
+  // b.save();
 }, 500);
 
 export default router => {
@@ -256,7 +273,7 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
-        const booking = req.item as IBooking;
+        const booking = req.item as DocumentType<IBooking>;
 
         // TODO restrict for roles
 
@@ -303,7 +320,7 @@ export default router => {
           throw new HttpError(403);
         }
 
-        const booking = req.item as IBooking;
+        const booking = req.item as DocumentType<IBooking>;
 
         if (booking.payments.some(p => p.paid)) {
           throw new HttpError(403, "已有成功付款记录，无法删除");

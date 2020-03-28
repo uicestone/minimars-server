@@ -1,4 +1,4 @@
-import Config, { IConfig } from "../models/Config";
+import Config, { Config as IConfig } from "../models/Config";
 import reduceConfig from "./reduceConfig";
 import moment from "moment";
 

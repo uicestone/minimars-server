@@ -5,6 +5,7 @@ import HttpError from "../utils/HttpError";
 import Payment from "../models/Payment";
 import moment from "moment";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
+import { Types } from "mongoose";
 
 export default router => {
   // Payment CURD
@@ -41,7 +42,7 @@ export default router => {
         }
 
         if (queryParams.customer) {
-          query.find({ customer: queryParams.customer });
+          query.find({ customer: queryParams.customer as any });
         }
 
         if (queryParams.attach) {

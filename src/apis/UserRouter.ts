@@ -2,12 +2,13 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import User, { IUser } from "../models/User";
+import User, { User as IUser } from "../models/User";
 import { hashPwd } from "../utils/helper";
 import { config } from "../models/Config";
 import Payment, { PaymentGateway } from "../models/Payment";
 import idCard from "idcard";
 import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
+import { DocumentType } from "@typegoose/typegoose";
 
 const { DEBUG } = process.env;
 
@@ -201,7 +202,7 @@ export default router => {
             delete body[f];
           });
         }
-        const user = req.item as IUser;
+        const user = req.item as DocumentType<IUser>;
         if (body.password) {
           console.log(`[USR] User ${user.id} password reset.`);
           body.password = await hashPwd(body.password);
