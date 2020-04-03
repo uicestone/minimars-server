@@ -21,6 +21,7 @@ export interface AuthLoginResponseBody {
 export interface ListQuery {
   order?: string;
   limit?: number;
+  skip?: number;
 }
 
 export interface AuthTokenUserIdResponseBody extends AuthLoginResponseBody {}

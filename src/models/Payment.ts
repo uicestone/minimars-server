@@ -244,7 +244,7 @@ export const gatewayNames = {
   [PaymentGateway.Coupon]: "团购优惠券",
   [PaymentGateway.Scan]: "现场扫码",
   [PaymentGateway.Card]: "会员卡",
-  [PaymentGateway.Cash]: "现场现金",
+  [PaymentGateway.Cash]: "现金刷卡",
   [PaymentGateway.WechatPay]: "微信小程序",
   [PaymentGateway.Alipay]: "支付宝",
   [PaymentGateway.UnionPay]: "银联"

@@ -32,7 +32,8 @@ export enum BookingType {
   PLAY = "play",
   PARTY = "party",
   EVENT = "event",
-  GIFT = "gift"
+  GIFT = "gift",
+  FOOT = "food"
 }
 
 export const liveBookingStatus = [
