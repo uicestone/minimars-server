@@ -282,7 +282,10 @@ export class Booking {
 
     if (extraPayAmount < 0.01 || adminAddWithoutPayment) {
       booking.status = BookingStatus.BOOKED;
-    } else if (extraPayAmount >= 0.01) {
+    } else if (
+      extraPayAmount >= 0.01 &&
+      paymentGateway !== PaymentGateway.Points
+    ) {
       const extraPayment = new paymentModel({
         customer: booking.customer,
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
@@ -301,8 +304,7 @@ export class Booking {
 
       booking.payments.push(extraPayment);
     }
-
-    if (booking.priceInPoints) {
+    if (booking.priceInPoints && paymentGateway === PaymentGateway.Points) {
       const pointsPayment = new paymentModel({
         customer: booking.customer,
         amount: 0,
