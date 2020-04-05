@@ -14,6 +14,7 @@ import { PaymentGateway } from "../models/Payment";
 import User, { User as IUser } from "../models/User";
 import { Types } from "mongoose";
 import { DocumentType } from "@typegoose/typegoose";
+import { verify } from "jsonwebtoken";
 
 export default router => {
   // Card CURD
@@ -23,7 +24,34 @@ export default router => {
     // create a card
     .post(
       handleAsyncErrors(async (req, res) => {
-        const card = new Card(req.body as CardPostBody);
+        const body = req.body as CardPostBody;
+
+        if (body.giftCode) {
+          try {
+            const [userId, cardId] = (verify(
+              body.giftCode,
+              process.env.APP_SECRET
+            ) as string).split(" ");
+
+            console.log(
+              `Gift code parsed, userId: ${userId}, cardId: ${cardId}`
+            );
+
+            const card = await Card.findOne({ _id: cardId });
+            if (card.customer.toString() === userId) {
+              // verify success, now change owner
+              card.customer = body.customer || req.user.id;
+              await card.save();
+              return res.json(card);
+            } else {
+              throw "";
+            }
+          } catch (e) {
+            throw new HttpError(403, "Card gift code verify failed.");
+          }
+        }
+
+        const card = new Card(body);
         const query = req.query as CardPostQuery;
         const cardType = await CardType.findOne({ slug: card.slug });
         if (!cardType) {

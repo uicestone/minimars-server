@@ -11,6 +11,9 @@ import { User } from "./User";
 import { Store } from "./Store";
 import paymentModel, { PaymentGateway, Payment } from "./Payment";
 import autoPopulate from "./plugins/autoPopulate";
+import { hash, hashSync } from "bcryptjs";
+import { signToken } from "../utils/helper";
+import { sign } from "jsonwebtoken";
 
 const { DEBUG } = process.env;
 
@@ -94,6 +97,13 @@ export class Card {
 
   @prop({ type: Number, required: true })
   freeParentsPerKid: number;
+
+  get giftCode(this: DocumentType<Card>): string | undefined {
+    if (!this.isGift || this.status !== CardStatus.VALID) return undefined;
+    const code = sign(this.customer + " " + this.id, process.env.APP_SECRET);
+    // console.log("Hash giftCode:", this.customer, this.id, code);
+    return code;
+  }
 
   async createPayment(
     this: DocumentType<Card>,
