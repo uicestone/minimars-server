@@ -129,53 +129,52 @@ export class User {
   @arrayProp({ ref: "Card" })
   cards: DocumentType<Card>[];
 
-  async depositSuccess(levelName: string) {
-    const user = this as DocumentType<User>;
+  async depositSuccess(this: DocumentType<User>, levelName: string) {
     const level = config.depositLevels.filter(l => l.slug === levelName)[0];
     if (!level) {
       throw new Error(`Deposit level not found for slug ${levelName}.`);
     }
 
-    user.cardType = level.cardType;
+    this.cardType = level.cardType;
 
     if (level.depositBalance || level.rewardBalance) {
-      if (!user.balanceDeposit) {
-        user.balanceDeposit = 0;
+      if (!this.balanceDeposit) {
+        this.balanceDeposit = 0;
       }
-      if (!user.balanceReward) {
-        user.balanceReward = 0;
+      if (!this.balanceReward) {
+        this.balanceReward = 0;
       }
 
       console.log(
-        `[USR] User ${user.id} balance was ${user.balanceDeposit}:${user.balanceReward}.`
+        `[USR] this ${this.id} balance was ${this.balanceDeposit}:${this.balanceReward}.`
       );
 
       if (level.depositBalance) {
-        user.balanceDeposit += level.depositBalance;
+        this.balanceDeposit += level.depositBalance;
       }
 
       if (level.rewardBalance) {
-        user.balanceReward += level.rewardBalance;
+        this.balanceReward += level.rewardBalance;
       }
 
       console.log(
-        `[USR] Deposit success ${user.id}, balance is now ${user.balanceDeposit}:${user.balanceReward}.`
+        `[USR] Deposit success ${this.id}, balance is now ${this.balanceDeposit}:${this.balanceReward}.`
       );
     }
 
     if (level.freePlayFrom && level.freePlayTo) {
-      user.freePlayFrom = level.freePlayFrom;
-      user.freePlayTo = level.freePlayTo;
+      this.freePlayFrom = level.freePlayFrom;
+      this.freePlayTo = level.freePlayTo;
       console.log(
-        `[USR] Update free-play duration for user ${user.id}: ${user.freePlayFrom}-${user.freePlayTo}`
+        `[USR] Update free-play duration for this ${this.id}: ${this.freePlayFrom}-${this.freePlayTo}`
       );
     }
 
-    await user.save();
+    await this.save();
 
     // send user notification
 
-    return user;
+    return this;
   }
 
   async addPoints(this: DocumentType<User>, amount: number, save = true) {
