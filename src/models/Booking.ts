@@ -285,6 +285,7 @@ export class Booking {
         booking.type === BookingType.FOOD
           ? BookingStatus.FINISHED
           : BookingStatus.BOOKED;
+      await booking.customer.addPoints(booking.price);
     } else if (
       extraPayAmount >= 0.01 &&
       paymentGateway !== PaymentGateway.Points
@@ -365,11 +366,7 @@ export class Booking {
     if (!booking.populated("customer")) {
       await booking.populate("customer").execPopulate();
     }
-    if (!booking.customer.points) {
-      booking.customer.points = 0;
-    }
-    booking.customer.points += 1 * booking.price;
-    await booking.customer.save();
+    await booking.customer.addPoints(booking.price);
     // send user notification
   }
 

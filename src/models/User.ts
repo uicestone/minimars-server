@@ -129,7 +129,7 @@ export class User {
   @arrayProp({ ref: "Card" })
   cards: DocumentType<Card>[];
 
-  depositSuccess = async function(levelName: string) {
+  async depositSuccess(levelName: string) {
     const user = this as DocumentType<User>;
     const level = config.depositLevels.filter(l => l.slug === levelName)[0];
     if (!level) {
@@ -176,8 +176,15 @@ export class User {
     // send user notification
 
     return user;
-  };
-  membershipUpgradeSuccess: (cardTypeName: string) => Promise<User>;
+  }
+
+  async addPoints(this: DocumentType<User>, amount: number, save = true) {
+    if (!this.points) this.points = 0;
+    this.points += 1 * amount;
+    if (save) {
+      await this.save();
+    }
+  }
 }
 
 const userModel = getModelForClass(User, {
