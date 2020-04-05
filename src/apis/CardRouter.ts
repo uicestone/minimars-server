@@ -11,7 +11,7 @@ import {
   CardPostQuery
 } from "./interfaces";
 import { PaymentGateway } from "../models/Payment";
-import User from "../models/User";
+import User, { User as IUser } from "../models/User";
 import { Types } from "mongoose";
 import { DocumentType } from "@typegoose/typegoose";
 
@@ -122,6 +122,9 @@ export default router => {
         if (!card) {
           throw new HttpError(404, `Card not found: ${req.params.cardId}`);
         }
+        if (req.user.role === "customer" && !req.user.equals(card.customer)) {
+          throw new HttpError(403);
+        }
         req.item = card;
         next();
       })
@@ -138,7 +141,21 @@ export default router => {
     .put(
       handleAsyncErrors(async (req, res) => {
         const card = req.item as DocumentType<ICard>;
+
+        const statusWas = card.status;
         card.set(req.body as CardPutBody);
+        if (
+          statusWas === CardStatus.VALID &&
+          card.status === CardStatus.ACTIVATED
+        ) {
+          await card.populate("customer").execPopulate();
+          const customer = card.customer as DocumentType<IUser>;
+          customer.balanceDeposit += card.price;
+          customer.balanceReward += card.balance - card.price;
+          card.status = CardStatus.EXPIRED;
+          await customer.save();
+          await card.save();
+        }
         await card.save();
         res.json(card);
       })
