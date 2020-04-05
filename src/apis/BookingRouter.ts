@@ -127,6 +127,10 @@ export default router => {
           }
         }
 
+        if (booking.type === BookingType.FOOD && !booking.price) {
+          throw new HttpError(400, "请填写收款金额");
+        }
+
         try {
           await booking.calculatePrice();
         } catch (err) {

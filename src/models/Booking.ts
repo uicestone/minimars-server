@@ -33,7 +33,7 @@ export enum BookingType {
   PARTY = "party",
   EVENT = "event",
   GIFT = "gift",
-  FOOT = "food"
+  FOOD = "food"
 }
 
 export const liveBookingStatus = [
@@ -281,7 +281,10 @@ export class Booking {
     // console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
     if (extraPayAmount < 0.01 || adminAddWithoutPayment) {
-      booking.status = BookingStatus.BOOKED;
+      booking.status =
+        booking.type === BookingType.FOOD
+          ? BookingStatus.FINISHED
+          : BookingStatus.BOOKED;
     } else if (
       extraPayAmount >= 0.01 &&
       paymentGateway !== PaymentGateway.Points
@@ -338,7 +341,10 @@ export class Booking {
             await booking.gift.save();
           }
         }
-        booking.status = BookingStatus.BOOKED;
+        booking.status =
+          booking.type === BookingType.FOOD
+            ? BookingStatus.FINISHED
+            : BookingStatus.BOOKED;
         await pointsPayment.save();
       } catch (err) {
         throw err;
@@ -351,7 +357,10 @@ export class Booking {
   async paymentSuccess(this: DocumentType<Booking>) {
     const booking = this;
 
-    booking.status = BookingStatus.BOOKED;
+    booking.status =
+      booking.type === BookingType.FOOD
+        ? BookingStatus.FINISHED
+        : BookingStatus.BOOKED;
     await booking.save();
     if (!booking.populated("customer")) {
       await booking.populate("customer").execPopulate();
