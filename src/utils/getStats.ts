@@ -85,6 +85,27 @@ export default async (
       0
     );
 
+  const playAmount = bookingsPaid
+    .filter(booking => booking.type === "play")
+    .reduce(
+      (amount, booking) =>
+        amount +
+        booking.payments
+          .filter(p => p.paid)
+          .reduce((a, p) => a + (p.amountDeposit || p.amount), 0),
+      0
+    );
+  const foodAmount = bookingsPaid
+    .filter(booking => booking.type === "food")
+    .reduce(
+      (amount, booking) =>
+        amount +
+        booking.payments
+          .filter(p => p.paid)
+          .reduce((a, p) => a + (p.amountDeposit || p.amount), 0),
+      0
+    );
+
   const paidAmountByGateways: { [gateway: string]: number } = payments.reduce(
     (amountByGateways, payment) => {
       if (!amountByGateways[payment.gateway]) {
@@ -338,7 +359,9 @@ export default async (
     customerCount,
     kidsCount,
     paidAmount,
+    playAmount,
     partyAmount,
+    foodAmount,
     cardAmount,
     socksCount,
     socksAmount,
