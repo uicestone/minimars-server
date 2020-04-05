@@ -24,10 +24,10 @@ export class Post {
   @prop()
   tags: string[];
 
-  @prop({ type: String })
+  @prop()
   posterUrl: string;
 
-  @prop({ type: String })
+  @prop()
   target?: string;
 
   @prop({ ref: "User", required: true })

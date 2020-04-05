@@ -13,6 +13,12 @@ export class Store {
   phone: string;
 
   @prop()
+  content: string;
+
+  @prop()
+  posterUrl: string;
+
+  @prop()
   partyRooms: number;
 
   @prop()
