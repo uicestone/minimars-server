@@ -2,8 +2,6 @@ import {
   prop,
   getModelForClass,
   plugin,
-  index,
-  Ref,
   DocumentType
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
@@ -28,7 +26,10 @@ export class CardType {
   @prop({ ref: "Store" })
   store?: DocumentType<Store>;
 
-  @prop({ type: String })
+  @prop()
+  posterUrl: string;
+
+  @prop()
   content: string;
 
   @prop()

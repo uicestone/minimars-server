@@ -11,8 +11,6 @@ import { User } from "./User";
 import { Store } from "./Store";
 import paymentModel, { PaymentGateway, Payment } from "./Payment";
 import autoPopulate from "./plugins/autoPopulate";
-import { hash, hashSync } from "bcryptjs";
-import { signToken } from "../utils/helper";
 import { sign } from "jsonwebtoken";
 
 const { DEBUG } = process.env;
@@ -73,6 +71,9 @@ export class Card {
 
   @prop({ ref: "Store" })
   store?: Ref<Store>;
+
+  @prop()
+  posterUrl: string;
 
   @prop({ type: String })
   content: string;
