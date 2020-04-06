@@ -2,8 +2,10 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Event from "../models/Event";
+import Event, { Event as IEvent } from "../models/Event";
 import { EventPostBody, EventPutBody, EventQuery } from "./interfaces";
+import Booking from "../models/Booking";
+import { DocumentType } from "@typegoose/typegoose";
 
 export default router => {
   // Event CURD
@@ -99,8 +101,15 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const event = req.item;
+        const event = req.item as DocumentType<IEvent>;
+        const bookingCount = await Booking.count({ event: event.id });
+
+        if (bookingCount > 0) {
+          throw new HttpError(400, "已经存在报名记录，不能删除");
+        }
+
         await event.remove();
+
         res.end();
       })
     );
