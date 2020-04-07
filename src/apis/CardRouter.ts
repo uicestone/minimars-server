@@ -122,6 +122,12 @@ export default router => {
               $in: queryParams.status.split(",") as CardStatus[]
             }
           });
+        } else if (req.user.role === "customer") {
+          query.find({
+            status: {
+              $in: [CardStatus.ACTIVATED, CardStatus.VALID, CardStatus.EXPIRED]
+            }
+          });
         }
 
         let total = await query.countDocuments();
