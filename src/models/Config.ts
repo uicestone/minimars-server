@@ -17,6 +17,7 @@ class ConfigDocument {
 
 const configModel = getModelForClass(ConfigDocument, {
   schemaOptions: {
+    collection: "configs",
     strict: false,
     toJSON: {
       getters: true,
