@@ -14,7 +14,7 @@ import {
   unifiedOrder as wechatUnifiedOrder,
   payArgs as wechatPayArgs
 } from "../utils/wechat";
-import cardModel, { Card } from "./Card";
+import cardModel, { Card, CardStatus } from "./Card";
 
 @pre("save", async function(next) {
   const payment = this as DocumentType<Payment>;
@@ -116,6 +116,12 @@ import cardModel, { Card } from "./Card";
         );
         payment.paid = true;
       } else {
+        if (card.status !== CardStatus.ACTIVATED) {
+          throw new Error("invalid_card");
+        }
+        if (card.timesLeft < payment.gatewayData.times) {
+          throw new Error("insufficient_card_times");
+        }
         card.timesLeft -= payment.gatewayData.times;
         await card.save();
         // await customer.updateCardBalance();
