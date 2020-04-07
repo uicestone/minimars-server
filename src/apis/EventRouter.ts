@@ -45,6 +45,10 @@ export default router => {
           }
         });
 
+        if (queryParams.tag) {
+          query.find({ tags: queryParams.tag });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()

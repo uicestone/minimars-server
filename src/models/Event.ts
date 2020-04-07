@@ -3,7 +3,6 @@ import {
   getModelForClass,
   plugin,
   pre,
-  Ref,
   DocumentType
 } from "@typegoose/typegoose";
 import { Schema } from "mongoose";
@@ -32,6 +31,9 @@ export class Event {
 
   @prop()
   content?: string;
+
+  @prop()
+  tags: string[];
 
   @prop({ required: true })
   posterUrl: string;

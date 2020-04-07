@@ -82,6 +82,7 @@ export interface EventPutBody extends Event {}
 export interface EventQuery extends ListQuery {
   keyword?: string;
   store?: string;
+  tag?: string;
 }
 
 export interface GiftPostBody extends Gift {}
