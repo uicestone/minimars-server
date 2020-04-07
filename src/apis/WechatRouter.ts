@@ -19,12 +19,7 @@ export default (router: Router) => {
         { openid },
         {},
         { upsert: true, new: true }
-      ).populate({
-        path: "cards",
-        match: { status: { $in: userVisibleCardStatus } },
-        options: { sort: { _id: -1 } },
-        select: "-payments"
-      });
+      );
 
       res.json({
         user,
@@ -63,12 +58,7 @@ export default (router: Router) => {
           region: `${country} ${province} ${city}`
         },
         { upsert: true, new: true }
-      ).populate({
-        path: "cards",
-        match: { status: { $in: userVisibleCardStatus } },
-        options: { sort: { _id: -1 } },
-        select: "-payments"
-      });
+      );
 
       await user.save();
 

@@ -10,7 +10,6 @@ import updateTimes from "./plugins/updateTimes";
 import { config } from "./Config";
 import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
-import { Card } from "./Card";
 
 @pre("validate", function(next) {
   const user = this as DocumentType<User>;
@@ -125,9 +124,6 @@ export class User {
 
   @prop()
   cardNo?: string;
-
-  @arrayProp({ ref: "Card" })
-  cards: DocumentType<Card>[];
 
   async depositSuccess(this: DocumentType<User>, levelName: string) {
     const level = config.depositLevels.filter(l => l.slug === levelName)[0];

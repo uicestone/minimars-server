@@ -21,14 +21,9 @@ export default router => {
         throw new HttpError(400, "请输入密码");
       }
 
-      const user = await User.findOne({ login: body.login })
-        .select(["+password"])
-        .populate({
-          path: "cards",
-          match: { status: { $in: userVisibleCardStatus } },
-          options: { sort: { _id: -1 } },
-          select: "-payments"
-        });
+      const user = await User.findOne({ login: body.login }).select([
+        "+password"
+      ]);
 
       if (!user) {
         throw new HttpError(404, "用户不存在");
@@ -64,12 +59,7 @@ export default router => {
 
   router.route("/auth/user").get(
     handleAsyncErrors(async (req, res) => {
-      const user = await User.findOne({ _id: req.user }).populate({
-        path: "cards",
-        match: { status: { $in: userVisibleCardStatus } },
-        options: { sort: { _id: -1 } },
-        select: "-payments"
-      });
+      const user = await User.findOne({ _id: req.user });
       if (!user) {
         throw new HttpError(401, "用户未登录");
       }

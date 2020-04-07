@@ -93,7 +93,6 @@ export default router => {
         }
 
         await card.save();
-        customer.cards.push(card);
         await customer.save();
 
         res.json(card);
