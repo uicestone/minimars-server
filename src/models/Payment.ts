@@ -123,6 +123,9 @@ import cardModel, { Card, CardStatus } from "./Card";
           throw new Error("insufficient_card_times");
         }
         card.timesLeft -= payment.gatewayData.times;
+        if (card.timesLeft === 0) {
+          card.status = CardStatus.EXPIRED;
+        }
         await card.save();
         // await customer.updateCardBalance();
         console.log(

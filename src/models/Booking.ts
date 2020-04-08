@@ -250,7 +250,11 @@ export class Booking {
         gatewayData: {
           cardId: booking.card.id,
           bookingId: booking.id,
-          times: Math.min(booking.kidsCount, booking.card.maxKids)
+          times: Math.min(
+            booking.kidsCount,
+            booking.card.maxKids,
+            booking.card.timesLeft
+          )
         }
       });
       await cardPayment.save();
