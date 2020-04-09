@@ -110,6 +110,8 @@ export default router => {
           createdAt: -1
         };
 
+        query.select("-content");
+
         ["customer"].forEach(field => {
           if (queryParams[field]) {
             query.find({ [field]: queryParams[field] });

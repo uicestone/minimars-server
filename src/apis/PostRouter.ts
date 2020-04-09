@@ -34,6 +34,8 @@ export default router => {
           createdAt: -1
         };
 
+        query.select("-content");
+
         if (queryParams.slug) {
           query.find({ slug: new RegExp("^" + queryParams.slug) });
         }

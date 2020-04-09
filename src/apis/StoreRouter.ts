@@ -29,6 +29,9 @@ export default router => {
         const queryParams = req.query as StoreQuery;
         const { limit, skip } = req.pagination;
         const query = Store.find();
+
+        query.select("-content");
+
         const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };

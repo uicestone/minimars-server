@@ -35,6 +35,8 @@ export default router => {
           createdAt: -1
         };
 
+        query.select("-content");
+
         if (queryParams.keyword) {
           query.find({ title: new RegExp(queryParams.keyword, "i") });
         }

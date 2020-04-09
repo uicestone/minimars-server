@@ -10,7 +10,7 @@ import autoPopulate from "./plugins/autoPopulate";
 import { Store } from "./Store";
 
 @plugin(updateTimes)
-@plugin(autoPopulate, ["store"])
+@plugin(autoPopulate, [{ path: "store", select: "-content" }])
 export class Gift {
   @prop({ required: true })
   title: string;

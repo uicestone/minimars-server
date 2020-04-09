@@ -34,6 +34,8 @@ export default router => {
           createdAt: -1
         };
 
+        query.select("-content");
+
         let total = await query.countDocuments();
         const page = await query
           .find()

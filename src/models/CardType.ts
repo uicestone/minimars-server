@@ -9,7 +9,7 @@ import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 
 @plugin(updateTimes)
-@plugin(autoPopulate, ["store"])
+@plugin(autoPopulate, [{ path: "store", select: "-content" }])
 export class CardType {
   @prop({ required: true })
   title: string;
