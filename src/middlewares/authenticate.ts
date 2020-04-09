@@ -5,7 +5,7 @@ import User from "../models/User";
 
 const { DEBUG } = process.env;
 
-export default async function(req, res, next) {
+export default async function (req, res, next) {
   const token = req.get("authorization") || req.query.token;
 
   if (token) {

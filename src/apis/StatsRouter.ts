@@ -85,11 +85,7 @@ export default router => {
         encoder.line("- 无");
       }
 
-      encoder
-        .newline()
-        .newline()
-        .newline()
-        .newline();
+      encoder.newline().newline().newline().newline();
 
       const hexString = Buffer.from(encoder.encode()).toString("hex");
 
@@ -104,9 +100,7 @@ export default router => {
         "./reports/templates/daily.xlsx"
       );
       const date = moment(dateInput).format("YYYY-MM-DD");
-      const startOfMonth = moment(date)
-        .startOf("month")
-        .toDate();
+      const startOfMonth = moment(date).startOf("month").toDate();
       const [year, month, day, dayOfWeek] = moment(date)
         .format("YYYY MM DD dd")
         .split(" ");

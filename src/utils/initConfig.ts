@@ -37,12 +37,8 @@ const initConfig: IConfig = {
       desc: "2020年卡",
       price: 5888,
       cardType: "年卡",
-      freePlayFrom: moment("2020-01-01")
-        .startOf("month")
-        .toDate(),
-      freePlayTo: moment("2020-12-31")
-        .endOf("month")
-        .toDate()
+      freePlayFrom: moment("2020-01-01").startOf("month").toDate(),
+      freePlayTo: moment("2020-12-31").endOf("month").toDate()
     }
   ],
   sockPrice: 0,

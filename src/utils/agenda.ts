@@ -21,9 +21,7 @@ export const initAgenda = async () => {
     const bookings = await Booking.find({
       status: BookingStatus.PENDING,
       createdAt: {
-        $lt: moment()
-          .subtract(1, "day")
-          .toDate()
+        $lt: moment().subtract(1, "day").toDate()
       }
     });
 
@@ -54,9 +52,7 @@ export const initAgenda = async () => {
     const cards = await Card.find({
       status: CardStatus.PENDING,
       createdAt: {
-        $lt: moment()
-          .subtract(1, "day")
-          .toDate()
+        $lt: moment().subtract(1, "day").toDate()
       }
     });
 

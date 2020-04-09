@@ -26,9 +26,7 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
-        const items = await Config.find()
-          .sort({ createdAt: -1 })
-          .exec();
+        const items = await Config.find().sort({ createdAt: -1 }).exec();
 
         res.json(req.query.seperate ? items : reduceConfig(items));
       })

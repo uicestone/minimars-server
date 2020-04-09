@@ -10,7 +10,7 @@ import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 
-@pre("validate", function(next) {
+@pre("validate", function (next) {
   const event = this as DocumentType<Event>;
   if (
     event.kidsCountMax !== null &&
@@ -73,7 +73,7 @@ const eventModel = getModelForClass(Event, {
   schemaOptions: {
     toJSON: {
       getters: true,
-      transform: function(doc, ret, options) {
+      transform: function (doc, ret, options) {
         delete ret._id;
         delete ret.__v;
       }

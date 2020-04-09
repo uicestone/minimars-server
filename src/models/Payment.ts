@@ -16,7 +16,7 @@ import {
 } from "../utils/wechat";
 import cardModel, { Card, CardStatus } from "./Card";
 
-@pre("save", async function(next) {
+@pre("save", async function (next) {
   const payment = this as DocumentType<Payment>;
 
   if (!payment.isModified("paid") && !payment.isNew) {
@@ -263,7 +263,7 @@ const paymentModel = getModelForClass(Payment, {
   schemaOptions: {
     toJSON: {
       getters: true,
-      transform: function(doc, ret, options) {
+      transform: function (doc, ret, options) {
         delete ret._id;
         delete ret.__v;
       }

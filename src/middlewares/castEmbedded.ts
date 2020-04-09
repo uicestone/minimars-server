@@ -1,4 +1,4 @@
-export default async function(req, res, next) {
+export default async function (req, res, next) {
   const objectKeys = [
     "card",
     "store",

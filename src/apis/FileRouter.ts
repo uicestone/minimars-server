@@ -7,10 +7,10 @@ import HttpError from "../utils/HttpError";
 import { DocumentType } from "@typegoose/typegoose";
 
 const storage = diskStorage({
-  destination: function(req, file, cb) {
+  destination: function (req, file, cb) {
     cb(null, process.cwd() + "/uploads/");
   },
-  filename: function(req: any, file, cb) {
+  filename: function (req: any, file, cb) {
     const hash = createHash("sha1");
     const extension = file.originalname.match(/^.*(\..*?)$/)[1];
     // @ts-ignore/

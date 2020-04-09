@@ -5,7 +5,7 @@ function updateTimes(schema, options?) {
   schema.index({ createdAt: -1 });
   schema.index({ updatedAt: -1 });
 
-  schema.pre("save", function() {
+  schema.pre("save", function () {
     this.updatedAt = new Date();
     if (this.isNew) {
       this.createdAt = new Date();

@@ -1,4 +1,4 @@
-export default async function(req, res, next) {
+export default async function (req, res, next) {
   req.pagination = { limit: 20, skip: 0 };
 
   if (req.query.skip) {
@@ -9,7 +9,7 @@ export default async function(req, res, next) {
     req.pagination.limit = Math.max(+req.query.limit, 0);
   }
 
-  res.paginatify = function(limit, skip, total) {
+  res.paginatify = function (limit, skip, total) {
     const from = Math.min(skip + 1, total);
     const to = limit ? Math.min(skip + limit, total) : total;
 

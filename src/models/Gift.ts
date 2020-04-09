@@ -38,7 +38,7 @@ const giftModel = getModelForClass(Gift, {
   schemaOptions: {
     toJSON: {
       getters: true,
-      transform: function(doc, ret, options) {
+      transform: function (doc, ret, options) {
         delete ret._id;
         delete ret.__v;
       }

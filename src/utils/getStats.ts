@@ -13,9 +13,7 @@ export default async (
     startOfDay = moment(dateInputFrom || dateInput)
       .startOf("day")
       .toDate(),
-    endOfDay = moment(dateInput)
-      .endOf("day")
-      .toDate(),
+    endOfDay = moment(dateInput).endOf("day").toDate(),
     dateRangeStartStr = moment(dateInputFrom || dateInput)
       .subtract(6, "days")
       .format("YYYY-MM-DD"),

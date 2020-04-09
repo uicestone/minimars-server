@@ -11,7 +11,7 @@ import { config } from "./Config";
 import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 
-@pre("validate", function(next) {
+@pre("validate", function (next) {
   const user = this as DocumentType<User>;
   ["balanceDeposit", "balanceReward"].forEach(field => {
     if (user[field]) {
@@ -53,7 +53,7 @@ export class User {
     sparse: true,
     // @ts-ignore
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return v.length === 11 || v.match(/^\+/);
       },
       message: (props: { value: any }) =>
@@ -186,7 +186,7 @@ const userModel = getModelForClass(User, {
   schemaOptions: {
     toJSON: {
       getters: true,
-      transform: function(doc, ret, options) {
+      transform: function (doc, ret, options) {
         delete ret._id;
         delete ret.__v;
       }

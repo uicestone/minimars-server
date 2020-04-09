@@ -84,9 +84,7 @@ export default router => {
         }
 
         if (!booking.checkInAt) {
-          booking.checkInAt = moment()
-            .add(5, "minutes")
-            .format("HH:mm:ss");
+          booking.checkInAt = moment().add(5, "minutes").format("HH:mm:ss");
         }
 
         if (
@@ -528,9 +526,7 @@ export default router => {
       }
 
       if (!booking.checkInAt) {
-        booking.checkInAt = moment()
-          .add(5, "minutes")
-          .format("HH:mm:ss");
+        booking.checkInAt = moment().add(5, "minutes").format("HH:mm:ss");
       }
 
       try {

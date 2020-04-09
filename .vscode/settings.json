@@ -1,0 +1,6 @@
+{
+  "javascript.format.enable": false,
+  "typescript.format.enable": false,
+  "prettier.arrowParens": "avoid",
+  "prettier.trailingComma": "none"
+}
