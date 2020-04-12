@@ -58,9 +58,6 @@ export default router => {
     .all(
       handleAsyncErrors(async (req, res, next) => {
         const store = await Store.findById(req.params.storeId);
-        if (req.user.role !== "admin") {
-          throw new HttpError(403);
-        }
         if (!store) {
           throw new HttpError(404, `Store not found: ${req.params.storeId}`);
         }
@@ -79,6 +76,9 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const store = req.item;
         store.set(req.body as StorePutBody);
         await store.save();
@@ -89,6 +89,9 @@ export default router => {
     // delete the store with this id
     .delete(
       handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
         const store = req.item;
         await store.remove();
         res.end();
