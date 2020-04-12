@@ -57,7 +57,7 @@ export const paidBookingStatus = [
 
 @plugin(autoPopulate, [
   { path: "customer", select: "name avatarUrl mobile" },
-  { path: "store", select: "name -content" },
+  { path: "store", select: "name" },
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
   { path: "card", select: "-content" },
   { path: "event", select: "-content" },
