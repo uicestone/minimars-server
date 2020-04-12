@@ -22,7 +22,6 @@ const storage = diskStorage({
       const hex = hash.digest("hex");
       // @ts-ignore
       file.hashedFullName = hex + extension;
-      console.log("file hashed");
     });
     cb(null, `tmp-${Date.now()}-${file.originalname}`);
   }

@@ -57,11 +57,11 @@ export const paidBookingStatus = [
 
 @plugin(autoPopulate, [
   { path: "customer", select: "name avatarUrl mobile" },
-  { path: "store", select: "name" },
+  { path: "store", select: "name -content" },
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
-  { path: "card" },
-  { path: "event" },
-  { path: "gift" }
+  { path: "card", select: "-content" },
+  { path: "event", select: "-content" },
+  { path: "gift", select: "-content" }
 ])
 @plugin(updateTimes)
 @index({ date: 1, checkInAt: 1, customer: 1 }, { unique: true })
@@ -188,7 +188,9 @@ export class Booking {
       booking.price = +booking.price.toFixed(2);
     } else if (booking.type === "event") {
       if (!booking.populated("event")) {
-        await booking.populate("event").execPopulate();
+        await booking
+          .populate({ path: "event", select: "-content" })
+          .execPopulate();
       }
       if (!booking.event) {
         return;
@@ -325,7 +327,9 @@ export class Booking {
       try {
         if (booking.type === "event") {
           if (!booking.populated("event")) {
-            await booking.populate("event").execPopulate();
+            await booking
+              .populate({ path: "event", select: "-content" })
+              .execPopulate();
           }
           if (!booking.event) {
             throw new Error("invalid_event");

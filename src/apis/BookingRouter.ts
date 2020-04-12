@@ -100,7 +100,9 @@ export default router => {
 
         if (body.type === BookingType.EVENT) {
           if (!booking.populated("event")) {
-            await booking.populate("event").execPopulate();
+            await booking
+              .populate({ path: "event", select: "-content" })
+              .execPopulate();
           }
           if (!booking.event) {
             throw new HttpError(400, "活动信息错误");
