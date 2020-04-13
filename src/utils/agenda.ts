@@ -101,7 +101,7 @@ export const initAgenda = async () => {
     agenda.every("4 hours", "cancel expired pending cards");
     // agenda.every("10 seconds", "test");
     // agenda.every("1 day", "cancel expired booked bookings");
-    agenda.now("save image from content");
+    // agenda.now("save image from content");
   });
 
   agenda.on("error", err => {
