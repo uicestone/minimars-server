@@ -3,6 +3,12 @@ import moment from "moment";
 import Booking, { BookingStatus } from "../models/Booking";
 import { MongoClient } from "mongodb";
 import Card, { CardStatus } from "../models/Card";
+import Gift from "../models/Gift";
+import CardType from "../models/CardType";
+import Event from "../models/Event";
+import Post from "../models/Post";
+import Store from "../models/Store";
+import { saveContentImages } from "./helper";
 
 let agenda: Agenda;
 
@@ -70,6 +76,24 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("save image from content", async (job, done) => {
+    console.log(`[CRO] Save image from content.`);
+    const cardTypes = await CardType.find();
+    const events = await Event.find();
+    const gifts = await Gift.find();
+    const posts = await Post.find();
+    const stores = await Store.find();
+    for (const documents of [cardTypes, events, gifts, posts, stores]) {
+      for (const document of documents) {
+        if (!document.content) continue;
+        document.content = saveContentImages(document.content);
+        // @ts-ignore
+        document.save();
+      }
+    }
+    done();
+  });
+
   agenda.start();
 
   agenda.on("ready", () => {
@@ -77,7 +101,7 @@ export const initAgenda = async () => {
     agenda.every("4 hours", "cancel expired pending cards");
     // agenda.every("10 seconds", "test");
     // agenda.every("1 day", "cancel expired booked bookings");
-    // agenda.now("generate 8 digit card no");
+    agenda.now("save image from content");
   });
 
   agenda.on("error", err => {
