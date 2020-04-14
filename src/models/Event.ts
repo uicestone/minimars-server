@@ -65,7 +65,7 @@ export class Event {
   @prop({ type: Date, required: true })
   date: Date;
 
-  @prop({ ref: "Store", required: true })
+  @prop({ ref: "Store" })
   store: DocumentType<Store>;
 }
 
