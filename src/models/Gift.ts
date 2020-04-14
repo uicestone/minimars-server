@@ -30,7 +30,7 @@ export class Gift {
   @prop()
   price?: number;
 
-  @prop({ ref: "Store", required: true })
+  @prop({ ref: "Store" })
   store: DocumentType<Store>;
 }
 
