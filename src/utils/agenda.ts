@@ -23,13 +23,16 @@ export const initAgenda = async () => {
   agenda = new Agenda({ mongo: client.db() });
 
   agenda.define("cancel expired pending bookings", async (job, done) => {
-    console.log(`[CRO] Cancel expired pending bookings.`);
     const bookings = await Booking.find({
       status: BookingStatus.PENDING,
       createdAt: {
         $lt: moment().subtract(1, "day").toDate()
       }
     });
+
+    if (bookings.length) {
+      console.log(`[CRO] Cancel expired pending bookings.`);
+    }
 
     for (const booking of bookings) {
       await booking.cancel();
@@ -39,13 +42,17 @@ export const initAgenda = async () => {
   });
 
   agenda.define("cancel expired booked bookings", async (job, done) => {
-    console.log(`[CRO] Cancel expired booked bookings.`);
     const bookings = await Booking.find({
       status: BookingStatus.BOOKED,
       date: {
         $lt: moment().format("YYYY-MM-DD")
       }
     });
+
+    if (bookings.length) {
+      console.log(`[CRO] Cancel expired booked bookings.`);
+    }
+
     for (const booking of bookings) {
       await booking.cancel();
     }
@@ -54,13 +61,16 @@ export const initAgenda = async () => {
   });
 
   agenda.define("cancel expired pending cards", async (job, done) => {
-    console.log(`[CRO] Cancel expired pending cards.`);
     const cards = await Card.find({
       status: CardStatus.PENDING,
       createdAt: {
         $lt: moment().subtract(1, "day").toDate()
       }
     });
+
+    if (cards) {
+      console.log(`[CRO] Cancel expired pending cards.`);
+    }
 
     for (const card of cards) {
       card.status = CardStatus.CANCELED;
