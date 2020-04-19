@@ -31,7 +31,7 @@ export const initAgenda = async () => {
     });
 
     if (bookings.length) {
-      console.log(`[CRO] Cancel expired pending bookings.`);
+      console.log(`[CRO] Cancel expired pending bookings...`);
     }
 
     for (const booking of bookings) {
@@ -50,7 +50,7 @@ export const initAgenda = async () => {
     });
 
     if (bookings.length) {
-      console.log(`[CRO] Cancel expired booked bookings.`);
+      console.log(`[CRO] Cancel expired booked bookings...`);
     }
 
     for (const booking of bookings) {
@@ -68,8 +68,8 @@ export const initAgenda = async () => {
       }
     });
 
-    if (cards) {
-      console.log(`[CRO] Cancel expired pending cards.`);
+    if (cards.length) {
+      console.log(`[CRO] Cancel expired pending cards...`);
     }
 
     for (const card of cards) {
@@ -82,12 +82,11 @@ export const initAgenda = async () => {
 
   agenda.define("test", async (job, done) => {
     console.log(`[CRO] Test cron job.`);
-
     done();
   });
 
   agenda.define("save image from content", async (job, done) => {
-    console.log(`[CRO] Save image from content.`);
+    console.log(`[CRO] Save image from content...`);
     const cardTypes = await CardType.find();
     const events = await Event.find();
     const gifts = await Gift.find();
@@ -101,6 +100,7 @@ export const initAgenda = async () => {
         document.save();
       }
     }
+    console.log(`[CRO] Saved image from content.`);
     done();
   });
 
