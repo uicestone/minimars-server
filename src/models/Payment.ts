@@ -155,7 +155,7 @@ import cardModel, { Card, CardStatus } from "./Card";
 @plugin(autoPopulate, [{ path: "customer", select: "name avatarUrl mobile" }])
 @plugin(updateTimes)
 export class Payment {
-  @prop({ ref: "User", required: true })
+  @prop({ ref: "User", required: true, index: true })
   customer: DocumentType<User>;
 
   @prop({ required: true })

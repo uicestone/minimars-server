@@ -64,9 +64,9 @@ export const paidBookingStatus = [
   { path: "gift", select: "-content" }
 ])
 @plugin(updateTimes)
-@index({ date: 1, checkInAt: 1, customer: 1 }, { unique: true })
+// @index({ date: 1, checkInAt: 1, customer: 1 }, { unique: true })
 export class Booking {
-  @prop({ ref: "User", required: true })
+  @prop({ ref: "User", required: true, index: true })
   customer: DocumentType<User>;
 
   @prop({ ref: "Store", required: true })
@@ -501,7 +501,7 @@ export class Booking {
   }
 }
 
-export default getModelForClass(Booking, {
+const bookingModel = getModelForClass(Booking, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -512,3 +512,5 @@ export default getModelForClass(Booking, {
     }
   }
 });
+
+export default bookingModel;
