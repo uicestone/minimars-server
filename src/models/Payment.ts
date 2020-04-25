@@ -156,8 +156,8 @@ import { isValidHexObjectId } from "../utils/helper";
 @plugin(autoPopulate, [{ path: "customer", select: "name avatarUrl mobile" }])
 @plugin(updateTimes)
 export class Payment {
-  @prop({ ref: "User", required: true, index: true })
-  customer: DocumentType<User>;
+  @prop({ ref: "User", index: true })
+  customer?: DocumentType<User>;
 
   @prop({ required: true })
   amount: number;

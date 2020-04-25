@@ -194,11 +194,11 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
   async function importEntranceRecord(item, store) {
     let customer = userMobileMap.get(item.code) || userCodeMap.get(item.code);
     if (!customer) {
-      if (item.code.length !== 11 && !item.code.match(/^\+/)) {
-        throw new Error(
-          `Invalid mobile ${item.code} in entrance record ${item.serialNumber}.`
-        );
-      }
+      // if (item.code.length !== 11 && !item.code.match(/^\+/)) {
+      //   throw new Error(
+      //     `Invalid mobile ${item.code} in entrance record ${item.serialNumber}.`
+      //   );
+      // }
       customer = new User({
         role: "customer",
         mobile: item.code,
@@ -249,47 +249,53 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
   }
 
   async function importConsumeRecord(item) {
-    const customer = userMobileMap.get(item.code) || userCodeMap.get(item.code);
+    let customer = userMobileMap.get(item.code) || userCodeMap.get(item.code);
+
+    if (!customer) {
+      const message = `Code not found as user: ${item.code} ${item.costDes}.`;
+      if (item.costDes !== "点餐消费") {
+        throw new Error(message);
+      }
+    }
 
     const cost = item.cost.replace("金额：￥", "");
 
-    if (!customer) {
-      throw new Error(`Code not found as user: ${item.code} ${item.costDes}.`);
-    }
-
-    const payment =
-      item.costDes === "入场消费"
-        ? new Payment({
-            customer: customer._id,
-            amount: 0,
-            paid: true,
-            title: item.costDes,
-            attach: "booking imported" + item.cost.replace("核销次数：", ""),
-            gateway: PaymentGateway.Card,
-            gatewayData: {
-              remark: item.remark,
-              costType: item.costType,
-              payType: item.payType,
-              status: item.status,
-              times: +item.cost.replace("核销次数：", "")
-            },
-            createdAt: new Date(item.createtime)
-          })
-        : new Payment({
-            customer: customer._id,
-            amount: +cost,
-            paid: item.status !== -1,
-            title: item.costDes,
-            attach: "card imported",
-            gateway: PaymentGateway.Cash,
-            gatewayData: {
-              remark: item.remark,
-              costType: item.costType,
-              payType: item.payType,
-              status: item.status
-            },
-            createdAt: new Date(item.createtime)
-          });
+    const payment = ["入场消费", "点餐消费"].includes(item.costDes)
+      ? new Payment({
+          customer: customer ? customer._id : undefined,
+          amount: 0,
+          paid: true,
+          title: item.costDes,
+          attach:
+            "booking imported " +
+            (item.costDes === "入场消费"
+              ? item.cost.replace("核销次数：", "")
+              : "food"),
+          gateway: PaymentGateway.Card,
+          gatewayData: {
+            remark: item.remark,
+            costType: item.costType,
+            payType: item.payType,
+            status: item.status,
+            times: +item.cost.replace("核销次数：", "")
+          },
+          createdAt: new Date(item.createtime)
+        })
+      : new Payment({
+          customer: customer._id,
+          amount: +cost,
+          paid: item.status !== -1,
+          title: item.costDes,
+          attach: "card imported",
+          gateway: PaymentGateway.Cash,
+          gatewayData: {
+            remark: item.remark,
+            costType: item.costType,
+            payType: item.payType,
+            status: item.status
+          },
+          createdAt: new Date(item.createtime)
+        });
 
     // await payment.save();
     paymentMap.set(payment.id, payment);

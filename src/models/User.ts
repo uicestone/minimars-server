@@ -54,7 +54,9 @@ export class User {
     // @ts-ignore
     validate: {
       validator: function (v) {
-        return v.length === 11 || v.match(/^\+/);
+        return (
+          v.length === 11 || v.match(/^\+/) || process.env.SUPPRESS_VALIDATOR
+        );
       },
       message: (props: { value: any }) =>
         `手机号必须是11位数或“+”开头的国际号码，输入的是${JSON.stringify(
