@@ -38,6 +38,9 @@ export class User {
   @prop({ type: String, text: true })
   name?: string;
 
+  @prop({ type: String, text: true })
+  childName?: string;
+
   @prop({
     type: String,
     get: v => v,
