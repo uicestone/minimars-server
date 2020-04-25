@@ -75,7 +75,7 @@ export class Booking {
   @prop({ type: String, enum: Object.values(BookingType), required: true })
   type: BookingType;
 
-  @prop({ type: String, required: true })
+  @prop({ type: String, required: true, index: true })
   date: string;
 
   @prop({ type: String, required: true })
@@ -127,7 +127,9 @@ export class Booking {
   async calculatePrice(this: DocumentType<Booking>) {
     const booking = this;
 
-    await booking.populate("customer").execPopulate();
+    if (!booking.populated("customer")) {
+      await booking.populate("customer").execPopulate();
+    }
 
     if (booking.type === "play") {
       let kidsCount = booking.kidsCount;

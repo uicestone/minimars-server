@@ -34,6 +34,7 @@ export interface BookingPostQuery {
   paymentGateway?: PaymentGateway;
   useBalance?: "false";
   adminAddWithoutPayment?: boolean;
+  customerKeyword?: string;
 }
 
 export interface BookingQuery extends ListQuery {

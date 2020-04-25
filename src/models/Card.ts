@@ -38,7 +38,7 @@ export const userVisibleCardStatus = [
   }
 ])
 export class Card {
-  @prop({ ref: "User", required: true })
+  @prop({ ref: "User", required: true, index: true })
   customer: Ref<User>;
 
   @prop({ type: Number })

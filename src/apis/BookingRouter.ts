@@ -64,10 +64,26 @@ export default router => {
 
         const booking = new Booking(body);
 
-        if (!booking.customer && req.user.role === "customer") {
-          booking.customer = req.user;
+        if (!booking.customer) {
+          if (req.user.role === "customer") {
+            booking.customer = req.user;
+          } else if (
+            query.customerKeyword &&
+            ["admin", "manager"].includes(req.user.role)
+          ) {
+            booking.customer = new User({
+              role: "customer",
+              mobile: query.customerKeyword
+            });
+            await booking.customer.validate();
+          }
         }
-        await booking.populate("customer").execPopulate();
+
+        if (!booking.populated("customer")) {
+          await booking.populate("customer").execPopulate();
+        }
+
+        console.log(booking.customer);
 
         if (!booking.customer) {
           throw new HttpError(400, "客户信息错误");
@@ -168,6 +184,9 @@ export default router => {
           }
         }
 
+        if (booking.customer.isNew) {
+          await booking.customer.save();
+        }
         await booking.save();
 
         res.json(booking);

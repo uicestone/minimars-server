@@ -94,11 +94,7 @@ export default router => {
 
         if (queryParams.keyword) {
           $and.push({
-            $or: [
-              { name: new RegExp(queryParams.keyword, "i") },
-              { mobile: new RegExp(queryParams.keyword) },
-              { cardNo: new RegExp(queryParams.keyword) }
-            ]
+            $text: queryParams.keyword
           });
         }
 
