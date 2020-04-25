@@ -54,7 +54,7 @@ export default router => {
         .line(`儿童数：${stats.kidsCount}`)
         .line(`袜子数：${stats.socksCount}`)
         .line(`门票收入：${stats.paidAmount - stats.socksAmount}`)
-        .line(`售卡收入：${stats.cardTypesCount}`)
+        // .line(`售卡收入：${stats.cardTypesCount}`)
         .line(`收款方式：`)
         .line(
           `- 余额：${stats.paidAmountByGateways[PaymentGateway.Balance] || 0}`
@@ -74,16 +74,16 @@ export default router => {
         encoder.line("- 无");
       }
 
-      encoder.line(`充值售卡：`);
-      if (stats.cardTypesCount.length) {
-        stats.cardTypesCount.forEach(depositCount => {
-          encoder.line(
-            `- ${depositCount.title}（${depositCount.price}）：${depositCount.count}`
-          );
-        });
-      } else {
-        encoder.line("- 无");
-      }
+      // encoder.line(`充值售卡：`);
+      // if (stats.cardTypesCount.length) {
+      //   stats.cardTypesCount.forEach(depositCount => {
+      //     encoder.line(
+      //       `- ${depositCount.title}（${depositCount.price}）：${depositCount.count}`
+      //     );
+      //   });
+      // } else {
+      //   encoder.line("- 无");
+      // }
 
       encoder.newline().newline().newline().newline();
 
