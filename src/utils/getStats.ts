@@ -150,40 +150,40 @@ export default async (
 
   paidAmountByGateways.coupon = couponsCount.reduce((a, c) => a + c.amount, 0);
 
-  const cardTypesCount: {
-    slug: string;
-    title: string;
-    price: number;
-    count: number;
-  }[] = [];
+  // const cardTypesCount: {
+  //   slug: string;
+  //   title: string;
+  //   price: number;
+  //   count: number;
+  // }[] = [];
 
-  const cardIds = payments
-    .filter(p => p.attach.match(/^card /))
-    .map(p => {
-      return p.attach.split(" ")[1];
-    });
+  // const cardIds = payments
+  //   .filter(p => p.attach.match(/^card /))
+  //   .map(p => {
+  //     return p.attach.split(" ")[1];
+  //   });
 
-  const cards = await Card.find({ _id: { $in: cardIds } });
+  // const cards = await Card.find({ _id: { $in: cardIds } });
 
-  for (const card of cards) {
-    const cardTypeCount = cardTypesCount.find(t => t.slug === card.slug);
-    if (cardTypeCount) {
-      cardTypeCount.count++;
-    } else {
-      cardTypesCount.push({
-        slug: card.slug,
-        title: card.title,
-        price: card.price,
-        count: 1
-      });
-    }
-  }
+  // for (const card of cards) {
+  //   const cardTypeCount = cardTypesCount.find(t => t.slug === card.slug);
+  //   if (cardTypeCount) {
+  //     cardTypeCount.count++;
+  //   } else {
+  //     cardTypesCount.push({
+  //       slug: card.slug,
+  //       title: card.title,
+  //       price: card.price,
+  //       count: 1
+  //     });
+  //   }
+  // }
 
-  for (const cardPayment of payments.filter(p => p.attach.match(/^card /))) {
-    const paymentAttach = cardPayment.attach.split(" ");
-    const cardId = paymentAttach[1];
-    await Card.findOne({ _id: cardId });
-  }
+  // for (const cardPayment of payments.filter(p => p.attach.match(/^card /))) {
+  //   const paymentAttach = cardPayment.attach.split(" ");
+  //   const cardId = paymentAttach[1];
+  //   await Card.findOne({ _id: cardId });
+  // }
 
   const dailyCustomers = await Booking.aggregate([
     { $match: { date: { $gte: dateRangeStartStr, $lte: dateStr } } },
@@ -365,7 +365,7 @@ export default async (
     socksAmount,
     paidAmountByGateways,
     couponsCount,
-    cardTypesCount,
+    // cardTypesCount,
     dailyCustomers,
     dailyBookingPayment,
     dailyCardPayment

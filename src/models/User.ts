@@ -184,6 +184,7 @@ export class User {
 
 const userModel = getModelForClass(User, {
   schemaOptions: {
+    strict: false,
     toJSON: {
       getters: true,
       transform: function (doc, ret, options) {

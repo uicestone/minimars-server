@@ -1,6 +1,6 @@
 {
   "name": "minimars-server",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "MINI MARS server apis.",
   "scripts": {
     "dev": "ts-node-dev --no-notify --respawn --transpileOnly src/index.ts",
@@ -23,6 +23,7 @@
     "@types/method-override": "^0.0.31",
     "@types/mongoose": "^5.5.0",
     "@types/multer": "^1.4.2",
+    "@types/mysql": "^2.15.10",
     "@types/socket.io": "^2.1.2",
     "@types/string-width": "^4.0.1",
     "@xinglu/wxapp-oauth": "^1.0.1",
@@ -41,6 +42,7 @@
     "moment": "^2.24.0",
     "mongoose": "^5.5.7",
     "multer": "^1.4.2",
+    "mysql": "^2.18.1",
     "redis": "^2.8.0",
     "socket.io": "^2.2.0",
     "string-width": "^4.1.0",

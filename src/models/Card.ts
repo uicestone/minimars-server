@@ -64,7 +64,7 @@ export class Card {
   slug: string;
 
   @prop({ type: String, enum: ["times", "period", "balance"], required: true })
-  type: string;
+  type: "times" | "period" | "balance";
 
   @prop({ type: Boolean, default: false })
   isGift: boolean;

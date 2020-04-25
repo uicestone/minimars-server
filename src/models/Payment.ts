@@ -15,6 +15,7 @@ import {
   payArgs as wechatPayArgs
 } from "../utils/wechat";
 import cardModel, { Card, CardStatus } from "./Card";
+import { isValidHexObjectId } from "../utils/helper";
 
 @pre("save", async function (next) {
   const payment = this as DocumentType<Payment>;
@@ -23,7 +24,7 @@ import cardModel, { Card, CardStatus } from "./Card";
     return next();
   }
 
-  console.log(`[PAY] Payment pre save ${payment._id}.`);
+  // console.log(`[PAY] Payment pre save ${payment._id}.`);
 
   if (payment.paid) {
     payment.paidSuccess();
@@ -213,6 +214,7 @@ export class Payment {
 
     switch (paymentAttach[0]) {
       case "booking":
+        if (!isValidHexObjectId(paymentAttach[1])) break;
         const booking = await Booking.findOne({ _id: paymentAttach[1] });
         if (payment.amount >= 0) {
           await booking.paymentSuccess();
@@ -223,14 +225,15 @@ export class Payment {
         }
         break;
       case "card":
+        if (!isValidHexObjectId(paymentAttach[1])) break;
         const card = await cardModel.findOne({ _id: paymentAttach[1] });
         await card.paymentSuccess();
         console.log(`[PAY] Card purchase success, id: ${card._id}.`);
         break;
       default:
-        console.error(
-          `[PAY] Unknown payment attach: ${JSON.stringify(payment.attach)}`
-        );
+      // console.error(
+      //   `[PAY] Unknown payment attach: ${JSON.stringify(payment.attach)}`
+      // );
     }
   }
 }

@@ -7,7 +7,7 @@ function updateTimes(schema, options?) {
 
   schema.pre("save", function () {
     this.updatedAt = new Date();
-    if (this.isNew) {
+    if (this.isNew && !this.createdAt) {
       this.createdAt = new Date();
     }
   });

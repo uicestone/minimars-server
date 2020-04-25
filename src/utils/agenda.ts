@@ -9,6 +9,7 @@ import Event from "../models/Event";
 import Post from "../models/Post";
 import Store from "../models/Store";
 import { saveContentImages } from "./helper";
+import importPrevData from "./importPrevData";
 
 let agenda: Agenda;
 
@@ -80,8 +81,9 @@ export const initAgenda = async () => {
     done();
   });
 
-  agenda.define("test", async (job, done) => {
-    console.log(`[CRO] Test cron job.`);
+  agenda.define("import prev data", async (job, done) => {
+    await importPrevData(job.attrs.data.database, job.attrs.data.storeKey);
+    console.log("Previous data imported.");
     done();
   });
 
@@ -109,7 +111,6 @@ export const initAgenda = async () => {
   agenda.on("ready", () => {
     agenda.every("4 hours", "cancel expired pending bookings");
     agenda.every("4 hours", "cancel expired pending cards");
-    // agenda.every("10 seconds", "test");
     // agenda.every("1 day", "cancel expired booked bookings");
     // agenda.now("save image from content");
   });
