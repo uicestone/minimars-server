@@ -100,6 +100,9 @@ export class User {
   @prop({ default: 0 })
   balanceReward?: number;
 
+  @prop({ remarks: String })
+  remarks?: string;
+
   get balance() {
     if (this.balanceDeposit === undefined && this.balanceReward === undefined) {
       return undefined;
