@@ -35,10 +35,10 @@ export class User {
   @prop({ select: false })
   password?: string;
 
-  @prop({ type: String, text: true })
+  @prop({ type: String })
   name?: string;
 
-  @prop({ type: String, text: true })
+  @prop({ type: String })
   childName?: string;
 
   @prop({
@@ -53,7 +53,6 @@ export class User {
 
   @prop({
     unique: true,
-    text: true,
     sparse: true,
     // @ts-ignore
     validate: {

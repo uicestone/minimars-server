@@ -13,7 +13,6 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
     cardMap = new Map(),
     bookingMap = new Map(),
     paymentMap = new Map(),
-    paymentEntranceIdMap = new Map(),
     userMap = new Map();
 
   const connection = createConnection({
