@@ -18,8 +18,8 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
 
   const connection = createConnection({
     host: "localhost",
-    user: "root",
-    password: process.env.MYSQL_ROOT_PASSWORD || "",
+    user: process.env.MYSQL_USER || "root",
+    password: process.env.MYSQL_PASS || "",
     database
   });
 
