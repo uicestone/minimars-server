@@ -27,7 +27,7 @@ import { isValidHexObjectId } from "../utils/helper";
   // console.log(`[PAY] Payment pre save ${payment._id}.`);
 
   if (payment.paid) {
-    payment.paidSuccess();
+    await payment.paidSuccess();
     return next();
   }
 
