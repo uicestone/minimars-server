@@ -127,9 +127,11 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
         avatarUrl: item.headimg,
         name: item.name,
         mobile: item.phone,
+        cardNo: item.code,
         updatedAt: item.updateTime,
         childBirthday: item.babyBirthday,
-        createdAt: new Date(item.createTime)
+        createdAt: new Date(item.createTime),
+        remarks: item.remark
       });
       // await user.save();
       userMobileMap.set(user.mobile, user);

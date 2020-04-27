@@ -140,6 +140,12 @@ import { isValidHexObjectId } from "../utils/helper";
       break;
     case PaymentGateway.Cash:
       break;
+    case PaymentGateway.Pos:
+      break;
+    case PaymentGateway.Dianping:
+      break;
+    case PaymentGateway.Shouqianba:
+      break;
     case PaymentGateway.Points:
       if (payment.amountInPoints > customer.points) {
         throw new Error("insufficient_points");
@@ -244,7 +250,10 @@ export enum PaymentGateway {
   Card = "card",
   Coupon = "coupon",
   Scan = "scan",
+  Pos = "pos",
   Cash = "cash",
+  Shouqianba = "shouqianba",
+  Dianping = "dianping",
   WechatPay = "wechatpay",
   Alipay = "alipay",
   UnionPay = "unionpay"
@@ -256,7 +265,10 @@ export const gatewayNames = {
   [PaymentGateway.Coupon]: "团购优惠券",
   [PaymentGateway.Scan]: "现场扫码",
   [PaymentGateway.Card]: "会员卡",
-  [PaymentGateway.Cash]: "现金刷卡",
+  [PaymentGateway.Pos]: "银行卡",
+  [PaymentGateway.Cash]: "现金",
+  [PaymentGateway.Shouqianba]: "收钱吧",
+  [PaymentGateway.Dianping]: "点评POS",
   [PaymentGateway.WechatPay]: "微信小程序",
   [PaymentGateway.Alipay]: "支付宝",
   [PaymentGateway.UnionPay]: "银联"
