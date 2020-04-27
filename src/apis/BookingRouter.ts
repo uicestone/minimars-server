@@ -211,13 +211,19 @@ export default router => {
           query.find({ customer: req.user._id });
         }
 
-        ["type", "store", "date", "customer", "event", "gift"].forEach(
-          field => {
-            if (queryParams[field]) {
-              query.find({ [field]: queryParams[field] });
-            }
+        [
+          "type",
+          "store",
+          "date",
+          "customer",
+          "event",
+          "gift",
+          "coupon"
+        ].forEach(field => {
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
           }
-        );
+        });
 
         if (queryParams.status) {
           query.find({
@@ -236,10 +242,6 @@ export default router => {
             ]
           });
           query.find({ customer: { $in: matchCustomers } });
-        }
-
-        if (queryParams.coupon) {
-          query.find({ coupon: new RegExp(queryParams.coupon) });
         }
 
         // restrict self store bookings for managers
@@ -432,15 +434,15 @@ export default router => {
       }
 
       if (booking.coupon) {
-        const coupon = config.coupons.find(c => c.slug === booking.coupon);
+        const coupon = booking.coupon;
         if (coupon) {
           encoder.line(
-            coupon.name +
+            coupon.title +
               " ".repeat(
                 Math.max(
                   0,
                   31 -
-                    stringWidth(coupon.name) -
+                    stringWidth(coupon.title) -
                     stringWidth(
                       coupon.price ? `￥${coupon.price.toFixed(2)}` : ""
                     )

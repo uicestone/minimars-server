@@ -136,6 +136,8 @@ import { isValidHexObjectId } from "../utils/helper";
       }
 
       break;
+    case PaymentGateway.Coupon:
+      break;
     case PaymentGateway.Scan:
       break;
     case PaymentGateway.Cash:

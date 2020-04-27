@@ -22,8 +22,6 @@ export default async (
       .startOf("day")
       .toDate();
 
-  const coupons = config.coupons;
-
   const bookingsPaid = await Booking.find({
     date: dateStrFrom ? { $gte: dateStrFrom, $lte: dateStr } : dateStr,
     status: { $in: paidBookingStatus }
@@ -128,19 +126,16 @@ export default async (
     .filter(b => b.coupon)
     .reduce((couponsCount, booking) => {
       let couponCount = couponsCount.find(c => c.slug === booking.coupon);
-      const coupon = coupons.find(c => c.slug === booking.coupon);
+      const coupon = booking.coupon;
       if (!couponCount) {
         couponCount = {
-          slug: coupon.slug,
-          name: coupon.name,
-          price: coupon.amount,
+          name: coupon.title,
+          price: coupon.priceThirdParty,
           count: 0
         };
         couponsCount.push(couponCount);
       }
-      couponCount.count +=
-        (booking.adultsCount + booking.kidsCount) /
-        ((coupon.adultsCount || 0) + (coupon.kidsCount || 0) || 1);
+      couponCount.count += booking.kidsCount / coupon.kidsCount;
       return couponsCount;
     }, [])
     .map(couponCount => {

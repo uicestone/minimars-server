@@ -16,6 +16,7 @@ import { Store } from "./Store";
 import { Card } from "./Card";
 import { Event } from "./Event";
 import { Gift } from "./Gift";
+import { Coupon } from "./Coupon";
 
 const { DEBUG } = process.env;
 
@@ -60,6 +61,7 @@ export const paidBookingStatus = [
   { path: "store", select: "name" },
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
   { path: "card", select: "-content" },
+  { path: "coupon", select: "-content" },
   { path: "event", select: "-content" },
   { path: "gift", select: "-content" }
 ])
@@ -106,8 +108,8 @@ export class Booking {
   @prop({ ref: "Card" })
   card?: DocumentType<Card>;
 
-  @prop()
-  coupon?: string;
+  @prop({ ref: "Coupon" })
+  coupon?: DocumentType<Coupon>;
 
   @prop({ ref: "Event" })
   event?: DocumentType<Event>;
@@ -151,39 +153,27 @@ export class Booking {
         // TODO check card valid times
         // TODO check card valid period
       }
-
-      let coupon;
-
       if (booking.coupon) {
-        coupon = config.coupons.find(c => c.slug === booking.coupon);
-        if (!coupon) {
+        if (!booking.populated("coupon")) {
+          await booking.populate("coupon").execPopulate();
+        }
+        if (!booking.coupon) {
           throw new Error("coupon_not_found");
         }
+        kidsCount -= booking.coupon.kidsCount;
+        extraAdultsCount = Math.max(
+          0,
+          booking.adultsCount -
+            booking.kidsCount * booking.coupon.freeParentsPerKid
+        );
       }
 
-      if (coupon) {
-        // fullDay hours with coupon
-        booking.price = 0;
-      } else {
-        // fullDay hours standard
-        booking.price =
-          config.extraParentFullDayPrice * extraAdultsCount +
-          config.kidFullDayPrice * kidsCount;
-      }
+      booking.price =
+        config.extraParentFullDayPrice * extraAdultsCount +
+        config.kidFullDayPrice * kidsCount;
 
-      if (coupon && coupon.price) {
-        booking.price += coupon.price;
-      }
-
-      if (coupon && coupon.discountAmount) {
-        booking.price -= coupon.discountAmount;
-        if (booking.price < 0) {
-          booking.price = 0;
-        }
-      }
-
-      if (coupon && coupon.discountRate) {
-        booking.price = booking.price * (1 - coupon.discountRate);
+      if (booking.coupon && booking.coupon.price) {
+        booking.price += booking.coupon.price;
       }
 
       booking.price += booking.socksCount * config.sockPrice;
@@ -232,7 +222,7 @@ export class Booking {
   ) {
     const booking = this;
 
-    if (!paymentGateway && !booking.card) {
+    if (!paymentGateway && !booking.card && !booking.coupon) {
       throw new Error("missing_gateway");
     }
 
@@ -263,6 +253,22 @@ export class Booking {
       });
       await cardPayment.save();
       booking.payments.push(cardPayment);
+    }
+
+    if (booking.coupon) {
+      const couponPayment = new paymentModel({
+        customer: booking.customer,
+        amount: booking.coupon.priceThirdParty,
+        title,
+        attach,
+        gateway: PaymentGateway.Coupon,
+        gatewayData: {
+          couponId: booking.coupon.id,
+          bookingId: booking.id
+        }
+      });
+      await couponPayment.save();
+      booking.payments.push(couponPayment);
     }
 
     if (

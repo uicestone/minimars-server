@@ -6,7 +6,8 @@ export default async function (req, res, next) {
     "customer",
     "author",
     "event",
-    "gift"
+    "gift",
+    "coupon"
   ];
   for (let key in req.body) {
     if (
