@@ -74,23 +74,26 @@ export class Booking {
   @prop({ ref: "Store", required: true })
   store: DocumentType<Store>;
 
-  @prop({ type: String, enum: Object.values(BookingType), required: true })
+  @prop({ enum: Object.values(BookingType), required: true })
   type: BookingType;
 
-  @prop({ type: String, required: true, index: true })
+  @prop({ required: true, index: true })
   date: string;
 
-  @prop({ type: String, required: true })
+  @prop({ required: true })
   checkInAt: string;
 
-  @prop({ type: Number, default: 1 })
+  @prop({ default: 1 })
   adultsCount: number;
 
-  @prop({ type: Number, default: 0 })
+  @prop({ default: 0 })
   kidsCount: number;
 
-  @prop({ type: Number, default: 0 })
+  @prop({ default: 0 })
   socksCount: number;
+
+  @prop({ default: 0 })
+  bandsPrinted: number;
 
   @prop({
     type: String,
