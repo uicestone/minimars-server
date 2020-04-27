@@ -4,7 +4,8 @@ import {
   getModelForClass,
   plugin,
   pre,
-  DocumentType
+  DocumentType,
+  index
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import { config } from "./Config";
@@ -25,6 +26,7 @@ import autoPopulate from "./plugins/autoPopulate";
 })
 @plugin(updateTimes)
 @plugin(autoPopulate, [{ path: "store", select: "-content" }])
+@index({ name: "text", mobile: "text", cardNo: "text" })
 export class User {
   @prop({ default: "customer" })
   role: string;
@@ -133,7 +135,7 @@ export class User {
   @prop()
   cardType?: string;
 
-  @prop()
+  @prop({ index: true })
   cardNo?: string;
 
   async depositSuccess(this: DocumentType<User>, levelName: string) {

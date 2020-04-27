@@ -10,6 +10,7 @@ import Post from "../models/Post";
 import Store from "../models/Store";
 import { saveContentImages } from "./helper";
 import importPrevData from "./importPrevData";
+import User from "../models/User";
 
 let agenda: Agenda;
 
@@ -87,6 +88,12 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("create indexes", async (job, done) => {
+    User.createIndexes();
+    console.log("Index created.");
+    done();
+  });
+
   agenda.define("save image from content", async (job, done) => {
     console.log(`[CRO] Save image from content...`);
     const cardTypes = await CardType.find();
@@ -112,7 +119,7 @@ export const initAgenda = async () => {
     agenda.every("4 hours", "cancel expired pending bookings");
     agenda.every("4 hours", "cancel expired pending cards");
     // agenda.every("1 day", "cancel expired booked bookings");
-    // agenda.now("save image from content");
+    // agenda.now("create indexes");
   });
 
   agenda.on("error", err => {

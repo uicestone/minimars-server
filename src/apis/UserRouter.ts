@@ -94,8 +94,8 @@ export default router => {
 
         if (queryParams.keyword) {
           $and.push({
-            mobile: new RegExp(queryParams.keyword)
-            // $text: {Ž$search: queryParams.keyword }
+            // mobile: new RegExp(queryParams.keyword)
+            $text: { $search: queryParams.keyword }
           });
         }
 
