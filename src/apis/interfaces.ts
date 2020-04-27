@@ -2,6 +2,7 @@ import { Booking } from "../models/Booking";
 import { PaymentGateway, Payment } from "../models/Payment";
 import { Card } from "../models/Card";
 import { CardType } from "../models/CardType";
+import { Coupon } from "../models/Coupon";
 import { Event } from "../models/Event";
 import { Gift } from "../models/Gift";
 import { Post } from "../models/Post";
@@ -75,6 +76,12 @@ export interface CardTypePostBody extends CardType {}
 export interface CardTypePutBody extends CardType {}
 
 export interface CardTypeQuery extends ListQuery {}
+
+export interface CouponPostBody extends Coupon {}
+
+export interface CouponPutBody extends Coupon {}
+
+export interface CouponQuery extends ListQuery {}
 
 export interface EventPostBody extends Event {}
 
