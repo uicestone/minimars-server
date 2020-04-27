@@ -125,7 +125,7 @@ export default async (
   }[] = bookingsPaid
     .filter(b => b.coupon)
     .reduce((couponsCount, booking) => {
-      let couponCount = couponsCount.find(c => c.slug === booking.coupon);
+      let couponCount = couponsCount.find(c => c.name === booking.coupon.title);
       const coupon = booking.coupon;
       if (!couponCount) {
         couponCount = {
