@@ -165,7 +165,8 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
           freeParentsPerKid: 2,
           maxKids: originalTimes > 5 ? 3 : 2,
           price: 0,
-          createdAt: new Date(item.createTime)
+          createdAt: new Date(item.createTime),
+          expiresAt: new Date(item.expiredTime)
         })
       : new Card({
           customer: user._id,
@@ -183,7 +184,8 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
           freeParentsPerKid: 2,
           maxKids: originalTimes > 5 ? 3 : 2,
           price: 0,
-          createdAt: new Date(item.createTime)
+          createdAt: new Date(item.createTime),
+          expiresAt: new Date(item.expiredTime)
         });
 
     // await card.save();

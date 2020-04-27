@@ -57,6 +57,9 @@ export class Card {
   @arrayProp({ ref: "Payment" })
   payments?: DocumentType<Payment>[];
 
+  @prop({ type: Date })
+  expiresAt: Date;
+
   @prop({ type: String, required: true })
   title: string;
 
