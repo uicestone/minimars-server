@@ -138,54 +138,6 @@ export class User {
   @prop({ index: true })
   cardNo?: string;
 
-  async depositSuccess(this: DocumentType<User>, levelName: string) {
-    const level = config.depositLevels.filter(l => l.slug === levelName)[0];
-    if (!level) {
-      throw new Error(`Deposit level not found for slug ${levelName}.`);
-    }
-
-    this.cardType = level.cardType;
-
-    if (level.depositBalance || level.rewardBalance) {
-      if (!this.balanceDeposit) {
-        this.balanceDeposit = 0;
-      }
-      if (!this.balanceReward) {
-        this.balanceReward = 0;
-      }
-
-      console.log(
-        `[USR] this ${this.id} balance was ${this.balanceDeposit}:${this.balanceReward}.`
-      );
-
-      if (level.depositBalance) {
-        this.balanceDeposit += level.depositBalance;
-      }
-
-      if (level.rewardBalance) {
-        this.balanceReward += level.rewardBalance;
-      }
-
-      console.log(
-        `[USR] Deposit success ${this.id}, balance is now ${this.balanceDeposit}:${this.balanceReward}.`
-      );
-    }
-
-    if (level.freePlayFrom && level.freePlayTo) {
-      this.freePlayFrom = level.freePlayFrom;
-      this.freePlayTo = level.freePlayTo;
-      console.log(
-        `[USR] Update free-play duration for this ${this.id}: ${this.freePlayFrom}-${this.freePlayTo}`
-      );
-    }
-
-    await this.save();
-
-    // send user notification
-
-    return this;
-  }
-
   async addPoints(this: DocumentType<User>, amount: number, save = true) {
     if (!this.points) this.points = 0;
     this.points += 1 * amount;

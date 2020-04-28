@@ -27,7 +27,6 @@ import { DocumentType } from "@typegoose/typegoose";
 
 setTimeout(async () => {
   // const u = await User.findOne({ name: "陆秋石" });
-  // u.depositSuccess("deposit-1000");
   // const s = await Store.findOne();
   // const b = new Booking({
   //   customer: u,
