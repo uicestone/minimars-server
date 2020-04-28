@@ -65,7 +65,7 @@ export default router => {
 
         if (!booking.customer) {
           if (req.user.role === "customer") {
-            booking.customer = req.user;
+            booking.customer = req.user._id;
           } else if (
             query.customerKeyword &&
             ["admin", "manager"].includes(req.user.role)
@@ -82,7 +82,9 @@ export default router => {
           await booking.populate("customer").execPopulate();
         }
 
-        console.log(booking.customer);
+        console.log(
+          `Create booking for customer ${booking.customer.mobile} ${booking.customer.id}`
+        );
 
         if (!booking.customer) {
           throw new HttpError(400, "客户信息错误");

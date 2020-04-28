@@ -60,7 +60,7 @@ export const payArgs = (gatewayData: {
     nonceStr,
     package: _package,
     paySign: utils.sign(
-      SignType.MD5,
+      "MD5" as SignType,
       {
         appId: WEIXIN_APPID,
         timeStamp,

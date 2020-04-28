@@ -19,6 +19,7 @@ export default async function (req, res, next) {
         _id: Types.ObjectId(tokenData.userId),
         role: tokenData.userRole
       });
+      // req.user = await User.findById(tokenData.userId);
     } catch (err) {
       return next(new HttpError(401, "无效登录，请重新登录"));
     }
