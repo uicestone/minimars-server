@@ -53,7 +53,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
   for (const item of membership) {
     if (!item.phone) continue;
     try {
-      await importMembership(item, store);
+      await importMembership(item);
     } catch (e) {
       console.error(e.message);
     }
@@ -61,12 +61,26 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
   console.log(`${membership.length} membership processed.`);
   console.timeEnd("Import membership");
 
+  console.log("Import special card...");
+  console.time("Import special card");
+  const specialCard = await query("SELECT * FROM `special_card`");
+  for (const item of specialCard) {
+    if (!item.phone) continue;
+    try {
+      await importSpecialCard(item);
+    } catch (e) {
+      console.error(e.message);
+    }
+  }
+  console.log(`${specialCard.length} special cards processed.`);
+  console.timeEnd("Import special card");
+
   console.log("Import entrance_records...");
   console.time("Import entrance_records");
   const entranceRecords = await query("SELECT * FROM `entrance_records`");
   for (const item of entranceRecords) {
     try {
-      await importEntranceRecord(item, store);
+      await importEntranceRecord(item);
     } catch (e) {
       console.error(e.message);
     }
@@ -118,7 +132,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
 
   connection.end();
 
-  async function importMembership(item, store) {
+  async function importMembership(item) {
     let user = userMobileMap.get(item.phone);
     if (!user) {
       user = new User({
@@ -140,53 +154,43 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
     }
     userCodeMap.set(item.code, user);
 
-    let originalTimes = 0;
-
-    if (item.account > 100) {
-    } else if (item.account > 16) {
-      originalTimes = 30;
-    } else if (item.account > 6) {
-      originalTimes = 15;
-    } else {
-      originalTimes = 5;
-    }
-
-    const card = originalTimes
-      ? new Card({
-          customer: user._id,
-          timesLeft: item.account,
-          status: CardStatus.ACTIVATED,
-          title: `${storeKey}店${originalTimes}次卡`,
-          type: "times",
-          slug: `ts-${originalTimes}`,
-          times: originalTimes,
-          store,
-          posterUrl: "",
-          freeParentsPerKid: 2,
-          maxKids: originalTimes > 5 ? 3 : 2,
-          price: 0,
-          createdAt: new Date(item.createTime),
-          expiresAt: new Date(item.expiredTime)
-        })
-      : new Card({
-          customer: user._id,
-          status:
-            new Date(item.expiredTime) > new Date()
-              ? CardStatus.ACTIVATED
-              : CardStatus.EXPIRED,
-          title: `${storeKey}店年卡`,
-          type: "period",
-          slug: `period`,
-          start: new Date(item.createTime),
-          end: new Date(item.expiredTime),
-          store,
-          posterUrl: "",
-          freeParentsPerKid: 2,
-          maxKids: originalTimes > 5 ? 3 : 2,
-          price: 0,
-          createdAt: new Date(item.createTime),
-          expiresAt: new Date(item.expiredTime)
-        });
+    const card =
+      item.account < 100
+        ? new Card({
+            customer: user._id,
+            timesLeft: +item.account,
+            status: CardStatus.ACTIVATED,
+            title: `${storeKey}店次卡`,
+            type: "times",
+            slug: `${database.substr(2)}-times`,
+            times: 0,
+            store,
+            posterUrl: "",
+            freeParentsPerKid: 2,
+            maxKids: 3,
+            price: 0,
+            createdAt: new Date(item.createTime),
+            expiresAt: new Date(item.expiredTime)
+          })
+        : new Card({
+            customer: user._id,
+            status:
+              new Date(item.expiredTime) > new Date()
+                ? CardStatus.ACTIVATED
+                : CardStatus.EXPIRED,
+            title: `${storeKey}店年卡`,
+            type: "period",
+            slug: `period`,
+            start: new Date(item.createTime),
+            end: new Date(item.expiredTime),
+            store,
+            posterUrl: "",
+            freeParentsPerKid: 2,
+            maxKids: 1,
+            price: 0,
+            createdAt: new Date(item.createTime),
+            expiresAt: new Date(item.expiredTime)
+          });
 
     // await card.save();
     cardMap.set(card.id, card);
@@ -194,7 +198,49 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
     // console.log(`Card created: ${card.title}.`);
   }
 
-  async function importEntranceRecord(item, store) {
+  async function importSpecialCard(item) {
+    let user = userMobileMap.get(item.phone);
+    if (!user) {
+      user = new User({
+        childName: item.name,
+        avatarUrl: item.photo,
+        name: item.name,
+        mobile: item.phone,
+        childBirthday: item.babyBirthday,
+        createdAt: new Date(item.createTime)
+      });
+      // await user.save();
+      userMobileMap.set(user.mobile, user);
+      userMap.set(user.id, user);
+      // console.log(`User created: ${user.mobile}.`);
+    }
+    userCodeMap.set(item.code, user);
+
+    const card = new Card({
+      customer: user._id,
+      status:
+        new Date(item.expiredTime) > new Date()
+          ? CardStatus.ACTIVATED
+          : CardStatus.EXPIRED,
+      title: `${storeKey}店年卡`,
+      type: "period",
+      slug: `period`,
+      start: new Date(item.createTime),
+      end: new Date(item.expiredTime),
+      store,
+      posterUrl: "",
+      freeParentsPerKid: 2,
+      maxKids: 1,
+      price: +item.fee,
+      createdAt: new Date(item.createTime),
+      expiresAt: new Date(item.expiredTime)
+    });
+
+    // await card.save();
+    cardMap.set(card.id, card);
+  }
+
+  async function importEntranceRecord(item) {
     let customer = userMobileMap.get(item.code) || userCodeMap.get(item.code);
     if (!customer) {
       // if (item.code.length !== 11 && !item.code.match(/^\+/)) {
