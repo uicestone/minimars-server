@@ -5,6 +5,7 @@ import HttpError from "../utils/HttpError";
 import Coupon, { Coupon as ICoupon } from "../models/Coupon";
 import { CouponQuery, CouponPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
+import User from "../models/User";
 
 export default router => {
   // Coupon CURD
@@ -35,6 +36,13 @@ export default router => {
         };
 
         query.select("-content");
+
+        if (req.user.role === "manager") {
+          if (!req.user.store) {
+            req.user = await User.findById(req.user.id);
+          }
+          query.find({ store: { $in: [req.user.store.id, null] } });
+        }
 
         let total = await query.countDocuments();
         const page = await query

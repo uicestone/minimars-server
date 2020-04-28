@@ -212,6 +212,13 @@ export default router => {
           query.find({ customer: req.user._id });
         }
 
+        if (req.user.role === "manager") {
+          if (!req.user.store) {
+            req.user = await User.findById(req.user.id);
+          }
+          query.find({ store: req.user.store.id });
+        }
+
         [
           "type",
           "store",
