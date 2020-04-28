@@ -11,6 +11,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
     userCodeMap = new Map(),
     bookingEntranceIdMap = new Map(),
     cardMap = new Map(),
+    cardCustomerMap = new Map(),
     bookingMap = new Map(),
     paymentMap = new Map(),
     userMap = new Map();
@@ -114,6 +115,49 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
   console.log(`${consumeRecords.length} consume records processed`);
   console.timeEnd("Import consume_records");
 
+  connection.end();
+
+  try {
+    for (const item of consumeRecords) {
+      const u = userCodeMap.get(item.code);
+      if (!u) continue;
+      const match = item.costDes.match(/会员(\d+)次卡/);
+      if (match) {
+        if (u.timesLeft === undefined) {
+          u.timesLeft = 0;
+        }
+        if (u.times === undefined) {
+          u.times = 0;
+        }
+        u.timesLeft += +match[1];
+        u.times += +match[1];
+      }
+      if (item.costDes === "入场消费") {
+        const matchTimes = item.cost.match(/核销次数：(\d+)/);
+        if (!+matchTimes[1]) throw new Error("times wrong");
+        u.timesLeft -= +matchTimes[1];
+      }
+      if (u.timesLeft >= 15) {
+        u.maxKids = 3;
+      } else if (u.timesLeft >= 5) {
+        u.maxKids = 2;
+      } else if (u.timesLeft === 0) {
+        u.maxKids = undefined;
+      }
+    }
+    const uu = Array.from(userCodeMap)
+      .map(u => u[1])
+      .filter(u => (u as any).maxKids);
+    console.log(`${uu.length} users to update card maxKids.`);
+    for (const u of uu) {
+      const card = cardCustomerMap.get(u.id);
+      card.maxKids = u.maxKids;
+      card.times = u.times;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
   console.log("Save documents...");
   console.time("Save documents");
   try {
@@ -129,8 +173,6 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
     console.error(e.message);
   }
   console.timeEnd("Save documents");
-
-  connection.end();
 
   async function importMembership(item) {
     let user = userMobileMap.get(item.phone);
@@ -163,11 +205,11 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
             title: `${storeKey}店次卡`,
             type: "times",
             slug: `${database.substr(2)}-times`,
-            times: 0,
+            times: +item.account,
             store,
             posterUrl: "",
             freeParentsPerKid: 2,
-            maxKids: 3,
+            maxKids: 2,
             price: 0,
             createdAt: new Date(item.createTime),
             expiresAt: new Date(item.expiredTime)
@@ -194,6 +236,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
 
     // await card.save();
     cardMap.set(card.id, card);
+    cardCustomerMap.set("" + card.customer, card);
 
     // console.log(`Card created: ${card.title}.`);
   }
