@@ -163,7 +163,7 @@ export class Booking {
         if (!booking.coupon) {
           throw new Error("coupon_not_found");
         }
-        kidsCount -= booking.coupon.kidsCount;
+        kidsCount = 0;
         extraAdultsCount = Math.max(
           0,
           booking.adultsCount -
