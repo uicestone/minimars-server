@@ -142,12 +142,16 @@ import { isValidHexObjectId } from "../utils/helper";
     case PaymentGateway.Scan:
       break;
     case PaymentGateway.Cash:
+      payment.paid = true;
       break;
     case PaymentGateway.Pos:
+      payment.paid = true;
       break;
     case PaymentGateway.Dianping:
+      payment.paid = true;
       break;
     case PaymentGateway.Shouqianba:
+      payment.paid = true;
       break;
     case PaymentGateway.Points:
       if (payment.amountInPoints > customer.points) {

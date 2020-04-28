@@ -240,7 +240,8 @@ export class Booking {
     if (booking.card && booking.card.type === "times") {
       const cardPayment = new paymentModel({
         customer: booking.customer,
-        amount: (booking.card.price / booking.card.times) * booking.kidsCount,
+        amount:
+          (booking.card.price / booking.card.times) * booking.kidsCount || 0,
         title,
         attach,
         gateway: PaymentGateway.Card,
@@ -314,6 +315,11 @@ export class Booking {
         attach,
         gateway: paymentGateway
       });
+
+      booking.status =
+        booking.type === BookingType.FOOD
+          ? BookingStatus.FINISHED
+          : BookingStatus.BOOKED;
 
       console.log(`[PAY] Extra payment: `, JSON.stringify(extraPayment));
 
