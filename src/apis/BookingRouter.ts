@@ -243,11 +243,7 @@ export default router => {
 
         if (queryParams.customerKeyword) {
           const matchCustomers = await User.find({
-            $or: [
-              { name: new RegExp(queryParams.customerKeyword, "i") },
-              { mobile: new RegExp(queryParams.customerKeyword) },
-              { cardNo: new RegExp(queryParams.customerKeyword) }
-            ]
+            $text: { $search: queryParams.customerKeyword }
           });
           query.find({ customer: { $in: matchCustomers } });
         }
