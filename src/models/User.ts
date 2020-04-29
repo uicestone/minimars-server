@@ -92,7 +92,7 @@ export class User {
   @prop()
   constellation?: string;
 
-  @prop({ unique: true, sparse: true })
+  @prop({ index: true })
   idCardNo?: string;
 
   @prop()

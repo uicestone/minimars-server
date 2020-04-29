@@ -5,8 +5,32 @@ import Store from "../models/Store";
 import Booking, { BookingType, BookingStatus } from "../models/Booking";
 import moment from "moment";
 import Payment, { PaymentGateway } from "../models/Payment";
+import Coupon from "../models/Coupon";
+
+// item.type 0 会员卡，24 扫码，25 点评，27 麦淘 30 周末酒店
+// 28/29 小丸子， 26 彩贝壳， 23 现金， 22 银行卡， 20 支付宝，21 微信支付(POS)
+// 3 其他来源
+// 2 现金(其他)支付
+// 1 微信支付
+const paymentType = {
+  0: PaymentGateway.Card,
+  1: PaymentGateway.WechatPay,
+  2: PaymentGateway.Cash,
+  3: "其他来源",
+  20: PaymentGateway.Alipay,
+  21: PaymentGateway.WechatPay,
+  23: PaymentGateway.Cash,
+  24: PaymentGateway.Dianping,
+  25: "点评",
+  26: "彩贝壳",
+  27: "麦淘",
+  28: "小丸子",
+  29: "小丸子",
+  30: "周末酒店"
+};
 
 export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") => {
+  const slug = database.substr(2);
   const userMobileMap = new Map(),
     userCodeMap = new Map(),
     bookingEntranceIdMap = new Map(),
@@ -28,6 +52,8 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
   if (!store) {
     throw new Error("store_not_found");
   }
+
+  const coupons = await Coupon.find();
 
   const customers = await User.find({ role: "customer" });
 
@@ -89,18 +115,18 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
   console.log(`${entranceRecords.length} entrance records processed.`);
   console.timeEnd("Import entrance_records");
 
-  console.log("Import family_packages...");
-  console.time("Import family_packages");
-  const familyPackages = await query("SELECT * FROM `family_package`");
-  for (const item of familyPackages) {
-    try {
-      await importFamilyPackage(item);
-    } catch (e) {
-      console.error(e.message);
-    }
-  }
-  console.log(`${entranceRecords.length} entrance records processed.`);
-  console.timeEnd("Import family_packages");
+  // console.log("Import family_packages...");
+  // console.time("Import family_packages");
+  // const familyPackages = await query("SELECT * FROM `family_package`");
+  // for (const item of familyPackages) {
+  //   try {
+  //     await importFamilyPackage(item);
+  //   } catch (e) {
+  //     console.error(e.message);
+  //   }
+  // }
+  // console.log(`${entranceRecords.length} entrance records processed.`);
+  // console.timeEnd("Import family_packages");
 
   console.log("Import consume_records...");
   console.time("Import consume_records");
@@ -183,9 +209,10 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
         avatarUrl: item.headimg,
         name: item.name,
         mobile: item.phone,
-        cardNo: item.code,
+        cardNo: `${slug}-${item.code}`,
         updatedAt: item.updateTime,
-        childBirthday: item.babyBirthday,
+        childBirthday:
+          item.babyBirthday && moment(item.babyBirthday).format("YYYY-MM-DD"),
         createdAt: new Date(item.createTime),
         remarks: item.remark
       });
@@ -204,7 +231,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
             status: +item.account ? CardStatus.ACTIVATED : CardStatus.EXPIRED,
             title: `${storeKey}店次卡`,
             type: "times",
-            slug: `${database.substr(2)}-times`,
+            slug: `${slug}-times`,
             times: +item.account,
             store,
             posterUrl: "",
@@ -212,7 +239,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
             maxKids: 2,
             price: 0,
             createdAt: new Date(item.createTime),
-            expiresAt: new Date(item.expiredTime)
+            expiresAt: item.expiredTime && new Date(item.expiredTime)
           })
         : new Card({
             customer: user._id,
@@ -231,7 +258,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
             maxKids: 1,
             price: 0,
             createdAt: new Date(item.createTime),
-            expiresAt: new Date(item.expiredTime)
+            expiresAt: item.expiredTime && new Date(item.expiredTime)
           });
 
     // await card.save();
@@ -300,6 +327,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
       userMobileMap.set(item.code, customer);
       userMap.set(customer.id, customer);
     }
+
     const booking = new Booking({
       customer,
       store,
@@ -308,9 +336,67 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
       checkInAt: moment(item.enterTime).format("HH:mm:ss"),
       adultsCount: +item.enterPeople - item.cost,
       kidsCount: item.cost,
-      status: BookingStatus.FINISHED,
-      createdAt: new Date(item.enterTime)
+      status: item.status > 0 ? BookingStatus.FINISHED : BookingStatus.CANCELED,
+      createdAt: new Date(item.enterTime),
+      remarks: item.remark,
+      serialNumber: item.serialNumber
     });
+
+    const title = `${booking.store.name} ${booking.adultsCount}大${booking.kidsCount}小 ${booking.date} ${booking.checkInAt}入场`;
+
+    if ([3, 25, 26, 27, 28, 29, 30].includes(item.type)) {
+      const coupon = coupons.find(
+        c => c.title.indexOf(paymentType[item.type]) > -1
+      );
+      if (!coupon) throw new Error(paymentType[item.type]);
+      const couponPayment = new Payment({
+        customer,
+        amount: coupon.priceThirdParty,
+        paid: item.status > 0,
+        title,
+        attach: `booking ${booking.id}`,
+        gateway: PaymentGateway.Coupon,
+        gatewayData: {
+          couponId: coupon.id,
+          bookingId: booking.id
+        }
+      });
+      booking.payments.push(couponPayment._id);
+      paymentMap.set(couponPayment.id, couponPayment);
+      booking.coupon = coupon;
+    }
+
+    if ([1, 2, 20, 21, 23, 24].includes(item.type)) {
+      const directPayment = new Payment({
+        customer,
+        amount: +item.totalFee,
+        paid: item.status > 0,
+        title,
+        attach: `booking ${booking.id}`,
+        gateway: paymentType[item.type]
+      });
+      booking.payments.push(directPayment._id);
+      paymentMap.set(directPayment.id, directPayment);
+    }
+
+    if (item.type === 0) {
+      const card = cardCustomerMap.get(customer.id);
+      booking.card = card;
+      // if (customer.cards.length === 1) {
+      //   booking.card = customer.cards[0];
+      // }
+      // if (customer.cards.length > 1) {
+      //   booking.card = customer.cards.sort((c1, c2) => {
+      //     if (!c1.updatedAt) return 1;
+      //     return c1.updatedAt < c2.updatedAt ? 1 : -1;
+      //   })[0];
+      //   console.log(
+      //     // @ts-ignore
+      //     `Multiple cards for user ${customer.mobile}, use ${booking.card.updatedAt}`
+      //   );
+      // }
+    }
+
     // await booking.save();
     bookingMap.set(booking.id, booking);
     bookingEntranceIdMap.set(item.id, booking);
@@ -336,7 +422,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
       createdAt: new Date(item.createTime)
     });
     if (!booking.payments) booking.payments = [];
-    booking.payments.push(payment.id);
+    booking.payments.push(payment._id);
     paymentMap.set(payment.id, payment);
   }
 
@@ -351,6 +437,12 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
     }
 
     const cost = item.cost.replace("金额：￥", "");
+
+    // 1 Card
+    // 2 buy time card
+    // 3 food
+    // 6 guest
+    // 7 buy period card
 
     const payment = ["入场消费", "点餐消费"].includes(item.costDes)
       ? new Payment({
@@ -388,6 +480,11 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
           },
           createdAt: new Date(item.createtime)
         });
+    const booking = bookingEntranceIdMap.get(item.trade_no);
+
+    if (booking) {
+      booking.payments.push(payment._id);
+    }
 
     // await payment.save();
     paymentMap.set(payment.id, payment);
