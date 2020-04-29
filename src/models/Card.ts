@@ -137,6 +137,10 @@ export class Card {
         attach,
         gateway: paymentGateway
       });
+      // payment is now set to true automatically
+      if (paymentGateway !== PaymentGateway.WechatPay) {
+        card.status = card.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
+      }
       console.log(`[PAY] Card payment: `, JSON.stringify(payment));
 
       try {

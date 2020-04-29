@@ -316,10 +316,12 @@ export class Booking {
         gateway: paymentGateway
       });
 
-      booking.status =
-        booking.type === BookingType.FOOD
-          ? BookingStatus.FINISHED
-          : BookingStatus.BOOKED;
+      if (paymentGateway !== PaymentGateway.WechatPay) {
+        booking.status =
+          booking.type === BookingType.FOOD
+            ? BookingStatus.FINISHED
+            : BookingStatus.BOOKED;
+      }
 
       console.log(`[PAY] Extra payment: `, JSON.stringify(extraPayment));
 
