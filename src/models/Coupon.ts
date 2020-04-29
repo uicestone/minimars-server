@@ -15,7 +15,7 @@ export class Coupon {
   @prop({ ref: "Store" })
   store?: DocumentType<Store>;
 
-  @prop({ required: true })
+  @prop()
   content: string;
 
   @prop()
@@ -35,6 +35,9 @@ export class Coupon {
 
   @prop()
   end?: Date;
+
+  @prop()
+  enabled = true;
 }
 
 const cardModel = getModelForClass(Coupon, {

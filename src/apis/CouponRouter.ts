@@ -42,6 +42,7 @@ export default router => {
             req.user = await User.findById(req.user.id);
           }
           query.find({ store: { $in: [req.user.store.id, null] } });
+          query.find({ enabled: true });
         }
 
         let total = await query.countDocuments();
