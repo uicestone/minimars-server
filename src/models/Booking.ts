@@ -320,7 +320,9 @@ export class Booking {
         booking.status =
           booking.type === BookingType.FOOD
             ? BookingStatus.FINISHED
-            : BookingStatus.BOOKED;
+            : booking.date > moment().format("YYYY-MM-DD")
+            ? BookingStatus.BOOKED
+            : BookingStatus.IN_SERVICE;
       }
 
       console.log(`[PAY] Extra payment: `, JSON.stringify(extraPayment));

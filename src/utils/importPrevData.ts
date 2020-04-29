@@ -201,7 +201,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
         ? new Card({
             customer: user._id,
             timesLeft: +item.account,
-            status: CardStatus.ACTIVATED,
+            status: +item.account ? CardStatus.ACTIVATED : CardStatus.EXPIRED,
             title: `${storeKey}店次卡`,
             type: "times",
             slug: `${database.substr(2)}-times`,
