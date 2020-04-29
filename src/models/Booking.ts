@@ -235,7 +235,7 @@ export class Booking {
 
     let attach = `booking ${booking._id}`;
 
-    const title = `预定${booking.store.name} ${booking.date} ${booking.checkInAt}入场`;
+    const title = `${booking.store.name} ${booking.adultsCount}大${booking.kidsCount}小 ${booking.date} ${booking.checkInAt}入场`;
 
     if (booking.card && booking.card.type === "times") {
       const cardPayment = new paymentModel({
