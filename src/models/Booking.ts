@@ -302,7 +302,9 @@ export class Booking {
       booking.status =
         booking.type === BookingType.FOOD
           ? BookingStatus.FINISHED
-          : BookingStatus.BOOKED;
+          : booking.date > moment().format("YYYY-MM-DD")
+          ? BookingStatus.BOOKED
+          : BookingStatus.IN_SERVICE;
       await booking.customer.addPoints(booking.price);
     } else if (
       extraPayAmount >= 0.01 &&
@@ -323,6 +325,9 @@ export class Booking {
             : booking.date > moment().format("YYYY-MM-DD")
             ? BookingStatus.BOOKED
             : BookingStatus.IN_SERVICE;
+        console.log(
+          `Auto set booking status ${booking.status} for ${booking.id}.`
+        );
       }
 
       console.log(`[PAY] Extra payment: `, JSON.stringify(extraPayment));
@@ -396,6 +401,7 @@ export class Booking {
       await booking.populate("customer").execPopulate();
     }
     await booking.customer.addPoints(booking.price);
+    console.log(`Booking payment success: ${booking.id}.`);
     // send user notification
   }
 
