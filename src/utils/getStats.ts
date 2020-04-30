@@ -69,7 +69,7 @@ export default async (
     .reduce((count, booking) => count + booking.kidsCount, 0);
 
   const guestKidsCount = bookingsPaid
-    .filter(b => !b.card)
+    .filter(b => !b.card && !b.coupon)
     .reduce((count, booking) => count + booking.kidsCount, 0);
 
   const kidsCount = bookingsPaid.reduce(
