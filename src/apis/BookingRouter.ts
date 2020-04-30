@@ -213,9 +213,6 @@ export default router => {
         }
 
         if (req.user.role === "manager") {
-          if (!req.user.store) {
-            req.user = await User.findById(req.user.id);
-          }
           query.find({ store: req.user.store.id });
         }
 

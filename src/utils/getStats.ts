@@ -3,10 +3,13 @@ import { config } from "../models/Config";
 import Booking, { paidBookingStatus, BookingStatus } from "../models/Booking";
 import Payment, { PaymentGateway } from "../models/Payment";
 import Card from "../models/Card";
+import { Store } from "../models/Store";
+import { DocumentType } from "@typegoose/typegoose";
 
 export default async (
   dateInput?: string | Date,
-  dateInputFrom?: string | Date
+  dateInputFrom?: string | Date,
+  store?: DocumentType<Store>
 ) => {
   const dateStr = moment(dateInput).format("YYYY-MM-DD"),
     dateStrFrom = dateInputFrom && moment(dateInputFrom).format("YYYY-MM-DD"),
@@ -24,7 +27,8 @@ export default async (
 
   const bookingsPaid = await Booking.find({
     date: dateStrFrom ? { $gte: dateStrFrom, $lte: dateStr } : dateStr,
-    status: { $in: paidBookingStatus }
+    status: { $in: paidBookingStatus },
+    store
   });
 
   const payments = await Payment.find({
@@ -32,7 +36,8 @@ export default async (
       $gte: startOfDay,
       $lte: endOfDay
     },
-    paid: true
+    paid: true,
+    store
   });
 
   const bookingServing = await Booking.find({

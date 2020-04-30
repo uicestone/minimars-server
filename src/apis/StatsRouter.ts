@@ -15,7 +15,7 @@ export default router => {
   router.route("/stats/:date?").get(
     handleAsyncErrors(async (req, res) => {
       const dateInput = req.params.date;
-      const stats = await getStats(dateInput);
+      const stats = await getStats(dateInput, undefined, req.user.store);
       res.json(stats);
     })
   );
