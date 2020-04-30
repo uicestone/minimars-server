@@ -64,6 +64,14 @@ export default async (
     0
   );
 
+  const memberKidsCount = bookingsPaid
+    .filter(b => b.card)
+    .reduce((count, booking) => count + booking.kidsCount, 0);
+
+  const guestKidsCount = bookingsPaid
+    .filter(b => !b.card)
+    .reduce((count, booking) => count + booking.kidsCount, 0);
+
   const kidsCount = bookingsPaid.reduce(
     (count, booking) => count + booking.kidsCount,
     0
@@ -366,6 +374,8 @@ export default async (
     checkedInCount,
     customerCount,
     kidsCount,
+    memberKidsCount,
+    guestKidsCount,
     paidAmount,
     playAmount,
     partyAmount,
