@@ -159,6 +159,10 @@ export default router => {
           }
         }
 
+        if (booking.customer.isNew) {
+          await booking.customer.save();
+        }
+
         try {
           await booking.createPayment({
             paymentGateway:
@@ -185,9 +189,6 @@ export default router => {
           }
         }
 
-        if (booking.customer.isNew) {
-          await booking.customer.save();
-        }
         await booking.save();
 
         res.json(booking);
