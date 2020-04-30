@@ -1,9 +1,4 @@
-import {
-  prop,
-  getModelForClass,
-  plugin,
-  DocumentType
-} from "@typegoose/typegoose";
+import { prop, getModelForClass, plugin, Ref } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
 
@@ -13,7 +8,7 @@ export class Coupon {
   title: string;
 
   @prop({ ref: "Store" })
-  store?: DocumentType<Store>;
+  store?: Ref<Store>;
 
   @prop()
   content: string;

@@ -16,6 +16,7 @@ import {
 } from "../utils/wechat";
 import cardModel, { Card, CardStatus } from "./Card";
 import { isValidHexObjectId } from "../utils/helper";
+import { Store } from "./Store";
 
 @pre("save", async function (next) {
   const payment = this as DocumentType<Payment>;
@@ -171,6 +172,9 @@ import { isValidHexObjectId } from "../utils/helper";
 export class Payment {
   @prop({ ref: "User", index: true })
   customer?: DocumentType<User>;
+
+  @prop({ ref: "Store" })
+  store?: Ref<Store>;
 
   @prop({ required: true })
   amount: number;

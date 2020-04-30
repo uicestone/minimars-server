@@ -240,6 +240,7 @@ export class Booking {
     if (booking.card && booking.card.type === "times") {
       const cardPayment = new paymentModel({
         customer: booking.customer,
+        store: booking.store,
         amount:
           (booking.card.price / booking.card.times) * booking.kidsCount || 0,
         title,
@@ -262,6 +263,7 @@ export class Booking {
     if (booking.coupon) {
       const couponPayment = new paymentModel({
         customer: booking.customer,
+        store: booking.store,
         amount: booking.coupon.priceThirdParty,
         title,
         attach,
@@ -284,6 +286,7 @@ export class Booking {
       balancePayAmount = Math.min(totalPayAmount, booking.customer.balance);
       const balancePayment = new paymentModel({
         customer: booking.customer,
+        store: booking.store,
         amount: balancePayAmount,
         amountForceDeposit: booking.socksCount * config.sockPrice,
         title,
@@ -312,6 +315,7 @@ export class Booking {
     ) {
       const extraPayment = new paymentModel({
         customer: booking.customer,
+        store: booking.store,
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
         title,
         attach,
@@ -343,6 +347,7 @@ export class Booking {
     if (booking.priceInPoints && paymentGateway === PaymentGateway.Points) {
       const pointsPayment = new paymentModel({
         customer: booking.customer,
+        store: booking.store,
         amount: 0,
         amountInPoints: booking.priceInPoints,
         title,
@@ -428,6 +433,7 @@ export class Booking {
       const p = payment;
       const refundPayment = new paymentModel({
         customer: p.customer,
+        store: booking.store,
         amount: -p.amount,
         amountDeposit: p.amountDeposit ? -p.amountDeposit : undefined,
         amountForceDeposit: p.amountForceDeposit
@@ -453,6 +459,7 @@ export class Booking {
         extraPayments.map(async (p: DocumentType<Payment>) => {
           const refundPayment = new paymentModel({
             customer: p.customer,
+            store: booking.store,
             amount: -p.amount,
             title: `退款：${p.title}`,
             attach: p.attach,
