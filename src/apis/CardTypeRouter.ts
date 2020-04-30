@@ -44,6 +44,10 @@ export default router => {
           query.find({ store: { $in: [req.user.store.id, null] } });
         }
 
+        if (req.ua && req.ua.isWechat) {
+          query.find({ wechat: true });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()
