@@ -205,8 +205,6 @@ export default router => {
           createdAt: -1
         };
 
-        const $and = []; // combine all $or conditions into one $and
-
         // restrict self bookings for customers
         if (req.user.role === "customer") {
           query.find({ customer: req.user._id });
@@ -245,11 +243,18 @@ export default router => {
           query.find({ customer: { $in: matchCustomers } });
         }
 
-        // restrict self store bookings for managers
-        // TODO
-
-        if ($and.length) {
-          query.find({ $and });
+        if (queryParams.paymentType) {
+          switch (queryParams.paymentType) {
+            case "guest":
+              query.find({ coupon: null, card: null });
+              break;
+            case "coupon":
+              query.find({ coupon: { $ne: null } });
+              break;
+            case "card":
+              query.find({ card: { $ne: null } });
+              break;
+          }
         }
 
         let total = await query.countDocuments();

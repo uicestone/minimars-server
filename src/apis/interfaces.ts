@@ -48,6 +48,7 @@ export interface BookingQuery extends ListQuery {
   event?: string;
   gift?: string;
   coupon?: string;
+  paymentType?: "guest" | "coupon" | "card";
 }
 
 export interface BookingPricePostBody extends Booking {}
@@ -81,7 +82,9 @@ export interface CouponPostBody extends Coupon {}
 
 export interface CouponPutBody extends Coupon {}
 
-export interface CouponQuery extends ListQuery {}
+export interface CouponQuery extends ListQuery {
+  enabled: "true" | "false";
+}
 
 export interface EventPostBody extends Event {}
 

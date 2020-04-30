@@ -27,6 +27,16 @@ export default router => {
           query.find({ customer: req.user });
         }
 
+        if (req.user.role === "manager") {
+          query.find({ store: req.user.store.id });
+        }
+
+        ["store"].forEach(field => {
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
+          }
+        });
+
         if (queryParams.date) {
           const startOfDay = moment(queryParams.date).startOf("day");
           const endOfDay = moment(queryParams.date).endOf("day");

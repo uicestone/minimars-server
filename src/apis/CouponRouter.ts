@@ -42,6 +42,10 @@ export default router => {
           query.find({ enabled: true });
         }
 
+        if (queryParams.enabled) {
+          query.find({ enabled: queryParams.enabled !== "false" });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()
