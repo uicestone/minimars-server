@@ -24,21 +24,31 @@ export default async (
       .subtract(6, "days")
       .startOf("day")
       .toDate();
-
-  const bookingsPaid = await Booking.find({
+  console.log("getStats store:", store);
+  const bookingsPaidQuery = Booking.find({
     date: dateStrFrom ? { $gte: dateStrFrom, $lte: dateStr } : dateStr,
-    status: { $in: paidBookingStatus },
-    store
+    status: { $in: paidBookingStatus }
   });
 
-  const payments = await Payment.find({
+  if (store) {
+    bookingsPaidQuery.find({ store });
+  }
+
+  const bookingsPaid = await bookingsPaidQuery.exec();
+
+  const paymentsQuery = Payment.find({
     createdAt: {
       $gte: startOfDay,
       $lte: endOfDay
     },
-    paid: true,
-    store
+    paid: true
   });
+
+  if (store) {
+    paymentsQuery.find({ store });
+  }
+
+  const payments = await paymentsQuery.exec();
 
   const bookingServing = await Booking.find({
     status: BookingStatus.IN_SERVICE
