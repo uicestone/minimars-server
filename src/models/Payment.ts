@@ -285,6 +285,23 @@ export const gatewayNames = {
   [PaymentGateway.UnionPay]: "银联"
 };
 
+export const flowGateways = [
+  PaymentGateway.Scan,
+  PaymentGateway.Pos,
+  PaymentGateway.Cash,
+  PaymentGateway.Shouqianba,
+  PaymentGateway.Dianping,
+  PaymentGateway.WechatPay,
+  PaymentGateway.Alipay,
+  PaymentGateway.UnionPay
+];
+
+export const cardCouponGateways = [
+  PaymentGateway.Card,
+  PaymentGateway.Coupon,
+  PaymentGateway.Balance
+];
+
 const paymentModel = getModelForClass(Payment, {
   schemaOptions: {
     toJSON: {

@@ -1,7 +1,11 @@
 import moment from "moment";
 import { config } from "../models/Config";
 import Booking, { paidBookingStatus, BookingStatus } from "../models/Booking";
-import Payment, { PaymentGateway } from "../models/Payment";
+import Payment, {
+  PaymentGateway,
+  flowGateways,
+  cardCouponGateways
+} from "../models/Payment";
 import Card from "../models/Card";
 import { Store } from "../models/Store";
 import { DocumentType } from "@typegoose/typegoose";
@@ -24,7 +28,7 @@ export default async (
       .subtract(6, "days")
       .startOf("day")
       .toDate();
-  console.log("getStats store:", store);
+
   const bookingsPaidQuery = Booking.find({
     date: dateStrFrom ? { $gte: dateStrFrom, $lte: dateStr } : dateStr,
     status: { $in: paidBookingStatus }
@@ -50,95 +54,49 @@ export default async (
 
   const payments = await paymentsQuery.exec();
 
-  const bookingServing = await Booking.find({
-    status: BookingStatus.IN_SERVICE
-  });
+  const flowAmount = payments
+    .filter(p => flowGateways.includes(p.gateway))
+    .reduce((amount, p) => amount + p.amount, 0);
 
-  const checkedInCount = bookingServing.reduce(
-    (count, booking) => count + booking.adultsCount + booking.kidsCount,
-    0
-  );
+  const cardCouponAmount = payments
+    .filter(p => cardCouponGateways.includes(p.gateway))
+    .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
 
   const customerCount = bookingsPaid.reduce(
     (count, booking) => count + booking.adultsCount + booking.kidsCount,
     0
   );
 
-  const memberKidsCount = bookingsPaid
-    .filter(b => b.card)
-    .reduce((count, booking) => count + booking.kidsCount, 0);
-
-  const guestKidsCount = bookingsPaid
-    .filter(b => !b.card && !b.coupon)
-    .reduce((count, booking) => count + booking.kidsCount, 0);
-
-  const kidsCount = bookingsPaid.reduce(
-    (count, booking) => count + booking.kidsCount,
-    0
-  );
-
-  // booking paid amount
-  const paidAmount = payments
-    .filter(p => p.attach.match(/^booking /))
-    .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
-
-  const cardAmount = payments
-    .filter(p => p.attach.match(/^card /))
-    .reduce((amount, p) => amount + p.amount, 0);
-
-  const socksCount = bookingsPaid.reduce(
-    (socks, booking) => socks + booking.socksCount,
-    0
-  );
-
-  const socksAmount = socksCount * config.sockPrice;
-
-  const partyAmount = bookingsPaid
-    .filter(booking => booking.type === "party")
-    .reduce(
-      (amount, booking) =>
-        amount +
-        booking.payments
-          .filter(p => p.paid)
-          .reduce((a, p) => a + (p.amountDeposit || p.amount), 0),
-      0
-    );
-
-  const playAmount = bookingsPaid
-    .filter(booking => booking.type === "play")
-    .reduce(
-      (amount, booking) =>
-        amount +
-        booking.payments
-          .filter(p => p.paid)
-          .reduce((a, p) => a + (p.amountDeposit || p.amount), 0),
-      0
-    );
-  const foodAmount = bookingsPaid
-    .filter(booking => booking.type === "food")
-    .reduce(
-      (amount, booking) =>
-        amount +
-        booking.payments
-          .filter(p => p.paid)
-          .reduce((a, p) => a + (p.amountDeposit || p.amount), 0),
-      0
-    );
-
-  const paidAmountByGateways: { [gateway: string]: number } = payments.reduce(
-    (amountByGateways, payment) => {
-      if (!amountByGateways[payment.gateway]) {
-        amountByGateways[payment.gateway] = 0;
-      }
-      if (payment.gateway === PaymentGateway.Balance) {
-        amountByGateways[payment.gateway] += payment.amountDeposit;
+  const customersByType = bookingsPaid.reduce(
+    (acc, booking) => {
+      if (booking.card) {
+        acc.card.adultsCount += booking.adultsCount;
+        acc.card.kidsCount += booking.kidsCount;
+      } else if (booking.coupon) {
+        acc.coupon.adultsCount += booking.adultsCount;
+        acc.coupon.kidsCount += booking.kidsCount;
       } else {
-        amountByGateways[payment.gateway] += payment.amount;
+        acc.guest.adultsCount += booking.adultsCount;
+        acc.guest.kidsCount += booking.kidsCount;
       }
-      return amountByGateways;
+      return acc;
     },
-    {}
+    {
+      card: { adultsCount: 0, kidsCount: 0 },
+      coupon: { adultsCount: 0, kidsCount: 0 },
+      guest: { adultsCount: 0, kidsCount: 0 }
+    }
   );
+
+  const flowAmountByGateways: { [gateway: string]: number } = payments
+    .filter(p => flowGateways.includes(p.gateway))
+    .reduce((acc, payment) => {
+      if (!acc[payment.gateway]) {
+        acc[payment.gateway] = 0;
+      }
+      acc[payment.gateway] += payment.amount;
+      return acc;
+    }, {});
 
   const couponsCount: {
     slug: string;
@@ -147,61 +105,52 @@ export default async (
     amount: number;
   }[] = bookingsPaid
     .filter(b => b.coupon)
-    .reduce((couponsCount, booking) => {
-      let couponCount = couponsCount.find(c => c.name === booking.coupon.title);
+    .reduce((acc, booking) => {
+      let item = acc.find(c => c.name === booking.coupon.title);
       const coupon = booking.coupon;
-      if (!couponCount) {
-        couponCount = {
+      if (!item) {
+        item = {
           name: coupon.title,
           price: coupon.priceThirdParty,
-          count: 0
+          kidsCount: 0,
+          adultsCount: 0,
+          amount: 0
         };
-        couponsCount.push(couponCount);
+        acc.push(item);
       }
-      couponCount.count += booking.kidsCount / coupon.kidsCount;
-      return couponsCount;
+      item.adultsCount += booking.adultsCount;
+      item.kidsCount += booking.kidsCount;
+      return acc;
     }, [])
-    .map(couponCount => {
-      couponCount.amount = couponCount.price * couponCount.count;
-      return couponCount;
+    .map(item => {
+      item.amount = item.price * item.kidsCount;
+      return item;
     });
 
-  paidAmountByGateways.coupon = couponsCount.reduce((a, c) => a + c.amount, 0);
+  const cardsCount = bookingsPaid
+    .filter(b => b.card)
+    .reduce((acc, booking) => {
+      let item = acc.find(i => i.title === booking.card.title);
 
-  // const cardTypesCount: {
-  //   slug: string;
-  //   title: string;
-  //   price: number;
-  //   count: number;
-  // }[] = [];
+      if (!item) {
+        item = {
+          name: booking.card.title,
+          adultsCount: 0,
+          kidsCount: 0,
+          amount: 0
+        };
+        acc.push(item);
+      }
 
-  // const cardIds = payments
-  //   .filter(p => p.attach.match(/^card /))
-  //   .map(p => {
-  //     return p.attach.split(" ")[1];
-  //   });
-
-  // const cards = await Card.find({ _id: { $in: cardIds } });
-
-  // for (const card of cards) {
-  //   const cardTypeCount = cardTypesCount.find(t => t.slug === card.slug);
-  //   if (cardTypeCount) {
-  //     cardTypeCount.count++;
-  //   } else {
-  //     cardTypesCount.push({
-  //       slug: card.slug,
-  //       title: card.title,
-  //       price: card.price,
-  //       count: 1
-  //     });
-  //   }
-  // }
-
-  // for (const cardPayment of payments.filter(p => p.attach.match(/^card /))) {
-  //   const paymentAttach = cardPayment.attach.split(" ");
-  //   const cardId = paymentAttach[1];
-  //   await Card.findOne({ _id: cardId });
-  // }
+      item.adultsCount += booking.adultsCount;
+      item.kidsCount += booking.kidsCount;
+      item.amount += booking.payments
+        .filter(p =>
+          [PaymentGateway.Card, PaymentGateway.Balance].includes(p.gateway)
+        )
+        .reduce((amount, p) => amount + p.amount, 0);
+      return acc;
+    }, []);
 
   const dailyCustomers = await Booking.aggregate([
     { $match: { date: { $gte: dateRangeStartStr, $lte: dateStr } } },
@@ -261,12 +210,12 @@ export default async (
     }
   ]);
 
-  const dailyBookingPayment = await Payment.aggregate([
+  const dailyFlowAmount = await Payment.aggregate([
     {
       $match: {
         createdAt: { $gte: startOfDateRange, $lte: endOfDay },
-        attach: { $regex: /^booking / },
-        paid: true
+        paid: true,
+        gateway: { $in: flowGateways }
       }
     },
     {
@@ -316,12 +265,12 @@ export default async (
     }
   ]);
 
-  const dailyCardPayment = await Payment.aggregate([
+  const dailyCardCouponPayment = await Payment.aggregate([
     {
       $match: {
         createdAt: { $gte: startOfDateRange, $lte: endOfDay },
-        attach: { $regex: /^card / },
-        paid: true
+        paid: true,
+        gateway: { $in: cardCouponGateways }
       }
     },
     {
@@ -371,23 +320,15 @@ export default async (
   ]);
 
   return {
-    checkedInCount,
+    flowAmount,
+    cardCouponAmount,
     customerCount,
-    kidsCount,
-    memberKidsCount,
-    guestKidsCount,
-    paidAmount,
-    playAmount,
-    partyAmount,
-    foodAmount,
-    cardAmount,
-    socksCount,
-    socksAmount,
-    paidAmountByGateways,
+    flowAmountByGateways,
     couponsCount,
-    // cardTypesCount,
+    cardsCount,
+    customersByType,
     dailyCustomers,
-    dailyBookingPayment,
-    dailyCardPayment
+    dailyFlowAmount,
+    dailyCardCouponPayment
   };
 };
