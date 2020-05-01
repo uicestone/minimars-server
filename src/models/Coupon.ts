@@ -13,16 +13,16 @@ export class Coupon {
   @prop()
   content: string;
 
-  @prop()
+  @prop({ type: Number })
   kidsCount = 1;
 
-  @prop()
+  @prop({ type: Number })
   price = 0;
 
-  @prop()
+  @prop({ type: Number })
   priceThirdParty: number;
 
-  @prop({ default: 2 })
+  @prop({ type: Number, default: 2 })
   freeParentsPerKid: number;
 
   @prop()

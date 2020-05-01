@@ -32,7 +32,7 @@ export class CardType {
   @prop()
   content: string;
 
-  @prop()
+  @prop({ type: Number })
   times: number;
 
   @prop({ type: Date })
@@ -41,16 +41,16 @@ export class CardType {
   @prop({ type: Date })
   end: Date;
 
-  @prop()
+  @prop({ type: Number })
   balance: number;
 
-  @prop({ required: true })
+  @prop({ type: Number, required: true })
   price: number;
 
-  @prop({ required: true })
+  @prop({ type: Number, required: true })
   maxKids: number;
 
-  @prop({ default: 2 })
+  @prop({ type: Number, default: 2 })
   freeParentsPerKid: number;
 }
 
