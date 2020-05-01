@@ -27,9 +27,9 @@ export default router => {
           query.find({ customer: req.user });
         }
 
-        if (req.user.role === "manager") {
-          query.find({ store: req.user.store.id });
-        }
+        // if (req.user.role === "manager") {
+        //   query.find({ store: req.user.store.id });
+        // }
 
         ["store"].forEach(field => {
           if (queryParams[field]) {
