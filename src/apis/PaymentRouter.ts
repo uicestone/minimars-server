@@ -1,11 +1,11 @@
+import moment from "moment";
+import xlsx from "xlsx";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Payment from "../models/Payment";
-import moment from "moment";
+import Payment, { gatewayNames } from "../models/Payment";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
-import { Types } from "mongoose";
 
 export default router => {
   // Payment CURD
@@ -111,6 +111,101 @@ export default router => {
         res.paginatify(limit, skip, total).json(page);
       })
     );
+
+  router.route("/payment-sheet").get(
+    handleAsyncErrors(async (req, res) => {
+      if (!["admin", "accountant"].includes(req.user.role)) {
+        throw new HttpError(403);
+      }
+      const queryParams = req.query as PaymentQuery;
+      const query = Payment.find().sort({ _id: -1 });
+
+      ["store"].forEach(field => {
+        if (queryParams[field]) {
+          query.find({ [field]: queryParams[field] });
+        }
+      });
+
+      if (queryParams.date) {
+        const startOfDay = moment(queryParams.date).startOf("day");
+        const endOfDay = moment(queryParams.date).endOf("day");
+        query.find({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
+      }
+
+      if (queryParams.paid) {
+        if (queryParams.paid === "false") {
+          query.find({ paid: false });
+        } else {
+          query.find({ paid: true });
+        }
+      }
+
+      if (queryParams.customer) {
+        query.find({ customer: queryParams.customer as any });
+      }
+
+      if (queryParams.attach) {
+        query.find({ attach: new RegExp("^" + queryParams.attach) });
+      }
+
+      if (queryParams.gateway) {
+        query.find({
+          gateway: {
+            $in: Array.isArray(queryParams.gateway)
+              ? queryParams.gateway
+              : [queryParams.gateway]
+          }
+        });
+      }
+
+      if (queryParams.direction === "payment") {
+        query.find({
+          amount: { $gt: 0 }
+        });
+      }
+
+      if (queryParams.direction === "refund") {
+        query.find({
+          amount: { $lt: 0 }
+        });
+      }
+
+      const payments = await query.find().limit(5e3).exec();
+
+      /* original data */
+      const filename = "流水明细.xlsx";
+      const path = "/tmp/" + filename;
+      const data: any[][] = [
+        ["手机", "已支付", "金额", "明细", "支付方式", "时间"]
+      ];
+
+      payments.forEach(payment => {
+        // if (payment.carNum.match(/^沪TEST/) || payment.carNum.match(/^沪CIC/))
+        //     return;
+
+        const row = [
+          payment.customer.mobile,
+          payment.paid,
+          payment.amount,
+          payment.title,
+          gatewayNames[payment.gateway],
+          moment((payment as any).createdAt).format("YYYY-MM-DD HH:mm")
+        ];
+        data.push(row);
+      });
+
+      const ws_name = filename.replace(/\.xlsx$/, "");
+      const wb = xlsx.utils.book_new(),
+        ws = xlsx.utils.aoa_to_sheet(data);
+
+      /* add worksheet to workbook */
+      xlsx.utils.book_append_sheet(wb, ws, ws_name);
+
+      /* write workbook */
+      xlsx.writeFile(wb, path);
+      res.download(path, filename);
+    })
+  );
 
   router
     .route("/payment/:paymentId")
