@@ -130,7 +130,7 @@ export default async (
   const cardsCount = bookingsPaid
     .filter(b => b.card)
     .reduce((acc, booking) => {
-      let item = acc.find(i => i.title === booking.card.title);
+      let item = acc.find(i => i.name === booking.card.title);
 
       if (!item) {
         item = {
