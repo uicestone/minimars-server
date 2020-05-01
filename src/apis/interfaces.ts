@@ -116,6 +116,7 @@ export interface PaymentQuery extends ListQuery {
   attach?: string;
   gateway?: PaymentGateway;
   direction?: "payment" | "refund";
+  amount?: string;
 }
 
 export interface PostPostBody extends Post {}

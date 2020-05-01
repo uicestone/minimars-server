@@ -51,9 +51,11 @@ export default router => {
           }
         }
 
-        if (queryParams.customer) {
-          query.find({ customer: queryParams.customer as any });
-        }
+        ["customer", "amount"].forEach(field => {
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
+          }
+        });
 
         if (queryParams.attach) {
           query.find({ attach: new RegExp("^" + queryParams.attach) });
@@ -140,9 +142,11 @@ export default router => {
         }
       }
 
-      if (queryParams.customer) {
-        query.find({ customer: queryParams.customer as any });
-      }
+      ["customer", "amount"].forEach(field => {
+        if (queryParams[field]) {
+          query.find({ [field]: queryParams[field] });
+        }
+      });
 
       if (queryParams.attach) {
         query.find({ attach: new RegExp("^" + queryParams.attach) });
