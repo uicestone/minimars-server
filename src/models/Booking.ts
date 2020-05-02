@@ -83,17 +83,17 @@ export class Booking {
   @prop({ required: true })
   checkInAt: string;
 
-  @prop({ default: 1 })
-  adultsCount: number;
+  @prop({ type: Number })
+  adultsCount?: number;
 
-  @prop({ default: 0 })
-  kidsCount: number;
+  @prop({ type: Number })
+  kidsCount?: number;
 
-  @prop({ default: 0 })
-  socksCount: number;
+  @prop({ type: Number })
+  socksCount?: number;
 
-  @prop({ default: 0 })
-  bandsPrinted: number;
+  @prop({ type: Number })
+  bandsPrinted?: number;
 
   @prop({
     type: String,

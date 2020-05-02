@@ -1,12 +1,10 @@
 import moment from "moment";
-import { config } from "../models/Config";
-import Booking, { paidBookingStatus, BookingStatus } from "../models/Booking";
+import Booking, { paidBookingStatus, BookingType } from "../models/Booking";
 import Payment, {
   PaymentGateway,
   flowGateways,
   cardCouponGateways
 } from "../models/Payment";
-import Card from "../models/Card";
 import { Store } from "../models/Store";
 import { DocumentType } from "@typegoose/typegoose";
 
@@ -31,7 +29,8 @@ export default async (
 
   const bookingsPaidQuery = Booking.find({
     date: dateStrFrom ? { $gte: dateStrFrom, $lte: dateStr } : dateStr,
-    status: { $in: paidBookingStatus }
+    status: { $in: paidBookingStatus },
+    type: BookingType.PLAY
   });
 
   if (store) {
