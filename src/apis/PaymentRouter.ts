@@ -4,7 +4,7 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Payment, { gatewayNames } from "../models/Payment";
+import Payment, { gatewayNames, PaymentGateway } from "../models/Payment";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 
 export default router => {
@@ -62,11 +62,12 @@ export default router => {
         }
 
         if (queryParams.gateway) {
+          const gateways = queryParams.gateway.includes(",")
+            ? (queryParams.gateway.split(",") as PaymentGateway[])
+            : (queryParams.gateway as PaymentGateway);
           query.find({
             gateway: {
-              $in: Array.isArray(queryParams.gateway)
-                ? queryParams.gateway
-                : [queryParams.gateway]
+              $in: Array.isArray(gateways) ? gateways : [gateways]
             }
           });
         }
@@ -153,11 +154,12 @@ export default router => {
       }
 
       if (queryParams.gateway) {
+        const gateways = queryParams.gateway.includes(",")
+          ? (queryParams.gateway.split(",") as PaymentGateway[])
+          : (queryParams.gateway as PaymentGateway);
         query.find({
           gateway: {
-            $in: Array.isArray(queryParams.gateway)
-              ? queryParams.gateway
-              : [queryParams.gateway]
+            $in: Array.isArray(gateways) ? gateways : [gateways]
           }
         });
       }

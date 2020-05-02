@@ -173,7 +173,7 @@ export class Payment {
   @prop({ ref: "User", index: true })
   customer?: DocumentType<User>;
 
-  @prop({ ref: "Store" })
+  @prop({ ref: "Store", index: true })
   store?: Ref<Store>;
 
   @prop({ required: true })
@@ -194,10 +194,10 @@ export class Payment {
   @prop({ default: " " })
   title: string;
 
-  @prop({ type: String })
+  @prop({ type: String, index: true })
   attach: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   gateway: PaymentGateway;
 
   @prop()
