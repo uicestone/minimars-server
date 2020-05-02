@@ -117,7 +117,7 @@ export default router => {
 
   router.route("/payment-sheet").get(
     handleAsyncErrors(async (req, res) => {
-      if (!["admin", "accountant"].includes(req.user.role)) {
+      if (!["admin", "accountant", "manager"].includes(req.user.role)) {
         throw new HttpError(403);
       }
       const queryParams = req.query as PaymentQuery;
