@@ -324,8 +324,11 @@ export default router => {
         await booking.populate("store").execPopulate();
 
         if (
-          booking.status === BookingStatus.CANCELED &&
-          req.user.role !== "admin"
+          ![BookingStatus.CANCELED, BookingStatus.PENDING_REFUND].includes(
+            statusWas
+          ) &&
+          booking.status === BookingStatus.CANCELED
+          // req.user.role !== "admin"
         ) {
           // TODO refund permission should be restricted
           // TODO IN_SERVICE refund
