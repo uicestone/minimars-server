@@ -235,7 +235,17 @@ export class Booking {
 
     let attach = `booking ${booking._id}`;
 
-    const title = `${booking.store.name} ${booking.adultsCount}大${booking.kidsCount}小 ${booking.date} ${booking.checkInAt}入场`;
+    let title = `${booking.store.name} ${booking.adultsCount}大${
+      booking.kidsCount
+    }小 ${booking.date.substr(5)} ${booking.checkInAt.substr(0, 5)}入场`;
+
+    if (booking.type === BookingType.GIFT) {
+      title = `${booking.gift.title} ${booking.quantity}份 ${booking.store.name} `;
+    }
+
+    if (booking.type === BookingType.EVENT) {
+      title = `${booking.event.title} ${booking.kidsCount}人 ${booking.store.name} `;
+    }
 
     if (booking.card && booking.card.type === "times") {
       const cardPayment = new paymentModel({
@@ -261,6 +271,7 @@ export class Booking {
     }
 
     if (booking.coupon) {
+      title = booking.coupon.title + " " + title;
       const couponPayment = new paymentModel({
         customer: booking.customer,
         store: booking.store,
@@ -302,12 +313,13 @@ export class Booking {
     // console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
     if (extraPayAmount < 0.01 || adminAddWithoutPayment) {
-      booking.status =
-        booking.type === BookingType.FOOD
-          ? BookingStatus.FINISHED
-          : booking.date > moment().format("YYYY-MM-DD")
-          ? BookingStatus.BOOKED
-          : BookingStatus.IN_SERVICE;
+      booking.status = [BookingType.FOOD, BookingType.GIFT].includes(
+        booking.type
+      )
+        ? BookingStatus.FINISHED
+        : booking.date > moment().format("YYYY-MM-DD")
+        ? BookingStatus.BOOKED
+        : BookingStatus.IN_SERVICE;
       await booking.customer.addPoints(booking.price);
     } else if (
       extraPayAmount >= 0.01 &&
@@ -323,12 +335,13 @@ export class Booking {
       });
 
       if (paymentGateway !== PaymentGateway.WechatPay) {
-        booking.status =
-          booking.type === BookingType.FOOD
-            ? BookingStatus.FINISHED
-            : booking.date > moment().format("YYYY-MM-DD")
-            ? BookingStatus.BOOKED
-            : BookingStatus.IN_SERVICE;
+        booking.status = [BookingType.FOOD, BookingType.GIFT].includes(
+          booking.type
+        )
+          ? BookingStatus.FINISHED
+          : booking.date > moment().format("YYYY-MM-DD")
+          ? BookingStatus.BOOKED
+          : BookingStatus.IN_SERVICE;
         console.log(
           `Auto set booking status ${booking.status} for ${booking.id}.`
         );
