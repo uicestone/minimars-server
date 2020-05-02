@@ -515,7 +515,9 @@ export class Booking {
       return;
 
     if (
-      ![BookingStatus.PENDING, BookingStatus.BOOKED].includes(booking.status)
+      [BookingStatus.PENDING_REFUND, BookingStatus.CANCELED].includes(
+        booking.status
+      )
     ) {
       throw new Error("uncancelable_booking_status");
     }
