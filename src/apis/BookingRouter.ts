@@ -220,20 +220,6 @@ export default router => {
           query.find({ store: req.user.store.id });
         }
 
-        [
-          "type",
-          "store",
-          "date",
-          "customer",
-          "event",
-          "gift",
-          "coupon"
-        ].forEach(field => {
-          if (queryParams[field]) {
-            query.find({ [field]: queryParams[field] });
-          }
-        });
-
         if (queryParams.status) {
           query.find({
             status: {
@@ -262,6 +248,20 @@ export default router => {
               break;
           }
         }
+
+        [
+          "type",
+          "store",
+          "date",
+          "customer",
+          "event",
+          "gift",
+          "coupon"
+        ].forEach(field => {
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
+          }
+        });
 
         let total = await query.countDocuments();
 
