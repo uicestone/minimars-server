@@ -111,8 +111,13 @@ export default router => {
           throw new HttpError(403, "只能为自己预订");
         }
 
-        if (body.adultsCount === 0 && body.kidsCount === 0) {
-          throw new HttpError(400, "成人和儿童数不能都为0");
+        if (booking.type === BookingType.PLAY) {
+          if (!booking.kidsCount) {
+            booking.kidsCount = 0;
+          }
+          if (!booking.adultsCount) {
+            booking.adultsCount = 0;
+          }
         }
 
         if (body.type === BookingType.EVENT) {
