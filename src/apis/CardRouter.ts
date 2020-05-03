@@ -15,6 +15,7 @@ import User, { User as IUser } from "../models/User";
 import { Types } from "mongoose";
 import { DocumentType } from "@typegoose/typegoose";
 import { verify } from "jsonwebtoken";
+import moment from "moment";
 
 export default router => {
   // Card CURD
@@ -71,6 +72,16 @@ export default router => {
 
         if (cardType.times) {
           card.timesLeft = cardType.times;
+        }
+
+        if (cardType.expiresInMonths && !cardType.end) {
+          card.expiresAt = moment(card.start)
+            .add(cardType.expiresInMonths, "months")
+            // .subtract(1, "day")
+            .endOf("day")
+            .toDate();
+        } else if (cardType.end) {
+          card.expiresAt = cardType.end;
         }
 
         try {
