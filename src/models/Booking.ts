@@ -432,7 +432,7 @@ export class Booking {
     const balanceAndCardPayments = booking.payments.filter(
       (p: DocumentType<Payment>) =>
         [PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
-        p.amount > 0 &&
+        p.amount >= 0 &&
         p.paid
     );
     const extraPayments = booking.payments.filter(
