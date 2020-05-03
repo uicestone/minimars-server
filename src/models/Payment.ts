@@ -17,6 +17,7 @@ import {
 import cardModel, { Card, CardStatus } from "./Card";
 import { isValidHexObjectId } from "../utils/helper";
 import { Store } from "./Store";
+import moment from "moment";
 
 @pre("save", async function (next) {
   const payment = this as DocumentType<Payment>;
@@ -206,6 +207,14 @@ export class Payment {
   @prop()
   original?: string;
 
+  get valid(this: DocumentType<Payment>) {
+    return (
+      this.paid ||
+      this.isNew ||
+      moment().diff((this as any).createdAt, "hours", true) <= 2
+    );
+  }
+
   get payArgs(this: DocumentType<Payment>) {
     const payment = this;
     if (payment.gateway === PaymentGateway.WechatPay && !payment.paid) {
@@ -214,7 +223,7 @@ export class Payment {
         !payment.gatewayData.nonce_str ||
         !payment.gatewayData.prepay_id
       ) {
-        if (payment.isNew) return;
+        if (!payment.valid) return;
         else throw new Error(`incomplete_gateway_data`);
       }
       const wechatGatewayData = payment.gatewayData as {
@@ -224,6 +233,7 @@ export class Payment {
       return wechatPayArgs(wechatGatewayData);
     }
   }
+
   async paidSuccess(this: DocumentType<Payment>) {
     const payment = this;
 
