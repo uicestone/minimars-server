@@ -38,9 +38,11 @@ export default router => {
         });
 
         if (queryParams.date) {
-          const startOfDay = moment(queryParams.date).startOf("day");
-          const endOfDay = moment(queryParams.date).endOf("day");
-          query.find({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
+          const start = moment(queryParams.date).startOf("day");
+          const end = moment(queryParams.dateEnd || queryParams.date).endOf(
+            "day"
+          );
+          query.find({ createdAt: { $gte: start, $lte: end } });
         }
 
         if (queryParams.paid) {
@@ -130,9 +132,11 @@ export default router => {
       });
 
       if (queryParams.date) {
-        const startOfDay = moment(queryParams.date).startOf("day");
-        const endOfDay = moment(queryParams.date).endOf("day");
-        query.find({ createdAt: { $gte: startOfDay, $lte: endOfDay } });
+        const start = moment(queryParams.date).startOf("day");
+        const end = moment(queryParams.dateEnd || queryParams.date).endOf(
+          "day"
+        );
+        query.find({ createdAt: { $gte: start, $lte: end } });
       }
 
       if (queryParams.paid) {
@@ -186,9 +190,6 @@ export default router => {
       ];
 
       payments.forEach(payment => {
-        // if (payment.carNum.match(/^沪TEST/) || payment.carNum.match(/^沪CIC/))
-        //     return;
-
         const row = [
           payment.customer.mobile,
           payment.paid,

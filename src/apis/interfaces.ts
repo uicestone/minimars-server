@@ -111,6 +111,7 @@ export interface PaymentPutBody extends Payment {}
 
 export interface PaymentQuery extends ListQuery {
   date?: string;
+  dateEnd?: string;
   paid?: "false";
   customer?: string;
   attach?: string;
