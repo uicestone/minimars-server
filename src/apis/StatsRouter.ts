@@ -1,11 +1,6 @@
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import moment from "moment";
-import HttpError from "../utils/HttpError";
-import EscPosEncoder from "esc-pos-encoder-canvas";
-import User from "../models/User";
 import getStats from "../utils/getStats";
-import { PaymentGateway } from "../models/Payment";
-import { Image } from "canvas";
 import XlsxPopulate from "xlsx-populate";
 
 moment.locale("zh-cn");
@@ -15,7 +10,11 @@ export default router => {
   router.route("/stats/:date?").get(
     handleAsyncErrors(async (req, res) => {
       const dateInput = req.params.date;
-      const stats = await getStats(dateInput, undefined, req.user.store);
+      const stats = await getStats(
+        dateInput,
+        undefined,
+        req.query.store || req.user.store
+      );
       res.json(stats);
     })
   );
