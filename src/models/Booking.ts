@@ -156,6 +156,7 @@ export class Booking {
         // TODO check card valid times
         // TODO check card valid period
       }
+
       if (booking.coupon) {
         if (!booking.populated("coupon")) {
           await booking.populate("coupon").execPopulate();
@@ -176,7 +177,7 @@ export class Booking {
         config.kidFullDayPrice * kidsCount;
 
       if (booking.coupon && booking.coupon.price) {
-        booking.price += booking.coupon.price;
+        booking.price += booking.coupon.price * booking.kidsCount;
       }
 
       booking.price += booking.socksCount * config.sockPrice;
@@ -275,7 +276,7 @@ export class Booking {
       const couponPayment = new paymentModel({
         customer: booking.customer,
         store: booking.store,
-        amount: booking.coupon.priceThirdParty,
+        amount: booking.coupon.priceThirdParty * booking.kidsCount,
         title,
         attach,
         gateway: PaymentGateway.Coupon,
