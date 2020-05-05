@@ -27,15 +27,9 @@ export default router => {
           query.find({ customer: req.user });
         }
 
-        // if (req.user.role === "manager") {
-        //   query.find({ store: req.user.store.id });
-        // }
-
-        ["store"].forEach(field => {
-          if (queryParams[field]) {
-            query.find({ [field]: queryParams[field] });
-          }
-        });
+        if (req.user.role === "manager") {
+          query.find({ store: req.user.store.id });
+        }
 
         if (queryParams.date) {
           const start = moment(queryParams.date).startOf("day");
@@ -52,12 +46,6 @@ export default router => {
             query.find({ paid: true });
           }
         }
-
-        ["customer", "amount"].forEach(field => {
-          if (queryParams[field]) {
-            query.find({ [field]: queryParams[field] });
-          }
-        });
 
         if (queryParams.attach) {
           query.find({ attach: new RegExp("^" + queryParams.attach) });
@@ -85,6 +73,12 @@ export default router => {
             amount: { $lt: 0 }
           });
         }
+
+        ["store", "customer", "amount"].forEach(field => {
+          if (queryParams[field]) {
+            query.find({ [field]: queryParams[field] });
+          }
+        });
 
         let total = await query.countDocuments();
         const [{ totalAmount } = { totalAmount: 0 }] = await Payment.aggregate([
@@ -125,11 +119,9 @@ export default router => {
       const queryParams = req.query as PaymentQuery;
       const query = Payment.find().sort({ _id: -1 });
 
-      ["store"].forEach(field => {
-        if (queryParams[field]) {
-          query.find({ [field]: queryParams[field] });
-        }
-      });
+      if (req.user.role === "manager") {
+        query.find({ store: req.user.store.id });
+      }
 
       if (queryParams.date) {
         const start = moment(queryParams.date).startOf("day");
@@ -146,12 +138,6 @@ export default router => {
           query.find({ paid: true });
         }
       }
-
-      ["customer", "amount"].forEach(field => {
-        if (queryParams[field]) {
-          query.find({ [field]: queryParams[field] });
-        }
-      });
 
       if (queryParams.attach) {
         query.find({ attach: new RegExp("^" + queryParams.attach) });
@@ -179,6 +165,12 @@ export default router => {
           amount: { $lt: 0 }
         });
       }
+
+      ["store", "customer", "amount"].forEach(field => {
+        if (queryParams[field]) {
+          query.find({ [field]: queryParams[field] });
+        }
+      });
 
       const payments = await query.find().limit(5e3).exec();
 
