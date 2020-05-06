@@ -10,8 +10,8 @@ import Booking, {
 } from "../models/Booking";
 import User from "../models/User";
 import Store from "../models/Store";
-import EscPosEncoder from "esc-pos-encoder-canvas";
-import { Image } from "canvas";
+// import EscPosEncoder from "esc-pos-encoder-canvas";
+// import { Image } from "canvas";
 import Payment, { gatewayNames, PaymentGateway } from "../models/Payment";
 import { config } from "../models/Config";
 import stringWidth from "string-width";
@@ -376,6 +376,7 @@ export default router => {
       })
     );
 
+  /*
   router.route("/booking/:bookingId/receipt-data").get(
     handleAsyncErrors(async (req, res) => {
       if (!["manager", "admin"].includes(req.user.role)) {
@@ -535,6 +536,7 @@ export default router => {
       res.send(hexString);
     })
   );
+  */
 
   router.route("/booking-price").post(
     handleAsyncErrors(async (req, res) => {
