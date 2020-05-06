@@ -22,7 +22,7 @@ module.exports = {
     testing: {
       user: "www-data",
       host: ["stirad.com"],
-      ref: "origin/testing",
+      ref: "origin/master",
       repo: "https://github.com/uicestone/minimars-server",
       path: "/var/www/minimars-server",
       "post-deploy": "yarn && pm2 startOrRestart ecosystem.config.js"
