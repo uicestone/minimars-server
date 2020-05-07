@@ -97,12 +97,18 @@ export default (router: Router) => {
         await openIdUser.remove();
         await oldCustomer.save();
 
-        res.json(oldCustomer);
+        res.json({
+          user: oldCustomer,
+          token: signToken(oldCustomer)
+        });
       } else {
         console.log(`更新手机号${mobile}`);
         openIdUser.set({ mobile });
         await openIdUser.save();
-        res.json(openIdUser);
+        res.json({
+          user: openIdUser,
+          token: signToken(openIdUser)
+        });
       }
     })
   );
