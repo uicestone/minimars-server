@@ -62,11 +62,11 @@ export class Event {
   @prop()
   price?: number;
 
-  @prop({ type: Date, required: true })
-  date: Date;
+  @prop({ type: Date })
+  date?: Date;
 
   @prop({ ref: "Store" })
-  store: DocumentType<Store>;
+  store?: DocumentType<Store>;
 }
 
 const eventModel = getModelForClass(Event, {
