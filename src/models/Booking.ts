@@ -328,7 +328,7 @@ export class Booking {
     ) {
       const extraPayment = new paymentModel({
         customer: booking.customer,
-        store: booking.store,
+        store: booking.store.id,
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
         title,
         attach,
@@ -348,10 +348,9 @@ export class Booking {
         );
       }
 
-      console.log(`[PAY] Extra payment: `, JSON.stringify(extraPayment));
-
       try {
         await extraPayment.save();
+        console.log(`[PAY] Extra payment: `, JSON.stringify(extraPayment));
       } catch (err) {
         throw err;
       }

@@ -83,7 +83,7 @@ export default router => {
         }
 
         console.log(
-          `Create booking for customer ${booking.customer.mobile} ${booking.customer.id}`
+          `[BOK] Create booking for customer ${booking.customer.mobile} ${booking.customer.id}.`
         );
 
         if (!booking.customer) {
@@ -181,6 +181,8 @@ export default router => {
           switch (err.message) {
             case "no_customer_openid":
               throw new HttpError(400, "缺少客户openid");
+            case "incomplete_gateway_data":
+              throw new HttpError(400, "微信支付信息错误");
             case "insufficient_balance":
               throw new HttpError(400, "客户账户余额不足");
             case "insufficient_points":
