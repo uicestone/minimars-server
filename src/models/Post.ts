@@ -8,6 +8,10 @@ import {
 import updateTimes from "./plugins/updateTimes";
 import { User } from "./User";
 import autoPopulate from "./plugins/autoPopulate";
+import {
+  appendResizeImageUrl,
+  appendResizeHtmlImage
+} from "../utils/imageResize";
 
 @plugin(updateTimes)
 @plugin(autoPopulate, ["author"])
@@ -19,13 +23,17 @@ export class Post {
   slug?: string;
 
   @prop()
-  content: string;
-
-  @prop()
   tags: string[];
 
-  @prop()
+  @prop({
+    required: true,
+    get: v => appendResizeImageUrl(v),
+    set: v => v
+  })
   posterUrl: string;
+
+  @prop({ get: v => appendResizeHtmlImage(v), set: v => v })
+  content?: string;
 
   @prop()
   target?: string;

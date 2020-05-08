@@ -8,6 +8,10 @@ import {
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { Store } from "./Store";
+import {
+  appendResizeImageUrl,
+  appendResizeHtmlImage
+} from "../utils/imageResize";
 
 @plugin(updateTimes)
 @plugin(autoPopulate, [{ path: "store", select: "-content" }])
@@ -15,11 +19,15 @@ export class Gift {
   @prop({ required: true })
   title: string;
 
-  @prop({ default: "" })
-  content: string;
-
-  @prop({ required: true })
+  @prop({
+    required: true,
+    get: v => appendResizeImageUrl(v),
+    set: v => v
+  })
   posterUrl: string;
+
+  @prop({ get: v => appendResizeHtmlImage(v), set: v => v })
+  content?: string;
 
   @prop({ default: 0 })
   quantity: number;
@@ -30,7 +38,7 @@ export class Gift {
   @prop()
   price?: number;
 
-  @prop({ ref: "Store" })
+  @prop({ required: true, ref: "Store" })
   store: DocumentType<Store>;
 }
 

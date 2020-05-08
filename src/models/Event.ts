@@ -9,6 +9,10 @@ import { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
+import {
+  appendResizeHtmlImage,
+  appendResizeImageUrl
+} from "../utils/imageResize";
 
 @pre("validate", function (next) {
   const event = this as DocumentType<Event>;
@@ -30,13 +34,17 @@ export class Event {
   title: string;
 
   @prop()
-  content?: string;
-
-  @prop()
   tags: string[];
 
-  @prop({ required: true })
+  @prop({
+    required: true,
+    get: v => appendResizeImageUrl(v),
+    set: v => v
+  })
   posterUrl: string;
+
+  @prop({ get: v => appendResizeHtmlImage(v), set: v => v })
+  content?: string;
 
   @prop({
     type: Schema.Types.Mixed,

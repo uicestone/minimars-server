@@ -6,12 +6,12 @@ import {
   Ref,
   DocumentType
 } from "@typegoose/typegoose";
+import { sign } from "jsonwebtoken";
 import updateTimes from "./plugins/updateTimes";
 import { User } from "./User";
 import { Store } from "./Store";
 import paymentModel, { PaymentGateway, Payment } from "./Payment";
 import autoPopulate from "./plugins/autoPopulate";
-import { sign } from "jsonwebtoken";
 
 const { DEBUG } = process.env;
 
@@ -78,7 +78,7 @@ export class Card {
   @prop()
   posterUrl: string;
 
-  @prop({ type: String })
+  @prop()
   content: string;
 
   @prop({ type: Number })
