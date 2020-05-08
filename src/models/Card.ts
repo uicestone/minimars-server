@@ -132,7 +132,7 @@ export class Card {
     } else {
       const payment = new paymentModel({
         customer: card.customer,
-        store: card.store.id,
+        store: card.store,
         amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
         title,
         attach,
