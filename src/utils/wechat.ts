@@ -54,11 +54,14 @@ export const refundOrder = async (
   totalFee: number,
   refundFee: number
 ) => {
+  console.log(
+    `[PAY] Wechat refund ${outTradeNo} ${outRefundNo} ${totalFee} ${refundFee}`
+  );
   return await pay.refund({
     out_trade_no: outTradeNo,
     out_refund_no: outRefundNo,
-    total_fee: Math.max(Math.round(totalFee * 100), 1),
-    refund_fee: Math.max(Math.round(refundFee * 100), 1)
+    total_fee: Math.max(Math.round(Math.abs(totalFee) * 100), 1),
+    refund_fee: Math.max(Math.round(Math.abs(refundFee) * 100), 1)
   });
 };
 
