@@ -48,6 +48,20 @@ export const unifiedOrder = async (
   return gatewayData;
 };
 
+export const refundOrder = async (
+  outTradeNo: string,
+  outRefundNo: string,
+  totalFee: number,
+  refundFee: number
+) => {
+  return await pay.refund({
+    out_trade_no: outTradeNo,
+    out_refund_no: outRefundNo,
+    total_fee: Math.max(Math.round(totalFee * 100), 1),
+    refund_fee: Math.max(Math.round(refundFee * 100), 1)
+  });
+};
+
 export const payArgs = (gatewayData: {
   nonce_str: string;
   prepay_id: string;

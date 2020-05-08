@@ -12,7 +12,8 @@ import { User } from "./User";
 import Booking from "./Booking";
 import {
   unifiedOrder as wechatUnifiedOrder,
-  payArgs as wechatPayArgs
+  payArgs as wechatPayArgs,
+  refundOrder
 } from "../utils/wechat";
 import cardModel, { Card, CardStatus } from "./Card";
 import { isValidHexObjectId } from "../utils/helper";
@@ -44,13 +45,22 @@ import moment from "moment";
       if (!customer.openid) {
         throw new Error("no_customer_openid");
       }
-      payment.gatewayData = await wechatUnifiedOrder(
-        payment._id.toString(),
-        payment.amount,
-        customer.openid,
-        payment.title,
-        payment.attach
-      );
+      if (payment.amount > 0) {
+        payment.gatewayData = await wechatUnifiedOrder(
+          payment._id.toString(),
+          payment.amount,
+          customer.openid,
+          payment.title,
+          payment.attach
+        );
+      } else {
+        payment.gatewayData = await refundOrder(
+          payment.original,
+          payment.id,
+          payment.amount,
+          payment.amount
+        );
+      }
       break;
     case PaymentGateway.Balance:
       if (customer.balance < payment.amount) {
