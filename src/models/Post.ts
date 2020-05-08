@@ -10,7 +10,9 @@ import { User } from "./User";
 import autoPopulate from "./plugins/autoPopulate";
 import {
   appendResizeImageUrl,
-  appendResizeHtmlImage
+  appendResizeHtmlImage,
+  removeResizeImageUrl,
+  removeResizeHtmlImage
 } from "../utils/imageResize";
 
 @plugin(updateTimes)
@@ -28,11 +30,14 @@ export class Post {
   @prop({
     required: true,
     get: v => appendResizeImageUrl(v),
-    set: v => v
+    set: v => removeResizeImageUrl(v)
   })
   posterUrl: string;
 
-  @prop({ get: v => appendResizeHtmlImage(v), set: v => v })
+  @prop({
+    get: v => appendResizeHtmlImage(v),
+    set: v => removeResizeHtmlImage(v)
+  })
   content?: string;
 
   @prop()

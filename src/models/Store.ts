@@ -2,7 +2,9 @@ import { prop, getModelForClass, plugin } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import {
   appendResizeImageUrl,
-  appendResizeHtmlImage
+  appendResizeHtmlImage,
+  removeResizeImageUrl,
+  removeResizeHtmlImage
 } from "../utils/imageResize";
 
 @plugin(updateTimes)
@@ -19,11 +21,14 @@ export class Store {
   @prop({
     required: true,
     get: v => appendResizeImageUrl(v),
-    set: v => v
+    set: v => removeResizeImageUrl(v)
   })
   posterUrl: string;
 
-  @prop({ get: v => appendResizeHtmlImage(v), set: v => v })
+  @prop({
+    get: v => appendResizeHtmlImage(v),
+    set: v => removeResizeHtmlImage(v)
+  })
   content?: string;
 
   @prop()

@@ -11,7 +11,9 @@ import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 import {
   appendResizeHtmlImage,
-  appendResizeImageUrl
+  appendResizeImageUrl,
+  removeResizeImageUrl,
+  removeResizeHtmlImage
 } from "../utils/imageResize";
 
 @pre("validate", function (next) {
@@ -39,11 +41,14 @@ export class Event {
   @prop({
     required: true,
     get: v => appendResizeImageUrl(v),
-    set: v => v
+    set: v => removeResizeImageUrl(v)
   })
   posterUrl: string;
 
-  @prop({ get: v => appendResizeHtmlImage(v), set: v => v })
+  @prop({
+    get: v => appendResizeHtmlImage(v),
+    set: v => removeResizeHtmlImage(v)
+  })
   content?: string;
 
   @prop({
