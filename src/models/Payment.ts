@@ -238,7 +238,7 @@ export class Payment {
         !payment.gatewayData.nonce_str ||
         !payment.gatewayData.prepay_id
       ) {
-        if (!payment.valid) return;
+        if (!payment.valid || payment.amount <= 0) return;
         else throw new Error(`incomplete_gateway_data`);
       }
       const wechatGatewayData = payment.gatewayData as {
