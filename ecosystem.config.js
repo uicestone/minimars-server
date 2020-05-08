@@ -26,7 +26,7 @@ module.exports = {
       repo: "https://github.com/uicestone/minimars-server",
       path: "/var/www/minimars-server",
       "post-deploy":
-        "yarn && yarn build && cp -r build/ dist/ && pm2 startOrRestart ecosystem.config.js"
+        "yarn && yarn build && rm -r dist && mv build dist && pm2 startOrRestart ecosystem.config.js"
     }
   }
 };
