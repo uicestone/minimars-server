@@ -42,7 +42,7 @@ export default router => {
         }
 
         if (req.ua && req.ua.isWechat) {
-          query.find({ wechat: true });
+          query.find({ openForClient: true });
         }
 
         let total = await query.countDocuments();

@@ -55,6 +55,9 @@ export class CardType {
 
   @prop({ type: Number, default: 2 })
   freeParentsPerKid: number;
+
+  @prop({ type: Boolean, default: false })
+  openForClient: boolean;
 }
 
 const cardTypeModel = getModelForClass(CardType, {
