@@ -288,16 +288,16 @@ export default router => {
     .all(
       handleAsyncErrors(async (req, res, next) => {
         const booking = await Booking.findOne({ _id: req.params.bookingId });
-        if (req.user.role === "customer") {
-          if (!booking.customer.equals(req.user)) {
-            throw new HttpError(403);
-          }
-        }
         if (!booking) {
           throw new HttpError(
             404,
             `Booking not found: ${req.params.bookingId}`
           );
+        }
+        if (req.user.role === "customer") {
+          if (!booking.customer.equals(req.user)) {
+            throw new HttpError(403);
+          }
         }
         req.item = booking;
         next();
