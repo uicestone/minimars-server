@@ -132,7 +132,7 @@ export class Card {
     } else {
       const payment = new paymentModel({
         customer: card.customer,
-        store: card.store,
+        store: card.store.id,
         amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
         title,
         attach,
@@ -142,10 +142,10 @@ export class Card {
       if (paymentGateway !== PaymentGateway.WechatPay) {
         card.status = card.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
       }
-      console.log(`[PAY] Card payment: `, JSON.stringify(payment));
 
       try {
         await payment.save();
+        console.log(`[PAY] Card payment: `, JSON.stringify(payment));
       } catch (err) {
         throw err;
       }

@@ -435,6 +435,7 @@ export class Booking {
         p.amount >= 0 &&
         p.paid
     );
+
     const extraPayments = booking.payments.filter(
       (p: DocumentType<Payment>) =>
         ![PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
