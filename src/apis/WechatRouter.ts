@@ -160,6 +160,7 @@ export default (router: Router) => {
         }
 
         payment.paid = true;
+        await payment.customer.addPoints(payment.amount);
         payment.gatewayData = parsedData;
 
         await payment.save();

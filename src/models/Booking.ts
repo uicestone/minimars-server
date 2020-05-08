@@ -321,7 +321,6 @@ export class Booking {
         : booking.date > moment().format("YYYY-MM-DD")
         ? BookingStatus.BOOKED
         : BookingStatus.IN_SERVICE;
-      await booking.customer.addPoints(booking.price);
     } else if (
       extraPayAmount >= 0.01 &&
       paymentGateway !== PaymentGateway.Points
@@ -418,7 +417,6 @@ export class Booking {
     if (!booking.populated("customer")) {
       await booking.populate("customer").execPopulate();
     }
-    await booking.customer.addPoints(booking.price);
     console.log(`Booking payment success: ${booking.id}.`);
     // send user notification
   }

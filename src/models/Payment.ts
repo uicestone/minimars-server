@@ -94,6 +94,7 @@ import moment from "moment";
       );
 
       payment.paid = true;
+      await payment.customer.addPoints(payment.amount);
       // await payment.paidSuccess();
       // we don't trigger paidSuccess or booking.paidSuccess here cause booking may not be saved
       // we need to change booking status manually after balance payment
@@ -117,7 +118,6 @@ import moment from "moment";
         console.log(
           `[PAY] Card ${card.id} refunded, time left: ${card.timesLeft}.`
         );
-        payment.paid = true;
       } else {
         if (card.status !== CardStatus.ACTIVATED) {
           throw new Error("invalid_card");
@@ -134,8 +134,9 @@ import moment from "moment";
         console.log(
           `[PAY] Card ${card.id} used in ${payment.gatewayData.bookingId}, times left: ${card.timesLeft}.`
         );
-        payment.paid = true;
       }
+      payment.paid = true;
+      await payment.customer.addPoints(payment.amount);
 
       break;
     case PaymentGateway.Coupon:
@@ -145,15 +146,19 @@ import moment from "moment";
       break;
     case PaymentGateway.Cash:
       payment.paid = true;
+      await payment.customer.addPoints(payment.amount);
       break;
     case PaymentGateway.Pos:
       payment.paid = true;
+      await payment.customer.addPoints(payment.amount);
       break;
     case PaymentGateway.Dianping:
       payment.paid = true;
+      await payment.customer.addPoints(payment.amount);
       break;
     case PaymentGateway.Shouqianba:
       payment.paid = true;
+      await payment.customer.addPoints(payment.amount);
       break;
     case PaymentGateway.Points:
       if (payment.amountInPoints > customer.points) {
