@@ -144,15 +144,19 @@ export class Booking {
       );
 
       if (booking.card) {
-        if (!booking.card.title) {
+        if (!booking.populated("card")) {
           await booking.populate("card").execPopulate();
         }
-        kidsCount = Math.max(0, booking.kidsCount - booking.card.maxKids);
-        extraAdultsCount = Math.max(
-          0,
-          booking.adultsCount -
-            booking.kidsCount * booking.card.freeParentsPerKid
-        );
+        if (booking.card.type === "balance") {
+          booking.card = null;
+        } else {
+          kidsCount = Math.max(0, booking.kidsCount - booking.card.maxKids);
+          extraAdultsCount = Math.max(
+            0,
+            booking.adultsCount -
+              booking.kidsCount * booking.card.freeParentsPerKid
+          );
+        }
         // TODO check card valid times
         // TODO check card valid period
       }
