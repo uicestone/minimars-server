@@ -1,10 +1,12 @@
 export const appendResizeHtmlImage = (html: string, width?: number) =>
+  html &&
   html.replace(
     /<img src=["'](.*?)["']>/g,
     (match, p1) => match && match.replace(p1, p1 + appendStringMaxWidth(width))
   );
 
 export const removeResizeHtmlImage = (html: string) =>
+  html &&
   html.replace(
     /<img src=["'](.*?)["']>/g,
     (match, p1) => match && match.replace(p1, p1.replace(/\?.*?$/, ""))
