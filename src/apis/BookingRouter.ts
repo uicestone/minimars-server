@@ -24,6 +24,7 @@ import {
   BookingPriceResponseBody
 } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
+import { isValidHexObjectId } from "../utils/helper";
 
 setTimeout(async () => {
   // const u = await User.findOne({ name: "陆秋石" });
@@ -231,10 +232,14 @@ export default router => {
         }
 
         if (queryParams.customerKeyword) {
-          const matchCustomers = await User.find({
-            $text: { $search: queryParams.customerKeyword }
-          });
-          query.find({ customer: { $in: matchCustomers } });
+          if (isValidHexObjectId(queryParams.customerKeyword)) {
+            query.find({ _id: queryParams.customerKeyword });
+          } else {
+            const matchCustomers = await User.find({
+              $text: { $search: queryParams.customerKeyword }
+            });
+            query.find({ customer: { $in: matchCustomers } });
+          }
         }
 
         if (queryParams.paymentType) {
