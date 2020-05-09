@@ -248,6 +248,10 @@ export class Booking {
       title = `${booking.event.title} ${booking.kidsCount}人 ${booking.store.name} `;
     }
 
+    if (booking.type === BookingType.FOOD) {
+      title = `餐饮消费`;
+    }
+
     if (booking.card && booking.card.type === "times") {
       const cardPayment = new paymentModel({
         customer: booking.customer,
