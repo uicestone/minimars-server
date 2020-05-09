@@ -233,7 +233,8 @@ export default router => {
 
         if (queryParams.customerKeyword) {
           if (isValidHexObjectId(queryParams.customerKeyword)) {
-            query.find({ _id: queryParams.customerKeyword });
+            // @ts-ignore
+            query.find({ customer: queryParams.customerKeyword });
           } else {
             const matchCustomers = await User.find({
               $text: { $search: queryParams.customerKeyword }
