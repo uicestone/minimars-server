@@ -3,7 +3,7 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import User, { User as IUser } from "../models/User";
-import { hashPwd } from "../utils/helper";
+import { hashPwd, isValidHexObjectId } from "../utils/helper";
 import { config } from "../models/Config";
 import Payment, { PaymentGateway } from "../models/Payment";
 import idCard from "idcard";
@@ -93,10 +93,14 @@ export default router => {
         const $and = []; // combine all $or conditions into one $and
 
         if (queryParams.keyword) {
-          $and.push({
-            // mobile: new RegExp(queryParams.keyword)
-            $text: { $search: queryParams.keyword }
-          });
+          if (isValidHexObjectId(queryParams.keyword)) {
+            $and.push({ _id: queryParams.keyword });
+          } else {
+            $and.push({
+              // mobile: new RegExp(queryParams.keyword)
+              $text: { $search: queryParams.keyword }
+            });
+          }
         }
 
         if (queryParams.role) {
