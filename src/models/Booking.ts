@@ -300,7 +300,7 @@ export class Booking {
         customer: booking.customer,
         store: booking.store,
         amount: balancePayAmount,
-        amountForceDeposit: booking.socksCount * config.sockPrice,
+        amountForceDeposit: booking.socksCount * config.sockPrice || 0,
         title,
         attach,
         gateway: PaymentGateway.Balance
