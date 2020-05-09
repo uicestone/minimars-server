@@ -28,7 +28,7 @@ export const initAgenda = async () => {
     const bookings = await Booking.find({
       status: BookingStatus.PENDING,
       createdAt: {
-        $lt: moment().subtract(1, "day").toDate()
+        $lt: moment().subtract(2, "hours").toDate()
       }
     });
 
@@ -66,7 +66,7 @@ export const initAgenda = async () => {
     const cards = await Card.find({
       status: CardStatus.PENDING,
       createdAt: {
-        $lt: moment().subtract(1, "day").toDate()
+        $lt: moment().subtract(2, "hours").toDate()
       }
     });
 
@@ -116,8 +116,8 @@ export const initAgenda = async () => {
   agenda.start();
 
   agenda.on("ready", () => {
-    agenda.every("4 hours", "cancel expired pending bookings");
-    agenda.every("4 hours", "cancel expired pending cards");
+    agenda.every("1 hour", "cancel expired pending bookings");
+    agenda.every("1 hour", "cancel expired pending cards");
     // agenda.every("1 day", "cancel expired booked bookings");
     // agenda.now("create indexes");
   });
