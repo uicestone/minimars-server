@@ -30,7 +30,7 @@ export default router => {
         const { limit, skip } = req.pagination;
         const query = Gift.find().populate("customer");
         const sort = parseSortString(queryParams.order) || {
-          createdAt: -1
+          order: -1
         };
 
         query.select("-content");

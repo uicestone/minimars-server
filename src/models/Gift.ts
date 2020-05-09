@@ -45,6 +45,9 @@ export class Gift {
 
   @prop({ required: true, ref: "Store" })
   store: DocumentType<Store>;
+
+  @prop({ type: Number })
+  order?: number;
 }
 
 const giftModel = getModelForClass(Gift, {
