@@ -42,7 +42,7 @@ export class CardType {
   end: Date;
 
   @prop({ type: Number })
-  expiresInMonths: number;
+  expiresInDays: number;
 
   @prop({ type: Number })
   balance: number;

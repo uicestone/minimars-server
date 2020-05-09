@@ -74,9 +74,9 @@ export default router => {
           card.timesLeft = cardType.times;
         }
 
-        if (cardType.expiresInMonths && !cardType.end) {
+        if (cardType.expiresInDays && !cardType.end) {
           card.expiresAt = moment(card.start)
-            .add(cardType.expiresInMonths, "months")
+            .add(cardType.expiresInDays, "days")
             // .subtract(1, "day")
             .endOf("day")
             .toDate();
