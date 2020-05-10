@@ -270,8 +270,8 @@ export class Booking {
           bookingId: booking.id,
           times: Math.min(
             booking.kidsCount,
-            booking.card.maxKids,
-            booking.card.timesLeft
+            booking.card.maxKids
+            // booking.card.timesLeft
           )
         }
       });
