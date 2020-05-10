@@ -4,7 +4,11 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Payment, { gatewayNames, PaymentGateway } from "../models/Payment";
+import Payment, {
+  gatewayNames,
+  PaymentGateway,
+  receptionGateways
+} from "../models/Payment";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 
 export default router => {
@@ -237,9 +241,25 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
-        // TODO should restrict write access for manager
         const payment = req.item;
-        payment.set(req.body as PaymentPutBody);
+        const body = req.body as PaymentPutBody;
+        let set: PaymentPutBody = {};
+
+        if (
+          (req.user.role =
+            "manager" && receptionGateways.includes(payment.gateway))
+        ) {
+          ["paid", "gateway"].forEach(key => {
+            if (body[key] !== undefined) {
+              set[key] = body[key];
+            }
+          });
+        } else if (req.user.role === "admin") {
+          set = body;
+        } else {
+          throw new HttpError(403);
+        }
+        payment.set(set);
         await payment.save();
         // sendConfirmEmail(payment);
         res.json(payment);

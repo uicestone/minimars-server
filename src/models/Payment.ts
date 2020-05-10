@@ -327,6 +327,15 @@ export const cardCouponGateways = [
   PaymentGateway.Balance
 ];
 
+export const receptionGateways = [
+  PaymentGateway.Scan,
+  PaymentGateway.Pos,
+  PaymentGateway.Cash,
+  PaymentGateway.Shouqianba,
+  PaymentGateway.Dianping,
+  PaymentGateway.Coupon
+];
+
 const paymentModel = getModelForClass(Payment, {
   schemaOptions: {
     toJSON: {

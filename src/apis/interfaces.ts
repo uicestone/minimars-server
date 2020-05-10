@@ -27,9 +27,9 @@ export interface ListQuery {
 
 export interface AuthTokenUserIdResponseBody extends AuthLoginResponseBody {}
 
-export interface BookingPostBody extends Booking {}
+export interface BookingPostBody extends Partial<Booking> {}
 
-export interface BookingPutBody extends Booking {}
+export interface BookingPutBody extends Partial<Booking> {}
 
 export interface BookingPostQuery {
   paymentGateway?: PaymentGateway;
@@ -51,16 +51,16 @@ export interface BookingQuery extends ListQuery {
   paymentType?: "guest" | "coupon" | "card";
 }
 
-export interface BookingPricePostBody extends Booking {}
+export interface BookingPricePostBody extends Partial<Booking> {}
 
 export interface BookingPriceResponseBody {
   price: number;
   priceInPoints?: number;
 }
 
-export interface CardPostBody extends Card {}
+export interface CardPostBody extends Partial<Card> {}
 
-export interface CardPutBody extends Card {}
+export interface CardPutBody extends Partial<Card> {}
 
 export interface CardPostQuery {
   paymentGateway?: PaymentGateway;
@@ -72,23 +72,23 @@ export interface CardQuery extends ListQuery {
   customer?: string;
 }
 
-export interface CardTypePostBody extends CardType {}
+export interface CardTypePostBody extends Partial<CardType> {}
 
-export interface CardTypePutBody extends CardType {}
+export interface CardTypePutBody extends Partial<CardType> {}
 
 export interface CardTypeQuery extends ListQuery {}
 
-export interface CouponPostBody extends Coupon {}
+export interface CouponPostBody extends Partial<Coupon> {}
 
-export interface CouponPutBody extends Coupon {}
+export interface CouponPutBody extends Partial<Coupon> {}
 
 export interface CouponQuery extends ListQuery {
   enabled: "true" | "false";
 }
 
-export interface EventPostBody extends Event {}
+export interface EventPostBody extends Partial<Event> {}
 
-export interface EventPutBody extends Event {}
+export interface EventPutBody extends Partial<Event> {}
 
 export interface EventQuery extends ListQuery {
   keyword?: string;
@@ -96,18 +96,18 @@ export interface EventQuery extends ListQuery {
   tag?: string;
 }
 
-export interface GiftPostBody extends Gift {}
+export interface GiftPostBody extends Partial<Gift> {}
 
-export interface GiftPutBody extends Gift {}
+export interface GiftPutBody extends Partial<Gift> {}
 
 export interface GiftQuery extends ListQuery {
   keyword?: string;
   store?: string;
 }
 
-export interface PaymentPostBody extends Payment {}
+export interface PaymentPostBody extends Partial<Payment> {}
 
-export interface PaymentPutBody extends Payment {}
+export interface PaymentPutBody extends Partial<Payment> {}
 
 export interface PaymentQuery extends ListQuery {
   date?: string;
