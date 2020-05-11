@@ -4,7 +4,8 @@ import {
   getModelForClass,
   plugin,
   Ref,
-  DocumentType
+  DocumentType,
+  pre
 } from "@typegoose/typegoose";
 import { sign } from "jsonwebtoken";
 import updateTimes from "./plugins/updateTimes";
@@ -37,6 +38,16 @@ export const userVisibleCardStatus = [
     select: "-customer"
   }
 ])
+@pre("save", function (this: DocumentType<Card>, next) {
+  if (this.type === "times") {
+    if (this.status === CardStatus.ACTIVATED && this.timesLeft === 0) {
+      this.status = CardStatus.EXPIRED;
+    } else if (this.status === CardStatus.EXPIRED && this.timesLeft > 0) {
+      this.status = CardStatus.ACTIVATED;
+    }
+  }
+  next();
+})
 export class Card {
   @prop({ ref: "User", required: true, index: true })
   customer: Ref<User>;
