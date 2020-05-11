@@ -271,7 +271,7 @@ export class Booking {
           )
         }
       });
-      await cardPayment.save();
+      // await cardPayment.save();
       booking.payments.push(cardPayment);
     }
 
@@ -289,7 +289,7 @@ export class Booking {
           bookingId: booking.id
         }
       });
-      await couponPayment.save();
+      // await couponPayment.save();
       booking.payments.push(couponPayment);
     }
 
@@ -310,7 +310,7 @@ export class Booking {
         gateway: PaymentGateway.Balance
       });
 
-      await balancePayment.save();
+      // await balancePayment.save();
       booking.payments.push(balancePayment);
     }
 
@@ -357,7 +357,7 @@ export class Booking {
       }
 
       try {
-        await extraPayment.save();
+        // await extraPayment.save();
         console.log(`[PAY] Extra payment: `, JSON.stringify(extraPayment));
       } catch (err) {
         throw err;
@@ -406,13 +406,15 @@ export class Booking {
           booking.type === BookingType.FOOD
             ? BookingStatus.FINISHED
             : BookingStatus.BOOKED;
-        await pointsPayment.save();
+        // await pointsPayment.save();
       } catch (err) {
         throw err;
       }
 
       booking.payments.push(pointsPayment);
     }
+
+    await Promise.all(booking.payments.map(p => p.save()));
   }
 
   async paymentSuccess(this: DocumentType<Booking>) {
