@@ -38,13 +38,27 @@ export const userVisibleCardStatus = [
     select: "-customer"
   }
 ])
-@pre("save", function (this: DocumentType<Card>, next) {
+@pre("save", async function (this: DocumentType<Card>, next) {
   if (this.type === "times") {
     if (this.status === CardStatus.ACTIVATED && this.timesLeft === 0) {
       this.status = CardStatus.EXPIRED;
     } else if (this.status === CardStatus.EXPIRED && this.timesLeft > 0) {
       this.status = CardStatus.ACTIVATED;
     }
+  }
+  if (this.type === "balance" && this.status === CardStatus.ACTIVATED) {
+    if (!this.populated("customer")) {
+      await this.populate("customer").execPopulate();
+    }
+    const customer = this.customer as DocumentType<User>;
+    customer.balanceDeposit += this.price;
+    customer.balanceReward += this.balance - this.price;
+    await customer.save();
+    console.log(
+      `[CRD] Balance card ${this.id} deposit user ${customer.id} by ${
+        this.balance - this.price
+      }/${this.price}`
+    );
   }
   next();
 })

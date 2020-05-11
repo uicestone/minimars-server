@@ -192,20 +192,8 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const card = req.item as DocumentType<ICard>;
 
-        const statusWas = card.status;
         card.set(req.body as CardPutBody);
-        if (
-          statusWas === CardStatus.VALID &&
-          card.status === CardStatus.ACTIVATED
-        ) {
-          await card.populate("customer").execPopulate();
-          const customer = card.customer as DocumentType<IUser>;
-          customer.balanceDeposit += card.price;
-          customer.balanceReward += card.balance - card.price;
-          card.status = CardStatus.EXPIRED;
-          await customer.save();
-          await card.save();
-        }
+
         await card.save();
         res.json(card);
       })
