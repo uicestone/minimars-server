@@ -36,6 +36,7 @@ export class Config {
   extraParentFullDayPrice?: number;
   kidFullDayPrice?: number;
   freeParentsPerKid?: number;
+  appointmentDeadline?: string;
 }
 
 export const config: Config = {};

@@ -238,7 +238,7 @@ export class Booking {
 
     let title = `${booking.store.name} ${booking.adultsCount}大${
       booking.kidsCount
-    }小 ${booking.date.substr(5)} ${booking.checkInAt.substr(0, 5)}入场`;
+    }小 ${booking.date.substr(5)} ${booking.checkInAt.substr(0, 5)}前入场`;
 
     if (booking.type === BookingType.GIFT) {
       title = `${booking.gift.title} ${booking.quantity}份 ${booking.store.name} `;
