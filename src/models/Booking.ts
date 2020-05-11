@@ -230,10 +230,6 @@ export class Booking {
   ) {
     const booking = this;
 
-    if (!paymentGateway && !booking.card && !booking.coupon) {
-      throw new Error("missing_gateway");
-    }
-
     let totalPayAmount = amount || booking.price;
 
     let balancePayAmount = 0;
@@ -333,6 +329,11 @@ export class Booking {
       extraPayAmount >= 0.01 &&
       paymentGateway !== PaymentGateway.Points
     ) {
+      if (!paymentGateway) {
+        // TODO possible create balance payment before failed
+        throw new Error("missing_gateway");
+      }
+
       const extraPayment = new paymentModel({
         customer: booking.customer,
         store: booking.store.id,
@@ -417,6 +418,7 @@ export class Booking {
   async paymentSuccess(this: DocumentType<Booking>) {
     const booking = this;
 
+    // conditional change booking status
     booking.status =
       booking.type === BookingType.FOOD
         ? BookingStatus.FINISHED
