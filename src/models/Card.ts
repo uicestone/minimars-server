@@ -46,7 +46,11 @@ export const userVisibleCardStatus = [
       this.status = CardStatus.ACTIVATED;
     }
   }
-  if (this.type === "balance" && this.status === CardStatus.ACTIVATED) {
+  if (
+    this.type === "balance" &&
+    this.isModified("status") &&
+    this.status === CardStatus.ACTIVATED
+  ) {
     if (!this.populated("customer")) {
       await this.populate("customer").execPopulate();
     }
