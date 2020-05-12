@@ -151,6 +151,26 @@ export default async (
       return acc;
     }, []);
 
+  const balanceCount = bookingsPaid
+    .filter(b => b.payments.some(p => p.gateway === PaymentGateway.Balance))
+    .reduce(
+      (acc, booking) => {
+        acc.adultsCount += booking.adultsCount;
+        acc.kidsCount += booking.kidsCount;
+        return acc;
+      },
+      {
+        name: "账户余额",
+        adultsCount: 0,
+        kidsCount: 0,
+        amount: 0
+      }
+    );
+
+  balanceCount.amount = payments
+    .filter(p => p.gateway === PaymentGateway.Balance)
+    .reduce((acc, p) => acc + p.amountDeposit || p.amount, 0);
+
   const dailyCustomers = await Booking.aggregate([
     { $match: { date: { $gte: dateRangeStartStr, $lte: dateStr } } },
     {
@@ -325,6 +345,7 @@ export default async (
     flowAmountByGateways,
     couponsCount,
     cardsCount,
+    balanceCount,
     customersByType,
     dailyCustomers,
     dailyFlowAmount,

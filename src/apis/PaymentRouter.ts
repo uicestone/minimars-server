@@ -189,7 +189,7 @@ export default router => {
         const row = [
           payment.customer.mobile,
           payment.paid,
-          payment.amount,
+          payment.amountDeposit || payment.amount,
           payment.title,
           gatewayNames[payment.gateway],
           moment((payment as any).createdAt).format("YYYY-MM-DD HH:mm")
