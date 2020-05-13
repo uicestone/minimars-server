@@ -6,7 +6,8 @@ import HttpError from "../utils/HttpError";
 import { utils } from "@sigodenjs/wechatpay";
 import { signToken } from "../utils/helper";
 import Payment from "../models/Payment";
-import { CardStatus, userVisibleCardStatus } from "../models/Card";
+import Card, { CardStatus, userVisibleCardStatus } from "../models/Card";
+import Booking from "../models/Booking";
 
 export default (router: Router) => {
   router.route("/wechat/login").post(
@@ -94,6 +95,18 @@ export default (router: Router) => {
           region,
           mobile
         });
+        await Booking.updateMany(
+          { customer: openIdUser },
+          { customer: oldCustomer }
+        ).exec();
+        await Card.updateMany(
+          { customer: openIdUser },
+          { customer: oldCustomer }
+        ).exec();
+        await Payment.updateMany(
+          { customer: openIdUser },
+          { customer: oldCustomer }
+        ).exec();
         await openIdUser.remove();
         await oldCustomer.save();
 
