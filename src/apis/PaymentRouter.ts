@@ -187,7 +187,7 @@ export default router => {
 
       payments.forEach(payment => {
         const row = [
-          payment.customer.mobile,
+          payment.customer?.mobile || "",
           payment.paid,
           payment.amountDeposit || payment.amount,
           payment.title,
