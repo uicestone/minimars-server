@@ -35,7 +35,10 @@ export default (router: Router) => {
     handleAsyncErrors(async (req, res) => {
       const { session_key, encryptedData, iv } = req.body;
       if (!session_key || !encryptedData || !iv) {
-        throw new HttpError(400, "Incorrect request params.");
+        console.error(
+          `[WEC] Wechat signup failed, ${JSON.stringify(req.body)}`
+        );
+        throw new HttpError(400, "微信登录失败，请后台关闭小程序重新尝试");
       }
 
       const userData = oAuth.decrypt(encryptedData, session_key, iv);
@@ -75,7 +78,13 @@ export default (router: Router) => {
     handleAsyncErrors(async (req, res) => {
       const { encryptedData, session_key, iv, openid } = req.body;
       if (!session_key || !encryptedData || !iv || !openid) {
-        throw new HttpError(400, "缺少参数");
+        console.error(
+          `[WEC] Update mobile failed, ${JSON.stringify(req.body)}`
+        );
+        throw new HttpError(
+          400,
+          "微信获取手机号失败，请后台关闭小程序重新尝试"
+        );
       }
       const { phoneNumber: mobile } = oAuth.decrypt(
         encryptedData,
@@ -86,7 +95,7 @@ export default (router: Router) => {
       const oldCustomer = await User.findOne({ mobile });
       const openIdUser = await User.findOne({ openid });
       if (oldCustomer && oldCustomer.id !== openIdUser.id) {
-        console.log(`用户迁移${mobile}`);
+        console.log(`[WEC] Merge user ${openIdUser.id} to ${oldCustomer.id}.`);
         const { openid, avatarUrl, gender, region } = openIdUser;
         oldCustomer.set({
           openid,
