@@ -22,6 +22,8 @@ export default (router: Router) => {
         { upsert: true, new: true }
       );
 
+      console.log(`[WEC] Wechat login ${user.id}, session_key: ${session_key}`);
+
       res.json({
         user,
         token: user ? signToken(user) : null,
