@@ -83,6 +83,9 @@ export class Booking {
   @prop({ required: true })
   checkInAt: string;
 
+  @prop()
+  checkOutAt: string;
+
   @prop({ type: Number })
   adultsCount?: number;
 

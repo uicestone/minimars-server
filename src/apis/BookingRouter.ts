@@ -357,6 +357,14 @@ export default router => {
           }
         }
 
+        if (
+          statusWas === BookingStatus.IN_SERVICE &&
+          booking.status === BookingStatus.FINISHED &&
+          !booking.checkOutAt
+        ) {
+          booking.checkOutAt = moment().format("HH:mm:ss");
+        }
+
         await booking.save();
         // sendConfirmEmail(booking);
         res.json(booking);
