@@ -14,7 +14,11 @@ export default (router: Router) => {
     handleAsyncErrors(async (req, res) => {
       const { code } = req.body;
       if (!code) throw new HttpError(400, "OAuth code missing.");
+      console.time("Wechat login");
       const userData = await oAuth.getUser(code);
+      console.timeEnd("Wechat login");
+      console.log("Wechat login user data:", JSON.stringify(userData));
+
       const { openid, session_key } = userData;
       const user = await User.findOneAndUpdate(
         { openid },
