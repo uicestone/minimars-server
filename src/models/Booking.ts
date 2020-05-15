@@ -443,6 +443,11 @@ export class Booking {
         p.paid
     );
 
+    const pointsPayments = booking.payments.filter(
+      (p: DocumentType<Payment>) =>
+        [PaymentGateway.Points].includes(p.gateway) && p.amount >= 0 && p.paid
+    );
+
     const extraPayments = booking.payments.filter(
       (p: DocumentType<Payment>) =>
         ![PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
@@ -469,6 +474,23 @@ export class Booking {
       if (p.gateway === PaymentGateway.Card) {
         p.gatewayData.cardRefund = true;
       }
+      await refundPayment.save();
+      booking.payments.push(refundPayment);
+    }
+
+    for (const payment of pointsPayments) {
+      const p = payment;
+      const refundPayment = new paymentModel({
+        customer: p.customer,
+        store: booking.store,
+        amount: 0,
+        amountInPoints: -p.amountInPoints,
+        title: `积分退还：${p.title}`,
+        attach: p.attach,
+        gateway: p.gateway,
+        gatewayData: p.gatewayData,
+        original: p.id
+      });
       await refundPayment.save();
       booking.payments.push(refundPayment);
     }
