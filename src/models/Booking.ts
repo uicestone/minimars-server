@@ -300,6 +300,7 @@ export class Booking {
       totalPayAmount >= 0.01 &&
       useBalance &&
       booking.customer.balance &&
+      paymentGateway !== PaymentGateway.Points &&
       !adminAddWithoutPayment
     ) {
       balancePayAmount = Math.min(totalPayAmount, booking.customer.balance);
