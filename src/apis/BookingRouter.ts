@@ -360,6 +360,13 @@ export default router => {
         }
 
         if (
+          statusWas !== BookingStatus.IN_SERVICE &&
+          booking.status === BookingStatus.IN_SERVICE
+        ) {
+          booking.checkInAt = moment().format("HH:mm:ss");
+        }
+
+        if (
           statusWas === BookingStatus.IN_SERVICE &&
           booking.status === BookingStatus.FINISHED &&
           !booking.checkOutAt
