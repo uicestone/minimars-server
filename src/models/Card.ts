@@ -174,7 +174,6 @@ export class Card {
 
       try {
         await payment.save();
-        console.log(`[PAY] Card payment: `, JSON.stringify(payment));
       } catch (err) {
         throw err;
       }

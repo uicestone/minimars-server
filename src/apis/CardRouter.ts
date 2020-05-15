@@ -52,12 +52,19 @@ export default router => {
           }
         }
 
-        const card = new Card(body);
         const query = req.query as CardPostQuery;
-        const cardType = await CardType.findOne({ slug: card.slug });
+        const cardType = await CardType.findOne({ slug: body.slug });
         if (!cardType) {
-          throw new HttpError(404, `CardType '${card.slug}' not exists.`);
+          throw new HttpError(404, `CardType '${body.slug}' not exists.`);
         }
+
+        const card = new Card({
+          ...cardType.toObject(),
+          customer: body.customer,
+          createdAt: undefined,
+          updatedAt: undefined
+        });
+
         if (req.user.role === "customer") {
           card.customer = req.user;
         }
