@@ -1,14 +1,13 @@
 import {
   prop,
-  arrayProp,
   getModelForClass,
   plugin,
   pre,
   DocumentType,
   index
 } from "@typegoose/typegoose";
+import moment from "moment";
 import updateTimes from "./plugins/updateTimes";
-import { config } from "./Config";
 import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 
@@ -107,7 +106,22 @@ export class User {
   @prop({ default: 0 })
   balanceReward?: number;
 
-  @prop({ remarks: String })
+  @prop({
+    remarks: String,
+    set: (v: string) => {
+      if (!v) return v;
+      const lines = v.split("\n");
+      return lines
+        .map(line => {
+          if (line && !line.match(/^\d{4}-\d{2}-\d{2}: /)) {
+            line = moment().format("YYYY-MM-DD") + ": " + line;
+          }
+          return line;
+        })
+        .join("\n");
+    },
+    get: v => v
+  })
   remarks?: string;
 
   get balance() {
