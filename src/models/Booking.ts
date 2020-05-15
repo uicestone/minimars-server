@@ -359,13 +359,6 @@ export class Booking {
         );
       }
 
-      try {
-        // await extraPayment.save();
-        console.log(`[PAY] Extra payment: `, JSON.stringify(extraPayment));
-      } catch (err) {
-        throw err;
-      }
-
       booking.payments.push(extraPayment);
     }
     if (booking.priceInPoints && paymentGateway === PaymentGateway.Points) {
