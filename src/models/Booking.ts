@@ -71,7 +71,7 @@ export class Booking {
   @prop({ ref: "User", required: true, index: true })
   customer: DocumentType<User>;
 
-  @prop({ ref: "Store", required: true })
+  @prop({ ref: "Store" })
   store: DocumentType<Store>;
 
   @prop({ enum: Object.values(BookingType), required: true })
@@ -239,20 +239,20 @@ export class Booking {
 
     let attach = `booking ${booking._id}`;
 
-    let title = `${booking.store.name} ${booking.adultsCount}大${
-      booking.kidsCount
-    }小 ${booking.date.substr(5)} ${booking.checkInAt.substr(0, 5)}前入场`;
+    let title = "";
 
     if (booking.type === BookingType.GIFT) {
-      title = `${booking.gift.title} ${booking.quantity}份 ${booking.store.name} `;
-    }
-
-    if (booking.type === BookingType.EVENT) {
+      title = `${booking.gift.title} ${booking.quantity}份 ${
+        booking.store?.name || "门店通用"
+      } `;
+    } else if (booking.type === BookingType.EVENT) {
       title = `${booking.event.title} ${booking.kidsCount}人 ${booking.store.name} `;
-    }
-
-    if (booking.type === BookingType.FOOD) {
+    } else if (booking.type === BookingType.FOOD) {
       title = `餐饮消费`;
+    } else {
+      title = `${booking.store.name} ${booking.adultsCount}大${
+        booking.kidsCount
+      }小 ${booking.date.substr(5)} ${booking.checkInAt.substr(0, 5)}前入场`;
     }
 
     if (booking.card && booking.card.type === "times") {

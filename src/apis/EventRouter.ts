@@ -34,8 +34,11 @@ export default router => {
         const sort = parseSortString(queryParams.order) || {
           order: -1
         };
-
         query.select("-content");
+
+        if (req.user.role === "manager") {
+          query.find({ $or: [{ store: req.user.store.id }, { store: null }] });
+        }
 
         if (queryParams.keyword) {
           query.find({ title: new RegExp(queryParams.keyword, "i") });

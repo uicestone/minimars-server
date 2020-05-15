@@ -94,7 +94,9 @@ export default router => {
         await booking.populate("store").execPopulate();
 
         if (!booking.store || !booking.store.name) {
-          throw new HttpError(400, "门店信息错误");
+          if (booking.type !== BookingType.GIFT) {
+            throw new HttpError(400, "门店信息错误");
+          }
         }
 
         if (!booking.date) {
@@ -220,7 +222,7 @@ export default router => {
         }
 
         if (req.user.role === "manager") {
-          query.find({ store: req.user.store.id });
+          query.find({ $or: [{ store: req.user.store.id }, { store: null }] });
         }
 
         if (queryParams.status) {
@@ -574,7 +576,9 @@ export default router => {
       await booking.populate("store").execPopulate();
 
       if (!booking.store || !booking.store.name) {
-        throw new HttpError(400, "门店信息错误");
+        if (booking.type !== BookingType.GIFT) {
+          throw new HttpError(400, "门店信息错误");
+        }
       }
 
       if (!booking.date) {
