@@ -34,7 +34,6 @@ export interface BookingPutBody extends Partial<Booking> {}
 export interface BookingPostQuery {
   paymentGateway?: PaymentGateway;
   useBalance?: "false";
-  adminAddWithoutPayment?: boolean;
   customerKeyword?: string;
 }
 
@@ -64,7 +63,6 @@ export interface CardPutBody extends Partial<Card> {}
 
 export interface CardPostQuery {
   paymentGateway?: PaymentGateway;
-  adminAddWithoutPayment?: boolean;
 }
 
 export interface CardQuery extends ListQuery {

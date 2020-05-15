@@ -257,11 +257,6 @@ export default router => {
             .replace(/^(\d{4})(\d{2})(\d{2})$/, "$1-$2-$3");
         }
 
-        if (body.cardNo) {
-          console.log(
-            `[USR] User ${user.id} card number set to ${user.cardNo}.`
-          );
-        }
         await user.save();
 
         user.password = undefined;

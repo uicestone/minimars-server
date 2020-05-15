@@ -142,44 +142,37 @@ export class Card {
     this: DocumentType<Card>,
     {
       paymentGateway,
-      adminAddWithoutPayment = false
+      atReception = false
     }: {
       paymentGateway: PaymentGateway;
-      adminAddWithoutPayment: boolean;
+      atReception?: boolean;
     }
   ) {
     const card = this as DocumentType<Card>;
-
     let totalPayAmount = card.price;
-
     let attach = `card ${card.id}`;
-
     const title = `${card.title}`;
 
-    if (adminAddWithoutPayment) {
+    const payment = new paymentModel({
+      customer: card.customer,
+      store: card.store,
+      amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
+      title,
+      attach,
+      gateway: paymentGateway
+    });
+    // payment is now set to true automatically
+    if (paymentGateway !== PaymentGateway.WechatPay) {
       card.status = card.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
-    } else {
-      const payment = new paymentModel({
-        customer: card.customer,
-        store: card.store,
-        amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
-        title,
-        attach,
-        gateway: paymentGateway
-      });
-      // payment is now set to true automatically
-      if (paymentGateway !== PaymentGateway.WechatPay) {
-        card.status = card.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
-      }
-
-      try {
-        await payment.save();
-      } catch (err) {
-        throw err;
-      }
-
-      card.payments.push(payment);
     }
+
+    try {
+      await payment.save();
+    } catch (err) {
+      throw err;
+    }
+
+    card.payments.push(payment);
   }
 
   async paymentSuccess(this: DocumentType<Card>) {

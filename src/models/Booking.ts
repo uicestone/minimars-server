@@ -223,22 +223,18 @@ export class Booking {
     {
       paymentGateway,
       useBalance = true,
-      adminAddWithoutPayment = false
+      atReception = false
     }: {
       paymentGateway: PaymentGateway;
-      useBalance: boolean;
-      adminAddWithoutPayment: boolean;
+      useBalance?: boolean;
+      atReception?: boolean;
     },
     amount?: number
   ) {
     const booking = this;
-
     let totalPayAmount = amount || booking.price;
-
     let balancePayAmount = 0;
-
     let attach = `booking ${booking._id}`;
-
     let title = "";
 
     if (booking.type === BookingType.GIFT) {
@@ -300,8 +296,7 @@ export class Booking {
       totalPayAmount >= 0.01 &&
       useBalance &&
       booking.customer.balance &&
-      paymentGateway !== PaymentGateway.Points &&
-      !adminAddWithoutPayment
+      paymentGateway !== PaymentGateway.Points
     ) {
       balancePayAmount = Math.min(totalPayAmount, booking.customer.balance);
       const balancePayment = new paymentModel({
@@ -321,14 +316,8 @@ export class Booking {
     const extraPayAmount = totalPayAmount - balancePayAmount;
     // console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
-    if (extraPayAmount < 0.01 || adminAddWithoutPayment) {
-      booking.status = [BookingType.FOOD, BookingType.GIFT].includes(
-        booking.type
-      )
-        ? BookingStatus.FINISHED
-        : booking.date > moment().format("YYYY-MM-DD")
-        ? BookingStatus.BOOKED
-        : BookingStatus.IN_SERVICE;
+    if (extraPayAmount < 0.01) {
+      booking.paymentSuccess(atReception);
     } else if (
       extraPayAmount >= 0.01 &&
       paymentGateway !== PaymentGateway.Points
@@ -348,16 +337,7 @@ export class Booking {
       });
 
       if (paymentGateway !== PaymentGateway.WechatPay) {
-        booking.status = [BookingType.FOOD, BookingType.GIFT].includes(
-          booking.type
-        )
-          ? BookingStatus.FINISHED
-          : booking.date > moment().format("YYYY-MM-DD")
-          ? BookingStatus.BOOKED
-          : BookingStatus.IN_SERVICE;
-        console.log(
-          `Auto set booking status ${booking.status} for ${booking.id}.`
-        );
+        booking.paymentSuccess(atReception);
       }
 
       booking.payments.push(extraPayment);
@@ -399,10 +379,7 @@ export class Booking {
             await booking.gift.save();
           }
         }
-        booking.status =
-          booking.type === BookingType.FOOD
-            ? BookingStatus.FINISHED
-            : BookingStatus.BOOKED;
+        booking.paymentSuccess(atReception);
         // await pointsPayment.save();
       } catch (err) {
         throw err;
@@ -414,19 +391,22 @@ export class Booking {
     await Promise.all(booking.payments.map(p => p.save()));
   }
 
-  async paymentSuccess(this: DocumentType<Booking>) {
-    const booking = this;
-
+  async paymentSuccess(this: DocumentType<Booking>, atReception = false) {
     // conditional change booking status
-    booking.status =
-      booking.type === BookingType.FOOD
-        ? BookingStatus.FINISHED
-        : BookingStatus.BOOKED;
-    await booking.save();
-    if (!booking.populated("customer")) {
-      await booking.populate("customer").execPopulate();
+    this.status = [BookingType.FOOD, BookingType.GIFT].includes(this.type)
+      ? BookingStatus.FINISHED
+      : this.date > moment().format("YYYY-MM-DD") || !atReception
+      ? BookingStatus.BOOKED
+      : BookingStatus.IN_SERVICE;
+    console.log(`Auto set booking status ${this.status} for ${this.id}.`);
+
+    await this.save();
+
+    if (!this.populated("customer")) {
+      await this.populate("customer").execPopulate();
     }
-    console.log(`Booking payment success: ${booking.id}.`);
+
+    console.log(`Booking payment success: ${this.id}.`);
     // send user notification
   }
 
