@@ -57,15 +57,17 @@ export default router => {
         if (!cardType) {
           throw new HttpError(404, `CardType '${body.slug}' not exists.`);
         }
-
         const card = new Card({
-          ...cardType.toObject(),
-          customer: body.customer,
-          _id: undefined,
-          id: undefined,
-          createdAt: undefined,
-          updatedAt: undefined
+          customer: body.customer
         });
+
+        Object.keys(cardType.toObject())
+          .filter(
+            key => !["_id", "__v", "createdAt", "updatedAt"].includes(key)
+          )
+          .forEach(key => {
+            card.set(key, cardType[key]);
+          });
 
         if (req.user.role === "customer") {
           card.customer = req.user;
