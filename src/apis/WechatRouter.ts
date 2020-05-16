@@ -130,7 +130,7 @@ export default (router: Router) => {
           token: signToken(oldCustomer)
         });
       } else {
-        console.log(`更新手机号${mobile}`);
+        console.log(`Update user mobile ${openIdUser.id} ${mobile}.`);
         openIdUser.set({ mobile });
         await openIdUser.save();
         res.json({
@@ -144,7 +144,7 @@ export default (router: Router) => {
     handleAsyncErrors(async (req, res) => {
       const { encryptedData, session_key, iv } = req.body;
       if (!session_key || !encryptedData || !iv) {
-        throw new HttpError(400, "缺少参数");
+        throw new HttpError(400, "微信信息解密失败");
       }
       const data = oAuth.decrypt(encryptedData, session_key, iv);
       res.json(data);
