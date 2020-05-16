@@ -34,13 +34,13 @@ export class Gift {
   })
   content?: string;
 
-  @prop({ default: 0 })
+  @prop({ type: Number, default: 0 })
   quantity: number;
 
-  @prop({ required: true })
+  @prop({ type: Number })
   priceInPoints: number;
 
-  @prop()
+  @prop({ type: Number })
   price?: number;
 
   @prop({ ref: "Store" })
