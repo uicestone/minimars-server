@@ -393,11 +393,16 @@ export class Booking {
 
   async paymentSuccess(this: DocumentType<Booking>, atReception = false) {
     // conditional change booking status
-    this.status = [BookingType.FOOD, BookingType.GIFT].includes(this.type)
-      ? BookingStatus.FINISHED
-      : this.date > moment().format("YYYY-MM-DD") || !atReception
-      ? BookingStatus.BOOKED
-      : BookingStatus.IN_SERVICE;
+    if (this.type === BookingType.FOOD) {
+      this.status = BookingStatus.FINISHED;
+    } else if (this.type === BookingType.GIFT) {
+      this.status = this.store ? BookingStatus.BOOKED : BookingStatus.FINISHED;
+    } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
+      this.status = BookingStatus.IN_SERVICE;
+    } else {
+      this.status = BookingStatus.BOOKED;
+    }
+
     console.log(`Auto set booking status ${this.status} for ${this.id}.`);
 
     await this.save();
