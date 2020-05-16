@@ -61,6 +61,8 @@ export default router => {
         const card = new Card({
           ...cardType.toObject(),
           customer: body.customer,
+          _id: undefined,
+          id: undefined,
           createdAt: undefined,
           updatedAt: undefined
         });
