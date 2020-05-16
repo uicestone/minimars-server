@@ -35,7 +35,7 @@ export default router => {
             ) as string).split(" ");
 
             console.log(
-              `Gift code parsed, userId: ${userId}, cardId: ${cardId}`
+              `Gift code parsed, userId: ${userId}, cardId: ${cardId}.`
             );
 
             const card = await Card.findOne({ _id: cardId });
@@ -43,6 +43,9 @@ export default router => {
               // verify success, now change owner
               card.customer = body.customer || req.user.id;
               await card.save();
+              console.log(
+                `Card ${card.id} transferred from user ${userId} to ${card.customer}.`
+              );
               return res.json(card);
             } else {
               throw "";
