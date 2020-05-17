@@ -333,7 +333,7 @@ export class Booking {
 
       const extraPayment = new paymentModel({
         customer: booking.customer,
-        store: booking.store.id,
+        store: booking.store?.id,
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
         title,
         attach,
