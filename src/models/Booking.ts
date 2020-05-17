@@ -321,7 +321,7 @@ export class Booking {
     // console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
     if (extraPayAmount < 0.01) {
-      booking.paymentSuccess(atReception);
+      await booking.paymentSuccess(atReception);
     } else if (
       extraPayAmount >= 0.01 &&
       paymentGateway !== PaymentGateway.Points
@@ -341,7 +341,7 @@ export class Booking {
       });
 
       if (paymentGateway !== PaymentGateway.WechatPay) {
-        booking.paymentSuccess(atReception);
+        await booking.paymentSuccess(atReception);
       }
 
       booking.payments.push(extraPayment);
@@ -383,7 +383,7 @@ export class Booking {
             await booking.gift.save();
           }
         }
-        booking.paymentSuccess(atReception);
+        await booking.paymentSuccess(atReception);
         // await pointsPayment.save();
       } catch (err) {
         throw err;
