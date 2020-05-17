@@ -414,6 +414,14 @@ export class Booking {
       await this.populate("customer").execPopulate();
     }
 
+    if (this.gift && this.gift.tagCustomer) {
+      if (!this.customer.tags) this.customer.tags = [];
+      if (!this.customer.tags.includes(this.gift.tagCustomer)) {
+        this.customer.tags.push(this.gift.tagCustomer);
+        await this.customer.save();
+      }
+    }
+
     console.log(`[PAY] Booking payment success: ${this.id}.`);
     // send user notification
   }

@@ -41,6 +41,18 @@ export default router => {
           query.find({ store: { $in: [req.user.store.id, null] } });
         }
 
+        if (req.user.role === "customer") {
+          if (req.user.tags && req.user.tags.length) {
+            query.find({
+              $or: [
+                { customerTags: { $in: req.user.tags } },
+                { customerTags: null },
+                { customerTags: [] }
+              ]
+            });
+          }
+        }
+
         if (req.ua && req.ua.isWechat) {
           query.find({ openForClient: true });
         }

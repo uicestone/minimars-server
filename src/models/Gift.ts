@@ -48,6 +48,9 @@ export class Gift {
 
   @prop({ type: Number })
   order?: number;
+
+  @prop()
+  tagCustomer: string; // push a tag to customer after purchased
 }
 
 const giftModel = getModelForClass(Gift, {

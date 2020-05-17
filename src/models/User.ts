@@ -106,6 +106,9 @@ export class User {
   @prop({ default: 0 })
   balanceReward?: number;
 
+  @prop()
+  tags: string[];
+
   @prop({
     remarks: String,
     set: (v: string) => {

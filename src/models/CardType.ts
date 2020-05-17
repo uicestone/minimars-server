@@ -58,6 +58,9 @@ export class CardType {
 
   @prop({ type: Boolean, default: false })
   openForClient: boolean;
+
+  @prop()
+  customerTags: string[];
 }
 
 const cardTypeModel = getModelForClass(CardType, {

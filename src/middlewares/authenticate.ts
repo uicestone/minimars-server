@@ -15,14 +15,7 @@ export default async function (req, res, next) {
         if (req.user) return next();
       }
       const tokenData = getTokenData(token);
-      if (tokenData.userRole === "manager") {
-        req.user = await User.findById(tokenData.userId);
-      } else {
-        req.user = new User({
-          _id: Types.ObjectId(tokenData.userId),
-          role: tokenData.userRole
-        });
-      }
+      req.user = await User.findById(tokenData.userId);
       // req.user = await User.findById(tokenData.userId);
     } catch (err) {
       return next(new HttpError(401, "无效登录，请重新登录"));
