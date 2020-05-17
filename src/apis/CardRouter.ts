@@ -2,7 +2,11 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Card, { Card as ICard, CardStatus } from "../models/Card";
+import Card, {
+  Card as ICard,
+  CardStatus,
+  userVisibleCardStatus
+} from "../models/Card";
 import CardType from "../models/CardType";
 import {
   CardPostBody,
@@ -60,6 +64,7 @@ export default router => {
         if (!cardType) {
           throw new HttpError(404, `CardType '${body.slug}' not exists.`);
         }
+
         const card = new Card({
           customer: body.customer
         });
@@ -82,6 +87,17 @@ export default router => {
 
         if (!customer) {
           throw new HttpError(400, "Invalid card customer.");
+        }
+
+        if (cardType.maxPerCustomer) {
+          const cardsOfSlug = await Card.find({
+            slug: cardType.slug,
+            status: { $in: userVisibleCardStatus },
+            customer: card.customer
+          });
+          if (cardsOfSlug.length + 1 > cardType.maxPerCustomer) {
+            throw new HttpError(400, "超过该会员卡限制购买数");
+          }
         }
 
         if (cardType.times) {

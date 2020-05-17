@@ -61,6 +61,9 @@ export class CardType {
 
   @prop()
   customerTags: string[];
+
+  @prop({ type: Number })
+  maxPerCustomer?: number;
 }
 
 const cardTypeModel = getModelForClass(CardType, {
