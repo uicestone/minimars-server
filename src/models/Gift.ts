@@ -49,6 +49,9 @@ export class Gift {
   @prop({ type: Number })
   order?: number;
 
+  @prop({ type: Boolean, default: true })
+  useBalance: boolean;
+
   @prop()
   tagCustomer: string; // push a tag to customer after purchased
 }
