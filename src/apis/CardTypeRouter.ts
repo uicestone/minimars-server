@@ -42,15 +42,13 @@ export default router => {
         }
 
         if (req.user.role === "customer") {
-          if (req.user.tags && req.user.tags.length) {
-            query.find({
-              $or: [
-                { customerTags: { $in: req.user.tags } },
-                { customerTags: null },
-                { customerTags: [] }
-              ]
-            });
-          }
+          query.find({
+            $or: [
+              { customerTags: { $in: req.user.tags || [] } },
+              { customerTags: null },
+              { customerTags: [] }
+            ]
+          });
         }
 
         if (req.ua && req.ua.isWechat) {
