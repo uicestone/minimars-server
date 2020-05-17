@@ -153,26 +153,26 @@ export class Card {
     let attach = `card ${card.id}`;
     const title = `${card.title}`;
 
-    const payment = new paymentModel({
-      customer: card.customer,
-      store: card.store,
-      amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
-      title,
-      attach,
-      gateway: paymentGateway
-    });
-    // payment is now set to true automatically
-    if (paymentGateway !== PaymentGateway.WechatPay) {
-      card.status = card.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
-    }
+    if (totalPayAmount < 0.01) {
+      await card.paymentSuccess();
+    } else {
+      const payment = new paymentModel({
+        customer: card.customer,
+        store: card.store,
+        amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
+        title,
+        attach,
+        gateway: paymentGateway
+      });
 
-    try {
       await payment.save();
-    } catch (err) {
-      throw err;
-    }
 
-    card.payments.push(payment);
+      if (paymentGateway !== PaymentGateway.WechatPay) {
+        await card.paymentSuccess();
+      }
+
+      card.payments.push(payment);
+    }
   }
 
   async paymentSuccess(this: DocumentType<Card>) {
