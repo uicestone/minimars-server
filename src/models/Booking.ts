@@ -358,31 +358,6 @@ export class Booking {
       });
 
       try {
-        if (booking.type === "event") {
-          if (!booking.populated("event")) {
-            await booking
-              .populate({ path: "event", select: "-content" })
-              .execPopulate();
-          }
-          if (!booking.event) {
-            throw new Error("invalid_event");
-          }
-          if (booking.event.kidsCountMax) {
-            booking.event.kidsCountLeft -= booking.kidsCount;
-            await booking.event.save();
-          }
-        } else if (booking.type === "gift") {
-          if (!booking.populated("gift")) {
-            await booking.populate("gift").execPopulate();
-          }
-          if (!booking.gift) {
-            throw new Error("invalid_gift");
-          }
-          if (booking.gift.quantity) {
-            booking.gift.quantity -= booking.quantity;
-            await booking.gift.save();
-          }
-        }
         await booking.paymentSuccess(atReception);
         // await pointsPayment.save();
       } catch (err) {
@@ -409,6 +384,33 @@ export class Booking {
     }
 
     console.log(`[BOK] Auto set booking status ${this.status} for ${this.id}.`);
+
+    if (this.type === BookingType.EVENT) {
+      if (!this.populated("event")) {
+        await this.populate({
+          path: "event",
+          select: "-content"
+        }).execPopulate();
+      }
+      if (!this.event) {
+        throw new Error("invalid_event");
+      }
+      if (this.event.kidsCountMax) {
+        this.event.kidsCountLeft -= this.kidsCount;
+        await this.event.save();
+      }
+    } else if (this.type === BookingType.GIFT) {
+      if (!this.populated("gift")) {
+        await this.populate("gift").execPopulate();
+      }
+      if (!this.gift) {
+        throw new Error("invalid_gift");
+      }
+      if (this.gift.quantity) {
+        this.gift.quantity -= this.quantity;
+        await this.gift.save();
+      }
+    }
 
     if (!this.populated("customer")) {
       await this.populate("customer").execPopulate();
