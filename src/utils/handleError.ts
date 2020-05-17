@@ -6,14 +6,14 @@ export default (err: Error, req, res, next) => {
     res.status(err.status).json({ message: err.message });
   } else if (err instanceof MongoError && err.code === 11000) {
     const match = err.message.match(
-      /collection: .*?\.(.*?) index: (.*?) dup key: { : (.*?) }$/
+      /collection: .*?\.(.*?) index: (.*?) dup key: { (.*?): (.*?) }$/
     );
     let message = "";
     if (match) {
       message = `Duplicated "${match[1]}" "${match[2].replace(
         /_\d+_?/g,
         ", "
-      )}": ${match[3]}`;
+      )}": ${match[4]}`;
     } else {
       message = `Duplicated key.`;
     }
