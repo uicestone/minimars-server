@@ -6,7 +6,8 @@ import HttpError from "../utils/HttpError";
 import Booking, {
   Booking as IBooking,
   BookingStatus,
-  BookingType
+  BookingType,
+  paidBookingStatus
 } from "../models/Booking";
 import User from "../models/User";
 import Store from "../models/Store";
@@ -149,6 +150,24 @@ export default router => {
           }
           if (booking.gift.quantity && booking.gift.quantity < body.quantity) {
             throw new HttpError(400, "礼品库存不足");
+          }
+          if (booking.gift.maxQuantityPerCustomer) {
+            const historyGiftBookings = await Booking.find({
+              type: BookingType.GIFT,
+              status: { $in: paidBookingStatus },
+              gift: booking.gift,
+              customer: booking.customer
+            });
+            const historyQuantity = historyGiftBookings.reduce(
+              (quantity, booking) => quantity + booking.quantity,
+              0
+            );
+            if (
+              historyQuantity + booking.quantity >
+              booking.gift.maxQuantityPerCustomer
+            ) {
+              throw new HttpError(400, "超过客户礼品限制兑换数");
+            }
           }
         }
 
