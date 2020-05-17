@@ -148,7 +148,11 @@ export default router => {
           if (!booking.gift) {
             throw new HttpError(400, "礼品信息错误");
           }
-          if (booking.gift.quantity && booking.gift.quantity < body.quantity) {
+          console.log(booking.gift.quantity, body.quantity);
+          if (
+            booking.gift.quantity >= 0 &&
+            booking.gift.quantity < body.quantity
+          ) {
             throw new HttpError(400, "礼品库存不足");
           }
           if (booking.gift.maxQuantityPerCustomer) {
