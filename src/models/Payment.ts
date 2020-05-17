@@ -134,7 +134,11 @@ import moment from "moment";
         if (card.status !== CardStatus.ACTIVATED) {
           throw new Error("invalid_card");
         }
-        if (card.expiresAt && card.expiresAt < new Date()) {
+        if (
+          card.expiresAt &&
+          card.expiresAt < new Date() &&
+          !payment.gatewayData?.atReception
+        ) {
           throw new Error("expired_card");
         }
         if (card.timesLeft < payment.gatewayData.times) {

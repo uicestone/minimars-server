@@ -265,6 +265,7 @@ export class Booking {
         attach,
         gateway: PaymentGateway.Card,
         gatewayData: {
+          atReception,
           cardId: booking.card.id,
           bookingId: booking.id,
           times: Math.min(
@@ -288,6 +289,7 @@ export class Booking {
         attach,
         gateway: PaymentGateway.Coupon,
         gatewayData: {
+          atReception,
           couponId: booking.coupon.id,
           bookingId: booking.id
         }
@@ -310,7 +312,10 @@ export class Booking {
         amountForceDeposit: booking.socksCount * config.sockPrice || 0,
         title,
         attach,
-        gateway: PaymentGateway.Balance
+        gateway: PaymentGateway.Balance,
+        gatewayData: {
+          atReception
+        }
       });
 
       // await balancePayment.save();
@@ -337,7 +342,10 @@ export class Booking {
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
         title,
         attach,
-        gateway: paymentGateway
+        gateway: paymentGateway,
+        gatewayData: {
+          atReception
+        }
       });
 
       if (paymentGateway !== PaymentGateway.WechatPay) {
@@ -354,7 +362,10 @@ export class Booking {
         amountInPoints: booking.priceInPoints,
         title,
         attach,
-        gateway: paymentGateway
+        gateway: paymentGateway,
+        gatewayData: {
+          atReception
+        }
       });
 
       try {

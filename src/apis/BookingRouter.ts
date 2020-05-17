@@ -201,7 +201,8 @@ export default router => {
               (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
             useBalance: query.useBalance !== "false",
             atReception:
-              req.user.role === "manager" && booking.customer.id !== req.user.id
+              ["admin", "manager"].includes(req.user.role) &&
+              booking.customer.id !== req.user.id
           });
         } catch (err) {
           switch (err.message) {
