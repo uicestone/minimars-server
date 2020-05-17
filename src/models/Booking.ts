@@ -199,7 +199,9 @@ export class Booking {
         return;
         // throw new Error("invalid_event");
       }
-      booking.priceInPoints = booking.event.priceInPoints * booking.kidsCount;
+      if (booking.priceInPoints) {
+        booking.priceInPoints = booking.event.priceInPoints * booking.kidsCount;
+      }
       if (booking.event.price) {
         booking.price = booking.event.price * booking.kidsCount;
       }
@@ -211,7 +213,9 @@ export class Booking {
         return;
         // throw new Error("invalid_gift");
       }
-      booking.priceInPoints = booking.gift.priceInPoints * booking.quantity;
+      if (booking.gift.priceInPoints) {
+        booking.priceInPoints = booking.gift.priceInPoints * booking.quantity;
+      }
       if (booking.gift.price) {
         booking.price = booking.gift.price * booking.quantity;
       }
@@ -403,15 +407,14 @@ export class Booking {
       this.status = BookingStatus.BOOKED;
     }
 
-    console.log(`Auto set booking status ${this.status} for ${this.id}.`);
-
+    console.log(`[BOK] Auto set booking status ${this.status} for ${this.id}.`);
     await this.save();
 
     if (!this.populated("customer")) {
       await this.populate("customer").execPopulate();
     }
 
-    console.log(`Booking payment success: ${this.id}.`);
+    console.log(`[PAY] Booking payment success: ${this.id}.`);
     // send user notification
   }
 
