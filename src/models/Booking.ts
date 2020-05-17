@@ -408,7 +408,6 @@ export class Booking {
     }
 
     console.log(`[BOK] Auto set booking status ${this.status} for ${this.id}.`);
-    await this.save();
 
     if (!this.populated("customer")) {
       await this.populate("customer").execPopulate();
@@ -515,7 +514,6 @@ export class Booking {
   async refundSuccess(this: DocumentType<Booking>) {
     const booking = this;
     booking.status = BookingStatus.CANCELED;
-    await booking.save();
     // send user notification
   }
 

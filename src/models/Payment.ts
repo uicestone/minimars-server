@@ -277,11 +277,13 @@ export class Payment {
           await booking.refundSuccess();
           console.log(`[PAY] Booking refund success, id: ${booking._id}.`);
         }
+        await booking.save();
         break;
       case "card":
         if (!isValidHexObjectId(paymentAttach[1])) break;
         const card = await cardModel.findOne({ _id: paymentAttach[1] });
         await card.paymentSuccess();
+        await card.save();
         console.log(`[PAY] Card purchase success, id: ${card._id}.`);
         break;
       default:

@@ -177,7 +177,6 @@ export class Card {
 
   async paymentSuccess(this: DocumentType<Card>) {
     this.status = this.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
-    await this.save();
     // send user notification
   }
 }
