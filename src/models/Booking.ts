@@ -392,6 +392,7 @@ export class Booking {
       booking.payments.push(pointsPayment);
     }
 
+    // we have to save all payments before booking saved, otherwise mongoose remove unsaved ref keys
     await Promise.all(booking.payments.map(p => p.save()));
   }
 
