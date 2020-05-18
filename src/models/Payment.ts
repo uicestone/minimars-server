@@ -30,6 +30,7 @@ import moment from "moment";
   // console.log(`[PAY] Payment pre save ${payment._id}.`);
 
   if (payment.paid) {
+    // payment.paid is modified to true and save
     await payment.paidSuccess();
     return next();
   }
@@ -64,6 +65,7 @@ import moment from "moment";
         Object.assign(payment.gatewayData, wechatRefundOrderData);
         if (wechatRefundOrderData.return_code === "SUCCESS") {
           payment.paid = true;
+          await payment.paidSuccess();
         }
       }
       break;
@@ -109,12 +111,10 @@ import moment from "moment";
       );
 
       payment.paid = true;
+      // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
         await payment.customer.addPoints(payment.amount);
       }
-      // await payment.paidSuccess();
-      // we don't trigger paidSuccess or booking.paidSuccess here cause booking may not be saved
-      // we need to change booking status manually after balance payment
       await customer.save();
       break;
     case PaymentGateway.Card:
@@ -156,6 +156,7 @@ import moment from "moment";
         );
       }
       payment.paid = true;
+      // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
         await payment.customer.addPoints(payment.amount);
       }
@@ -163,29 +164,34 @@ import moment from "moment";
       break;
     case PaymentGateway.Coupon:
       payment.paid = true;
+      // await payment.paidSuccess();
       break;
     case PaymentGateway.Scan:
       break;
     case PaymentGateway.Cash:
       payment.paid = true;
+      // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
         await payment.customer.addPoints(payment.amount);
       }
       break;
     case PaymentGateway.Pos:
       payment.paid = true;
+      // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
         await payment.customer.addPoints(payment.amount);
       }
       break;
     case PaymentGateway.Dianping:
       payment.paid = true;
+      // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
         await payment.customer.addPoints(payment.amount);
       }
       break;
     case PaymentGateway.Shouqianba:
       payment.paid = true;
+      // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
         await payment.customer.addPoints(payment.amount);
       }
@@ -197,6 +203,7 @@ import moment from "moment";
       customer.points -= payment.amountInPoints;
       await customer.save();
       payment.paid = true;
+      // await payment.paidSuccess();
       break;
     default:
       throw new Error("unsupported_payment_gateway");
@@ -277,6 +284,8 @@ export class Payment {
         if (!isValidHexObjectId(paymentAttach[1])) break;
         const booking = await Booking.findOne({ _id: paymentAttach[1] });
         if (payment.amount >= 0) {
+          // TODO: no, single payment success is not booking payment success
+          // so right now we don't trigger paidSuccess for balance/card/coupon payment
           await booking.paymentSuccess();
           console.log(`[PAY] Booking payment success, id: ${booking._id}.`);
         } else {
