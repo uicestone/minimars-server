@@ -46,8 +46,8 @@ export class Gift {
   @prop({ ref: "Store" })
   store: DocumentType<Store>;
 
-  @prop({ type: Number })
-  order?: number;
+  @prop({ type: Number, default: 0 })
+  order: number;
 
   @prop({ type: Boolean, default: true })
   useBalance: boolean;

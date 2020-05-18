@@ -81,8 +81,8 @@ export class Event {
   @prop({ ref: "Store" })
   store?: DocumentType<Store>;
 
-  @prop({ type: Number })
-  order?: number;
+  @prop({ type: Number, default: 0 })
+  order: number;
 }
 
 const eventModel = getModelForClass(Event, {

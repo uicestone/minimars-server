@@ -40,6 +40,10 @@ export default router => {
           query.find({ $or: [{ store: req.user.store.id }, { store: null }] });
         }
 
+        if (req.user.role === "customer") {
+          query.find({ order: { $gte: 0 } });
+        }
+
         if (queryParams.keyword) {
           query.find({ title: new RegExp(queryParams.keyword, "i") });
         }
