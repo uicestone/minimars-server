@@ -31,7 +31,7 @@ export const unifiedOrder = async (
   body: string = " ",
   attach: string = ""
 ) => {
-  const gatewayData = await pay.unifiedOrder({
+  const orderData = await pay.unifiedOrder({
     body,
     attach,
     out_trade_no: outTradeNo,
@@ -41,11 +41,11 @@ export const unifiedOrder = async (
     notify_url: `${API_ROOT}wechat/pay/notify`,
     spbill_create_ip: "8.8.8.8"
   });
-  if (!pay.verifySign(gatewayData)) throw new Error("WechatPay sign error.");
-  if (gatewayData.result_code === "FAIL")
-    throw new Error(`Trade failed: ${JSON.stringify(gatewayData)}`);
+  if (!pay.verifySign(orderData)) throw new Error("WechatPay sign error.");
+  if (orderData.result_code === "FAIL")
+    throw new Error(`Trade failed: ${JSON.stringify(orderData)}`);
 
-  return gatewayData;
+  return orderData;
 };
 
 export const refundOrder = async (

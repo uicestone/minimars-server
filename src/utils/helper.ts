@@ -51,13 +51,13 @@ export const saveContentImages = (content: string) => {
   if (!srcs) return;
   srcs.map(src => {
     const [, mime, base64] = src.match(/^src="data:(.*?);base64,(.*?)"$/);
-    console.log(`Found base64 of ${mime}.`);
+    console.log(`[HLP] Found base64 of ${mime}.`);
     const ext = getExtension(mime);
     const data = Buffer.from(base64, "base64");
     const filename = createHash("sha1").update(data).digest("hex") + "." + ext;
     const path = process.cwd() + "/uploads/" + filename;
     writeFileSync(path, data);
-    console.log(`Base64 saved to file ${filename}.`);
+    console.log(`[HLP] Base64 saved to file ${filename}.`);
     content = content.replace(
       src,
       `src="${process.env.UPLOAD_BASE}uploads/${filename}"`

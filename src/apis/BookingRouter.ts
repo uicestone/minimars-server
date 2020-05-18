@@ -148,7 +148,6 @@ export default router => {
           if (!booking.gift) {
             throw new HttpError(400, "礼品信息错误");
           }
-          console.log(booking.gift.quantity, body.quantity);
           if (
             booking.gift.quantity >= 0 &&
             booking.gift.quantity < body.quantity

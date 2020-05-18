@@ -40,26 +40,28 @@ import moment from "moment";
 
   switch (payment.gateway) {
     case PaymentGateway.WechatPay:
-      if (payment.gatewayData) return next();
+      if (payment.payArgs) return next();
       await payment.populate("customer").execPopulate();
       if (!customer.openid) {
         throw new Error("no_customer_openid");
       }
       if (payment.amount > 0) {
-        payment.gatewayData = await wechatUnifiedOrder(
+        const wechatUnifiedOrderData = await wechatUnifiedOrder(
           payment._id.toString(),
           payment.amount,
           customer.openid,
           payment.title,
           payment.attach
         );
+        Object.assign(payment.gatewayData, wechatUnifiedOrderData);
       } else {
-        payment.gatewayData = await refundOrder(
+        const wechatRefundOrderData = await refundOrder(
           payment.original,
           payment.id,
           payment.amount,
           payment.amount
         );
+        Object.assign(payment.gatewayData, wechatRefundOrderData);
       }
       break;
     case PaymentGateway.Balance:
@@ -137,7 +139,7 @@ import moment from "moment";
         if (
           card.expiresAt &&
           card.expiresAt < new Date() &&
-          !payment.gatewayData?.atReception
+          !payment.gatewayData.atReception
         ) {
           throw new Error("expired_card");
         }
@@ -232,8 +234,8 @@ export class Payment {
   @prop({ required: true, index: true })
   gateway: PaymentGateway;
 
-  @prop()
-  gatewayData: { [key: string]: any };
+  @prop({ default: {} })
+  gatewayData: Record<string, any>;
 
   @prop()
   original?: string;
@@ -247,22 +249,25 @@ export class Payment {
   }
 
   get payArgs(this: DocumentType<Payment>) {
-    const payment = this;
-    if (payment.gateway === PaymentGateway.WechatPay && !payment.paid) {
-      if (
-        !payment.gatewayData ||
-        !payment.gatewayData.nonce_str ||
-        !payment.gatewayData.prepay_id
-      ) {
-        if (!payment.valid || payment.amount <= 0) return;
-        else throw new Error(`incomplete_gateway_data`);
+    if (
+      this.gateway !== PaymentGateway.WechatPay ||
+      this.paid ||
+      !this.gatewayData ||
+      !this.gatewayData.nonce_str ||
+      !this.gatewayData.prepay_id
+    ) {
+      if (this.valid && this.amount > 0) {
+        console.error(
+          `[PAY] Incomplete wechat pay gateway data, payment: ${this.id}`
+        );
       }
-      const wechatGatewayData = payment.gatewayData as {
-        nonce_str: string;
-        prepay_id: string;
-      };
-      return wechatPayArgs(wechatGatewayData);
+      return;
     }
+    const wechatGatewayData = this.gatewayData as {
+      nonce_str: string;
+      prepay_id: string;
+    };
+    return wechatPayArgs(wechatGatewayData);
   }
 
   async paidSuccess(this: DocumentType<Payment>) {

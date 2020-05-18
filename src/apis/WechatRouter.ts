@@ -17,7 +17,7 @@ export default (router: Router) => {
       console.time("Wechat login");
       const userData = await oAuth.getUser(code);
       console.timeEnd("Wechat login");
-      console.log("Wechat login user data:", JSON.stringify(userData));
+      console.log("[WEC] Wechat login user data:", JSON.stringify(userData));
 
       const { openid, session_key } = userData;
       const user = await User.findOneAndUpdate(
@@ -130,7 +130,7 @@ export default (router: Router) => {
           token: signToken(oldCustomer)
         });
       } else {
-        console.log(`Update user mobile ${openIdUser.id} ${mobile}.`);
+        console.log(`[WEC] Update user mobile ${openIdUser.id} ${mobile}.`);
         openIdUser.set({ mobile });
         await openIdUser.save();
         res.json({
@@ -191,7 +191,7 @@ export default (router: Router) => {
         if (payment.attach.match(/^booking /)) {
           await payment.customer.addPoints(payment.amount);
         }
-        payment.gatewayData = parsedData;
+        Object.assign(payment.gatewayData, parsedData);
 
         await payment.save();
 

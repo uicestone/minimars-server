@@ -84,13 +84,13 @@ export const initAgenda = async () => {
 
   agenda.define("import prev data", async (job, done) => {
     await importPrevData(job.attrs.data.database, job.attrs.data.storeKey);
-    console.log("Previous data imported.");
+    console.log("[CRO] Previous data imported.");
     done();
   });
 
   agenda.define("create indexes", async (job, done) => {
     User.createIndexes();
-    console.log("Index created.");
+    console.log("[CRO] Index created.");
     done();
   });
 

@@ -12,7 +12,7 @@ export default async (config: IConfig) => {
   if (initConfigItemsInsert.length) {
     await Config.insertMany(initConfigItemsInsert);
     console.log(
-      `[SYS] ${initConfigItemsInsert.length} config items initialized.`
+      `[CFG] ${initConfigItemsInsert.length} config items initialized.`
     );
   }
   Object.assign(config, ...initConfigItemsInsert, existingConfig);
