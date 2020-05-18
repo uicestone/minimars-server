@@ -342,10 +342,7 @@ export class Booking {
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
         title,
         attach,
-        gateway: paymentGateway,
-        gatewayData: {
-          atReception
-        }
+        gateway: paymentGateway
       });
 
       if (paymentGateway !== PaymentGateway.WechatPay) {
