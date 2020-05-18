@@ -15,7 +15,7 @@ import {
   payArgs as wechatPayArgs,
   refundOrder
 } from "../utils/wechat";
-import cardModel, { Card, CardStatus } from "./Card";
+import cardModel, { CardStatus } from "./Card";
 import { isValidHexObjectId } from "../utils/helper";
 import { Store } from "./Store";
 import moment from "moment";
@@ -116,7 +116,6 @@ import moment from "moment";
       break;
     case PaymentGateway.Card:
       if (
-        !payment.gatewayData ||
         !payment.gatewayData.bookingId ||
         !payment.gatewayData.cardId ||
         !payment.gatewayData.times
@@ -249,13 +248,8 @@ export class Payment {
   }
 
   get payArgs(this: DocumentType<Payment>) {
-    if (
-      this.gateway !== PaymentGateway.WechatPay ||
-      this.paid ||
-      !this.gatewayData ||
-      !this.gatewayData.nonce_str ||
-      !this.gatewayData.prepay_id
-    ) {
+    if (this.gateway !== PaymentGateway.WechatPay || this.paid) return;
+    if (!this.gatewayData.nonce_str || !this.gatewayData.prepay_id) {
       if (this.valid && this.amount > 0) {
         console.error(
           `[PAY] Incomplete wechat pay gateway data, payment: ${this.id}`
