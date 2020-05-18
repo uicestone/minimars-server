@@ -526,8 +526,33 @@ export class Booking {
   }
 
   async refundSuccess(this: DocumentType<Booking>) {
-    const booking = this;
-    booking.status = BookingStatus.CANCELED;
+    this.status = BookingStatus.CANCELED;
+    if (this.type === BookingType.EVENT) {
+      if (!this.populated("event")) {
+        await this.populate({
+          path: "event",
+          select: "-content"
+        }).execPopulate();
+      }
+      if (!this.event) {
+        throw new Error("invalid_event");
+      }
+      if (this.event.kidsCountMax) {
+        this.event.kidsCountLeft += this.kidsCount;
+        await this.event.save();
+      }
+    } else if (this.type === BookingType.GIFT) {
+      if (!this.populated("gift")) {
+        await this.populate("gift").execPopulate();
+      }
+      if (!this.gift) {
+        throw new Error("invalid_gift");
+      }
+      if (this.gift.quantity) {
+        this.gift.quantity += this.quantity;
+        await this.gift.save();
+      }
+    }
     // send user notification
   }
 

@@ -62,6 +62,9 @@ import moment from "moment";
           payment.amount
         );
         Object.assign(payment.gatewayData, wechatRefundOrderData);
+        if (wechatRefundOrderData.return_code === "SUCCESS") {
+          payment.paid = true;
+        }
       }
       break;
     case PaymentGateway.Balance:
