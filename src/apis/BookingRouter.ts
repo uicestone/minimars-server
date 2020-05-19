@@ -247,7 +247,7 @@ export default router => {
         }
 
         if (req.user.role === "manager") {
-          query.find({ $or: [{ store: req.user.store.id }, { store: null }] });
+          query.find({ store: { $in: [req.user.store.id, null] } });
         }
 
         if (queryParams.status) {

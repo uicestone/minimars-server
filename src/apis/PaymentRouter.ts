@@ -32,7 +32,7 @@ export default router => {
         }
 
         if (req.user.role === "manager") {
-          query.find({ store: req.user.store.id });
+          query.find({ store: { $in: [req.user.store.id, null] } });
         }
 
         if (queryParams.date) {

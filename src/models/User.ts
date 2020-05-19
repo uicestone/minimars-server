@@ -106,33 +106,15 @@ export class User {
   @prop({ default: 0 })
   balanceReward?: number;
 
-  @prop()
-  tags: string[];
-
-  @prop({
-    remarks: String,
-    set: (v: string) => {
-      if (!v) return v;
-      const lines = v.split("\n");
-      return lines
-        .map(line => {
-          if (line && !line.match(/^\d{4}-\d{2}-\d{2}: /)) {
-            line = moment().format("YYYY-MM-DD") + ": " + line;
-          }
-          return line;
-        })
-        .join("\n");
-    },
-    get: v => v
-  })
-  remarks?: string;
-
   get balance() {
     if (this.balanceDeposit === undefined && this.balanceReward === undefined) {
       return undefined;
     }
     return +((this.balanceDeposit || 0) + (this.balanceReward || 0)).toFixed(2);
   }
+
+  @prop()
+  tags: string[];
 
   @prop()
   points?: number;
@@ -154,6 +136,24 @@ export class User {
 
   @prop({ index: true })
   cardNo?: string;
+
+  @prop({
+    remarks: String,
+    set: (v: string) => {
+      if (!v) return v;
+      const lines = v.split("\n");
+      return lines
+        .map(line => {
+          if (line && !line.match(/^\d{4}-\d{2}-\d{2}: /)) {
+            line = moment().format("YYYY-MM-DD") + ": " + line;
+          }
+          return line;
+        })
+        .join("\n");
+    },
+    get: v => v
+  })
+  remarks?: string;
 
   async addPoints(this: DocumentType<User>, amount: number, save = true) {
     if (!this.points) this.points = 0;
