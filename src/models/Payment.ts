@@ -260,11 +260,11 @@ export class Payment {
   get payArgs(this: DocumentType<Payment>) {
     if (this.gateway !== PaymentGateway.WechatPay || this.paid) return;
     if (!this.gatewayData.nonce_str || !this.gatewayData.prepay_id) {
-      if (this.valid && this.amount > 0) {
-        console.error(
-          `[PAY] Incomplete wechat pay gateway data, payment: ${this.id}`
-        );
-      }
+      // if (this.valid && this.amount > 0) {
+      //   console.trace(
+      //     `[PAY] Incomplete wechat pay gateway data, payment: ${this.id}`
+      //   );
+      // }
       return;
     }
     const wechatGatewayData = this.gatewayData as {
