@@ -275,7 +275,7 @@ export class Booking {
           )
         }
       });
-      // await cardPayment.save();
+      await cardPayment.save();
       booking.payments.push(cardPayment);
     }
 
@@ -294,7 +294,7 @@ export class Booking {
           bookingId: booking.id
         }
       });
-      // await couponPayment.save();
+      await couponPayment.save();
       booking.payments.push(couponPayment);
     }
 
@@ -318,7 +318,7 @@ export class Booking {
         }
       });
 
-      // await balancePayment.save();
+      await balancePayment.save();
       booking.payments.push(balancePayment);
     }
 
@@ -370,7 +370,7 @@ export class Booking {
 
       try {
         await booking.paymentSuccess(atReception);
-        // await pointsPayment.save();
+        await pointsPayment.save();
       } catch (err) {
         throw err;
       }
@@ -379,7 +379,8 @@ export class Booking {
     }
 
     // we have to save all payments before booking saved, otherwise mongoose remove unsaved ref keys
-    await Promise.all(booking.payments.map(p => p.save()));
+    // await Promise.all(booking.payments.map(p => p.save()));
+    // we give up save all payments at the same time. It saves no time but cause a user parallel saving problem
   }
 
   async paymentSuccess(this: DocumentType<Booking>, atReception = false) {

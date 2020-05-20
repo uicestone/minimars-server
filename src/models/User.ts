@@ -156,10 +156,14 @@ export class User {
   remarks?: string;
 
   async addPoints(this: DocumentType<User>, amount: number, save = true) {
-    if (!this.points) this.points = 0;
-    this.points += 1 * amount;
+    const r = 1;
     if (save) {
-      await this.save();
+      await this.update({ $inc: { points: amount * r } }).exec();
+      const u = await userModel.findById(this._id);
+      this.points = u.points;
+    } else {
+      if (!this.points) this.points = 0;
+      this.points += r * amount;
     }
   }
 }
