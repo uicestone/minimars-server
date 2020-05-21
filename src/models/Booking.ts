@@ -352,6 +352,7 @@ export class Booking {
         await booking.paymentSuccess(atReception);
       }
 
+      await extraPayment.save();
       booking.payments.push(extraPayment);
     }
     if (booking.priceInPoints && paymentGateway === PaymentGateway.Points) {
@@ -375,6 +376,7 @@ export class Booking {
         throw err;
       }
 
+      await pointsPayment.save();
       booking.payments.push(pointsPayment);
     }
 
