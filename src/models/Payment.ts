@@ -200,8 +200,7 @@ import moment from "moment";
       if (payment.amountInPoints > customer.points) {
         throw new Error("insufficient_points");
       }
-      customer.points -= payment.amountInPoints;
-      await customer.save();
+      await customer.addPoints(-payment.amountInPoints);
       payment.paid = true;
       // await payment.paidSuccess();
       break;
