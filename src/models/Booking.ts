@@ -199,7 +199,7 @@ export class Booking {
         return;
         // throw new Error("invalid_event");
       }
-      if (booking.priceInPoints) {
+      if (booking.event.priceInPoints) {
         booking.priceInPoints = booking.event.priceInPoints * booking.kidsCount;
       }
       if (booking.event.price) {
