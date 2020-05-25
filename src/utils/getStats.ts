@@ -13,6 +13,8 @@ export default async (
   dateInputFrom?: string | Date,
   store?: DocumentType<Store>
 ) => {
+  // const starts: number = Date.now();
+  // console.log("[DEBUG] Stats starts:", starts);
   const dateStr = moment(dateInput).format("YYYY-MM-DD"),
     dateStrFrom = dateInputFrom && moment(dateInputFrom).format("YYYY-MM-DD"),
     startOfDay = moment(dateInputFrom || dateInput)
@@ -37,8 +39,6 @@ export default async (
     bookingsPaidQuery.find({ store });
   }
 
-  const bookingsPaid = await bookingsPaidQuery.exec();
-
   const paymentsQuery = Payment.find({
     createdAt: {
       $gte: startOfDay,
@@ -51,7 +51,11 @@ export default async (
     paymentsQuery.find({ store });
   }
 
-  const payments = await paymentsQuery.exec();
+  const [bookingsPaid, payments] = await Promise.all([
+    bookingsPaidQuery.exec(),
+    paymentsQuery.exec()
+  ]);
+  // console.log("[DEBUG] Bookings & payments queried:", Date.now() - starts);
 
   const flowAmount = payments
     .filter(p => flowGateways.includes(p.gateway))
@@ -65,6 +69,7 @@ export default async (
     (count, booking) => count + booking.adultsCount + booking.kidsCount,
     0
   );
+  // console.log("[DEBUG] Count calculated:", Date.now() - starts);
 
   const customersByType = bookingsPaid.reduce(
     (acc, booking) => {
@@ -170,6 +175,7 @@ export default async (
   balanceCount.amount = payments
     .filter(p => p.gateway === PaymentGateway.Balance)
     .reduce((acc, p) => acc + p.amountDeposit || p.amount, 0);
+  // console.log("[DEBUG] Groups calculated:", Date.now() - starts);
 
   const dailyCustomers = await Booking.aggregate([
     { $match: { date: { $gte: dateRangeStartStr, $lte: dateStr } } },
@@ -337,6 +343,7 @@ export default async (
       }
     }
   ]);
+  // console.log("[DEBUG] Chart calculated:", Date.now() - starts);
 
   return {
     flowAmount,
