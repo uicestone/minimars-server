@@ -45,6 +45,9 @@ export class User {
   @prop({ type: String })
   childBirthday?: string;
 
+  @prop()
+  childPhotoUrl?: string;
+
   @prop({
     type: String,
     get: v => v,
