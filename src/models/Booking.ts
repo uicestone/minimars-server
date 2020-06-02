@@ -390,7 +390,7 @@ export class Booking {
     if (this.type === BookingType.FOOD) {
       this.status = BookingStatus.FINISHED;
     } else if (this.type === BookingType.GIFT) {
-      this.status = this.store ? BookingStatus.BOOKED : BookingStatus.FINISHED;
+      this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
       this.status = BookingStatus.IN_SERVICE;
     } else {
