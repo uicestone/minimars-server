@@ -157,7 +157,8 @@ export class Booking {
           extraAdultsCount = Math.max(
             0,
             booking.adultsCount -
-              booking.kidsCount * booking.card.freeParentsPerKid
+              (booking.kidsCount - kidsCount) * booking.card.freeParentsPerKid -
+              kidsCount * config.freeParentsPerKid
           );
         }
         // TODO check card valid times
