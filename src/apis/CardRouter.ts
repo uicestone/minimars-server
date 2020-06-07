@@ -69,9 +69,14 @@ export default router => {
           customer: body.customer
         });
 
+        if (cardType.store) {
+          card.store = cardType.store.id;
+        }
+
         Object.keys(cardType.toObject())
           .filter(
-            key => !["_id", "__v", "createdAt", "updatedAt"].includes(key)
+            key =>
+              !["_id", "__v", "createdAt", "updatedAt", "store"].includes(key)
           )
           .forEach(key => {
             card.set(key, cardType[key]);
