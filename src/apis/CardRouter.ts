@@ -124,8 +124,10 @@ export default router => {
             paymentGateway:
               query.paymentGateway ||
               (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
-            atReception:
+            atReceptionStore:
               req.user.role === "manager" && card.customer !== req.user.id
+                ? req.user.store
+                : null
           });
         } catch (err) {
           switch (err.message) {

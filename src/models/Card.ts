@@ -142,10 +142,10 @@ export class Card {
     this: DocumentType<Card>,
     {
       paymentGateway,
-      atReception = false
+      atReceptionStore = null
     }: {
       paymentGateway: PaymentGateway;
-      atReception?: boolean;
+      atReceptionStore?: DocumentType<Store>;
     }
   ) {
     const card = this as DocumentType<Card>;
@@ -158,7 +158,7 @@ export class Card {
     } else {
       const payment = new paymentModel({
         customer: card.customer,
-        store: card.store,
+        store: card.store || atReceptionStore.id,
         amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
         title,
         attach,
