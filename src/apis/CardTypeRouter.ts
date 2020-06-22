@@ -32,6 +32,7 @@ export default router => {
         const { limit, skip } = req.pagination;
         const query = CardType.find().populate("customer");
         const sort = parseSortString(queryParams.order) || {
+          type: -1,
           price: 1
         };
 
