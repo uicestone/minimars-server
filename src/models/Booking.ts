@@ -220,6 +220,20 @@ export class Booking {
       if (booking.gift.price) {
         booking.price = booking.gift.price * booking.quantity;
       }
+    } else if (booking.type === "food") {
+      if (booking.card && !booking.populated("card")) {
+        await booking.populate("card").execPopulate();
+        if (
+          booking.card.type === "coupon" &&
+          (!booking.card.overPrice || booking.price >= booking.card.overPrice)
+        ) {
+          if (booking.card.discountPrice) {
+            booking.price -= booking.card.discountPrice;
+          } else if (booking.card.discountRate) {
+            booking.price = booking.price * (1 - booking.card.discountRate);
+          }
+        }
+      }
     }
   }
 
@@ -256,7 +270,7 @@ export class Booking {
       }小 ${booking.date.substr(5)} ${booking.checkInAt.substr(0, 5)}前入场`;
     }
 
-    if (booking.card && booking.card.type === "times") {
+    if (booking.card && ["times", "coupon"].includes(booking.card.type)) {
       const cardPayment = new paymentModel({
         customer: booking.customer,
         store: booking.store,
@@ -269,11 +283,14 @@ export class Booking {
           atReception,
           cardId: booking.card.id,
           bookingId: booking.id,
-          times: Math.min(
-            booking.kidsCount,
-            booking.card.maxKids
-            // booking.card.timesLeft
-          )
+          times:
+            booking.card.type === "times"
+              ? Math.min(
+                  booking.kidsCount,
+                  booking.card.maxKids
+                  // booking.card.timesLeft
+                )
+              : 1
         }
       });
       await cardPayment.save();

@@ -39,7 +39,7 @@ export const userVisibleCardStatus = [
   }
 ])
 @pre("save", async function (this: DocumentType<Card>, next) {
-  if (this.type === "times") {
+  if (["times", "coupon"].includes(this.type)) {
     if (this.status === CardStatus.ACTIVATED && this.timesLeft === 0) {
       this.status = CardStatus.EXPIRED;
     } else if (this.status === CardStatus.EXPIRED && this.timesLeft > 0) {
@@ -95,8 +95,12 @@ export class Card {
   @prop({ type: String, required: true })
   slug: string;
 
-  @prop({ type: String, enum: ["times", "period", "balance"], required: true })
-  type: "times" | "period" | "balance";
+  @prop({
+    type: String,
+    enum: ["times", "period", "balance", "coupon"],
+    required: true
+  })
+  type: "times" | "period" | "balance" | "coupon";
 
   @prop({ type: Boolean, default: false })
   isGift: boolean;
@@ -130,6 +134,15 @@ export class Card {
 
   @prop({ type: Number, required: true })
   freeParentsPerKid: number;
+
+  @prop({ type: Number })
+  overPrice?: number;
+
+  @prop({ type: Number })
+  discountPrice?: number;
+
+  @prop({ type: Number })
+  discountRate?: number;
 
   get giftCode(this: DocumentType<Card>): string | undefined {
     if (!this.isGift || this.status !== CardStatus.VALID) return undefined;

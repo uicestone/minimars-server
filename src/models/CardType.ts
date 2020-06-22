@@ -17,7 +17,7 @@ export class CardType {
   @prop({ required: true, unique: true })
   slug: string;
 
-  @prop({ enum: ["times", "period", "balance"], required: true })
+  @prop({ enum: ["times", "period", "balance", "coupon"], required: true })
   type: string;
 
   @prop({ default: false })
@@ -64,6 +64,15 @@ export class CardType {
 
   @prop({ type: Number })
   maxPerCustomer?: number;
+
+  @prop({ type: Number })
+  overPrice?: number;
+
+  @prop({ type: Number })
+  discountPrice?: number;
+
+  @prop({ type: Number })
+  discountRate?: number;
 }
 
 const cardTypeModel = getModelForClass(CardType, {
