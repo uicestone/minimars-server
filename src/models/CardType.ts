@@ -50,7 +50,7 @@ export class CardType {
   @prop({ type: Number, required: true })
   price: number;
 
-  @prop({ type: Number, required: true })
+  @prop({ type: Number })
   maxKids: number;
 
   @prop({ type: Number, default: 2 })

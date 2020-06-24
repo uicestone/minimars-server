@@ -129,10 +129,10 @@ export class Card {
   @prop({ type: Number, required: true })
   price: number;
 
-  @prop({ type: Number, required: true })
+  @prop({ type: Number })
   maxKids: number;
 
-  @prop({ type: Number, required: true })
+  @prop({ type: Number })
   freeParentsPerKid: number;
 
   @prop({ type: Number })
