@@ -62,6 +62,25 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("finish in_service bookings", async (job, done) => {
+    const bookings = await Booking.find({
+      status: BookingStatus.IN_SERVICE,
+      date: {
+        $lt: moment().format("YYYY-MM-DD")
+      }
+    });
+
+    if (bookings.length) {
+      console.log(`[CRO] Finish previous in_service bookings...`);
+    }
+
+    for (const booking of bookings) {
+      await booking.finish();
+    }
+
+    done();
+  });
+
   agenda.define("cancel expired pending cards", async (job, done) => {
     const cards = await Card.find({
       status: CardStatus.PENDING,
@@ -118,7 +137,7 @@ export const initAgenda = async () => {
   agenda.on("ready", () => {
     agenda.every("1 hour", "cancel expired pending bookings");
     agenda.every("1 hour", "cancel expired pending cards");
-    // agenda.every("1 day", "cancel expired booked bookings");
+    agenda.every("1 day", "finish in_service bookings");
     // agenda.now("create indexes");
   });
 
