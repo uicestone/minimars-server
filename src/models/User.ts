@@ -123,18 +123,6 @@ export class User {
   points?: number;
 
   @prop()
-  freePlayFrom: Date;
-
-  @prop()
-  freePlayTo: Date;
-
-  get freePlay() {
-    const now = new Date();
-    const { freePlayFrom: from, freePlayTo: to } = this;
-    return from && from <= now && to && to >= now;
-  }
-
-  @prop()
   cardType?: string;
 
   @prop({ index: true })
