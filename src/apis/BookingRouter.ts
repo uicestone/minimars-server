@@ -137,6 +137,13 @@ export default router => {
           ) {
             throw new HttpError(400, "活动儿童人数名额不足");
           }
+
+          if (
+            booking.event.date &&
+            moment(booking.date).toDate() > booking.event.date
+          ) {
+            throw new HttpError(400, "活动日期已过，无法预约报名");
+          }
         }
 
         if (body.type === BookingType.GIFT) {
