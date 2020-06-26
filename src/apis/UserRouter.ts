@@ -22,7 +22,16 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const body = req.body as UserPostBody;
         if (req.user.role !== "admin") {
-          ["role", "openid", "cardType", "balance"].forEach(f => {
+          [
+            "role",
+            "openid",
+            "cardType",
+            "cardNo",
+            "balanceDeposit",
+            "balanceReward",
+            "tags",
+            "points"
+          ].forEach(f => {
             delete body[f];
           });
         }
@@ -48,6 +57,7 @@ export default router => {
             throw new HttpError(409, `会员卡号${body.cardNo}已被使用.`);
           }
         }
+        const user = new User(body);
         if (body.idCardNo) {
           body.idCardNo = body.idCardNo.replace("*", "X").toUpperCase();
           const userIdCardNoExists = await User.findOne({
@@ -56,9 +66,6 @@ export default router => {
           if (userIdCardNoExists) {
             throw new HttpError(409, `身份证号${body.idCardNo}已被使用.`);
           }
-        }
-        const user = new User(body);
-        if (body.idCardNo) {
           const idCardInfo = idCard.info(body.idCardNo);
           if (!idCardInfo.valid) {
             throw new HttpError(400, `非法身份证号`);
@@ -195,7 +202,9 @@ export default router => {
             "openid",
             "cardType",
             "balanceDeposit",
-            "balanceReward"
+            "balanceReward",
+            "tags",
+            "points"
           ].forEach(f => {
             delete body[f];
           });
