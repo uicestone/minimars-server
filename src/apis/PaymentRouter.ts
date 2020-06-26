@@ -29,10 +29,10 @@ export default router => {
 
         if (req.user.role === "customer") {
           query.find({ customer: req.user });
-        }
-
-        if (req.user.role === "manager") {
+        } else if (["manager", "eventManager"].includes(req.user.role)) {
           query.find({ store: { $in: [req.user.store.id, null] } });
+        } else if (!["admin", "accountant"].includes(req.user.role)) {
+          throw new HttpError(403);
         }
 
         if (queryParams.date) {
@@ -216,7 +216,7 @@ export default router => {
     .all(
       handleAsyncErrors(async (req, res, next) => {
         if (!["admin", "manager"].includes(req.user.role)) {
-          // TODO shop can only operate payment that is attached to booking in own store
+          // TODO manager can operate payment of same store
           throw new HttpError(403);
         }
         const payment = await Payment.findById(req.params.paymentId);

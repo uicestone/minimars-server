@@ -38,10 +38,6 @@ export default router => {
 
         query.select("-content");
 
-        if (req.user.role === "manager") {
-          query.find({ store: { $in: [req.user.store.id, null] } });
-        }
-
         if (req.user.role === "customer") {
           query.find({
             $or: [
@@ -50,6 +46,8 @@ export default router => {
               { customerTags: [] }
             ]
           });
+        } else if (req.user.role !== "admin") {
+          query.find({ store: { $in: [req.user.store.id, null] } });
         }
 
         if (req.ua && req.ua.isWechat) {

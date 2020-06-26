@@ -180,8 +180,13 @@ export default router => {
           });
         }
 
-        if (req.user.role === "manager") {
+        // restrict self card for customers
+        if (req.user.role === "customer") {
+          query.find({ customer: req.user._id });
+        } else if (req.user.role === "manager") {
           query.find({ store: { $in: [req.user.store.id, null] } });
+        } else if (req.user.role !== "admin") {
+          throw new HttpError(403);
         }
 
         let total = await query.countDocuments();

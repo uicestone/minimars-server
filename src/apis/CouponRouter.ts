@@ -40,6 +40,8 @@ export default router => {
         if (req.user.role === "manager") {
           query.find({ store: { $in: [req.user.store.id, null] } });
           query.find({ enabled: true });
+        } else if (req.user.role !== "admin") {
+          throw new HttpError(403);
         }
 
         if (queryParams.enabled) {

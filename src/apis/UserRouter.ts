@@ -79,8 +79,7 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
-        if (!["admin", "manager"].includes(req.user.role)) {
-          // TODO should restrict manager user list to own store booking
+        if (!["admin", "manager", "eventManager"].includes(req.user.role)) {
           throw new HttpError(403);
         }
         const queryParams = req.query as UserQuery;
@@ -162,7 +161,7 @@ export default router => {
       handleAsyncErrors(async (req, res, next) => {
         const user = await User.findById(req.params.userId);
         if (
-          !["admin", "manager"].includes(req.user.role) &&
+          !["admin", "manager", "eventManager"].includes(req.user.role) &&
           req.user.id !== req.params.userId
         ) {
           throw new HttpError(403);

@@ -36,7 +36,7 @@ export default router => {
         };
         query.select("-content");
 
-        if (req.user.role === "manager") {
+        if (["manager", "eventManager"].includes(req.user.role)) {
           query.find({ $or: [{ store: req.user.store.id }, { store: null }] });
         }
 
