@@ -26,6 +26,9 @@ export default router => {
             delete body[f];
           });
         }
+        if (["manager", "eventManager"].includes(body.role) && !body.store) {
+          throw new HttpError(400, "该角色必须绑定门店");
+        }
         if (body.password) {
           body.password = await hashPwd(body.password);
         }
