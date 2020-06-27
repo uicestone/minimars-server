@@ -132,7 +132,7 @@ export default router => {
             throw new HttpError(400, "活动信息错误");
           }
           if (
-            booking.event.kidsCountLeft &&
+            booking.event.kidsCountLeft !== undefined &&
             booking.event.kidsCountLeft < body.kidsCount
           ) {
             throw new HttpError(400, "活动儿童人数名额不足");

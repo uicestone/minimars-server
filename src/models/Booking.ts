@@ -605,11 +605,15 @@ export class Booking {
     ) {
       throw new Error("uncancelable_booking_status");
     }
+
     if (booking.payments.filter(p => p.paid).length) {
       console.log(`[BOK] Refund booking ${booking._id}.`);
       // we don't directly change status to canceled, will auto change on refund fullfil
       booking.status = BookingStatus.PENDING_REFUND;
       await booking.createRefundPayment();
+      if (!booking.payments.filter(p => p.amount < 0).some(p => !p.paid)) {
+        booking.refundSuccess();
+      }
     } else {
       booking.status = BookingStatus.CANCELED;
     }
