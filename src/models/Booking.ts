@@ -40,8 +40,7 @@ export enum BookingType {
 export const liveBookingStatus = [
   BookingStatus.PENDING,
   BookingStatus.BOOKED,
-  BookingStatus.IN_SERVICE,
-  BookingStatus.PENDING_REFUND
+  BookingStatus.IN_SERVICE
 ];
 
 export const deadBookingStatus = [

@@ -4,7 +4,7 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Event, { Event as IEvent } from "../models/Event";
 import { EventPostBody, EventPutBody, EventQuery } from "./interfaces";
-import Booking from "../models/Booking";
+import Booking, { liveBookingStatus } from "../models/Booking";
 import { DocumentType } from "@typegoose/typegoose";
 
 export default router => {
@@ -103,6 +103,22 @@ export default router => {
         }
         const event = req.item;
         event.set(req.body as EventPutBody);
+        if (req.item.kidsCountMax) {
+          // re-calculate kidsCountLeft
+          const eventBookings = await Booking.find({
+            event,
+            status: { $in: liveBookingStatus }
+          });
+          event.kidsCountLeft =
+            event.kidsCountMax -
+            eventBookings.reduce(
+              (kidsCount, booking) => kidsCount + booking.kidsCount,
+              0
+            );
+          if (event.kidsCountLeft < 0) {
+            throw new HttpError(400, "剩余名额不能为负数");
+          }
+        }
         await event.save();
         res.json(event);
       })
