@@ -2,8 +2,10 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Gift from "../models/Gift";
+import Gift, { Gift as IGift } from "../models/Gift";
 import { GiftQuery, GiftPostBody, GiftPutBody } from "./interfaces";
+import Booking from "../models/Booking";
+import { DocumentType } from "@typegoose/typegoose";
 
 export default router => {
   // Gift CURD
@@ -108,7 +110,12 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const gift = req.item;
+        const gift = req.item as DocumentType<IGift>;
+        const bookingCount = await Booking.count({ gift: gift.id });
+
+        if (bookingCount > 0) {
+          throw new HttpError(400, "已经存在兑换记录，不能删除");
+        }
         await gift.remove();
         res.end();
       })
