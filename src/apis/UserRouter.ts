@@ -9,6 +9,7 @@ import Payment, { PaymentGateway } from "../models/Payment";
 import idCard from "idcard";
 import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
+import Card, { CardStatus } from "../models/Card";
 
 const { DEBUG } = process.env;
 
@@ -134,14 +135,52 @@ export default router => {
         }
 
         let total = await query.countDocuments();
-        const [{ totalBalance } = { totalBalance: 0 }] = await User.aggregate([
+        const [
+          { totalBalance, totalBalanceDeposit } = {
+            totalBalance: 0,
+            totalBalanceDeposit: 0
+          }
+        ] = await User.aggregate([
           //@ts-ignore
           { $match: query._conditions },
           {
             $group: {
               _id: null,
+              totalBalanceDeposit: {
+                $sum: "$balanceDeposit"
+              },
+              totalBalanceReward: {
+                $sum: "$balanceReward"
+              }
+            }
+          },
+          {
+            $project: {
+              _id: false,
+              totalBalanceDeposit: true,
               totalBalance: {
-                $sum: { $sum: ["$balanceDeposit"] }
+                $sum: ["$totalBalanceDeposit", "$totalBalanceReward"]
+              }
+            }
+          }
+        ]);
+
+        const [
+          { totalValidCardBalance, totalValidCardBalanceDeposit } = {
+            totalValidCardBalance: 0,
+            totalValidCardBalanceDeposit: 0
+          }
+        ] = await Card.aggregate([
+          //@ts-ignore
+          { $match: { status: CardStatus.VALID } },
+          {
+            $group: {
+              _id: null,
+              totalValidCardBalanceDeposit: {
+                $sum: "$price"
+              },
+              totalValidCardBalance: {
+                $sum: "$balance"
               }
             }
           }
@@ -159,6 +198,12 @@ export default router => {
         }
 
         res.set("total-balance", Math.round(totalBalance));
+        res.set("total-balance-deposit", Math.round(totalBalanceDeposit));
+        res.set("total-valid-card-balance", Math.round(totalValidCardBalance));
+        res.set(
+          "total-valid-card-balance-deposit",
+          Math.round(totalValidCardBalanceDeposit)
+        );
 
         res.paginatify(limit, skip, total).json(page);
       })

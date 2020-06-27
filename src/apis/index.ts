@@ -55,7 +55,10 @@ export default (app, router) => {
         "items-start",
         "items-end",
         "total-amount",
-        "total-balance"
+        "total-balance",
+        "total-balance-deposit",
+        "total-valid-card-balance",
+        "total-valid-card-balance-deposit"
       ]
     }),
     methodOverride(),
