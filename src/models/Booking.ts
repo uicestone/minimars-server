@@ -407,7 +407,7 @@ export class Booking {
     // conditional change booking status
     if (this.type === BookingType.FOOD) {
       this.status = BookingStatus.FINISHED;
-    } else if (this.type === BookingType.GIFT) {
+    } else if ([BookingType.GIFT, BookingType.EVENT].includes(this.type)) {
       this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
       this.status = BookingStatus.IN_SERVICE;
