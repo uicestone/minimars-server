@@ -524,25 +524,22 @@ export class Booking {
       booking.payments.push(refundPayment);
     }
 
-    if (!extraPayments.length) {
-      booking.status = BookingStatus.CANCELED;
-    } else {
-      await Promise.all(
-        extraPayments.map(async (p: DocumentType<Payment>) => {
-          const refundPayment = new paymentModel({
-            customer: p.customer,
-            store: booking.store,
-            amount: -p.amount,
-            title: `退款：${p.title}`,
-            attach: p.attach,
-            gateway: p.gateway,
-            original: p.id
-          });
-          await refundPayment.save();
-          booking.payments.push(refundPayment);
-        })
-      );
-    }
+    await Promise.all(
+      extraPayments.map(async (p: DocumentType<Payment>) => {
+        const refundPayment = new paymentModel({
+          customer: p.customer,
+          store: booking.store,
+          amount: -p.amount,
+          title: `退款：${p.title}`,
+          attach: p.attach,
+          gateway: p.gateway,
+          original: p.id
+        });
+        await refundPayment.save();
+        booking.payments.push(refundPayment);
+      })
+    );
+    booking.status = BookingStatus.CANCELED;
   }
 
   async refundSuccess(this: DocumentType<Booking>) {
@@ -590,19 +587,8 @@ export class Booking {
   async cancel(this: DocumentType<Booking>, save = true) {
     const booking = this;
 
-    if (
-      [BookingStatus.CANCELED, BookingStatus.PENDING_REFUND].includes(
-        booking.status
-      )
-    )
+    if (booking.status === BookingStatus.CANCELED) {
       return;
-
-    if (
-      [BookingStatus.PENDING_REFUND, BookingStatus.CANCELED].includes(
-        booking.status
-      )
-    ) {
-      throw new Error("uncancelable_booking_status");
     }
 
     if (booking.payments.filter(p => p.paid).length) {

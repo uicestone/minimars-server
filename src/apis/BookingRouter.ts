@@ -364,27 +364,34 @@ export default router => {
         await booking.populate("store").execPopulate();
 
         if (
-          ![BookingStatus.CANCELED, BookingStatus.PENDING_REFUND].includes(
-            statusWas
-          ) &&
+          statusWas !== BookingStatus.CANCELED &&
           booking.status === BookingStatus.CANCELED
           // req.user.role !== "admin"
         ) {
           // TODO refund permission should be restricted
           // TODO IN_SERVICE refund
 
-          try {
-            booking.status = statusWas;
+          booking.status = statusWas;
+          if (
+            req.user.role === "customer" &&
+            statusWas !== BookingStatus.PENDING
+          ) {
+            booking.status = BookingStatus.PENDING_REFUND;
+            booking.remarks =
+              booking.remarks ||
+              "" +
+                `\n${moment().format("YYYY-MM-DD HH:mm")} 客户申请取消，原因：${
+                  req.query.reason
+                }。*小程序端可见*`;
+          } else {
             await booking.cancel(false);
-          } catch (err) {
-            switch (err.message) {
-              case "uncancelable_booking_status":
-                throw new HttpError(
-                  403,
-                  "服务状态无法取消，只有待付款/已确认状态才能取消"
-                );
-              default:
-                throw err;
+            if (
+              booking.remarks.match(/\*小程序端\*/) &&
+              booking.remarks.match(/客户申请取消/)
+            ) {
+              booking.remarks += `\n${moment().format(
+                "YYYY-MM-DD HH:mm"
+              )} 取消申请通过，已发起退款，微信支付将在1-7天内原路退回。*小程序端可见*`;
             }
           }
         }
