@@ -26,5 +26,7 @@ const initConfig: IConfig = {
   kidFullDayPrice: 248,
   extraParentFullDayPrice: 50,
   freeParentsPerKid: 1,
-  appointmentDeadline: "16:00:00"
+  appointmentDeadline: "16:00:00",
+  eventHint: "",
+  playHint: ""
 };

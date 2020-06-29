@@ -83,6 +83,9 @@ export class Event {
 
   @prop({ type: Number, default: 0 })
   order: number;
+
+  @prop({ type: String })
+  kidAgeRange: string;
 }
 
 const eventModel = getModelForClass(Event, {
