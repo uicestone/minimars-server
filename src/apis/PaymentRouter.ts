@@ -182,7 +182,7 @@ export default router => {
       const filename = "流水明细.xlsx";
       const path = "/tmp/" + filename;
       const data: any[][] = [
-        ["手机", "已支付", "金额", "明细", "支付方式", "时间"]
+        ["手机", "已支付", "金额", "余额面额", "明细", "支付方式", "时间"]
       ];
 
       payments.forEach(payment => {
@@ -190,6 +190,7 @@ export default router => {
           payment.customer?.mobile || "",
           payment.paid,
           payment.amountDeposit || payment.amount,
+          payment.amountDeposit ? payment.amount : "-",
           payment.title,
           gatewayNames[payment.gateway],
           moment((payment as any).createdAt).format("YYYY-MM-DD HH:mm")
