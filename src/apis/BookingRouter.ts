@@ -386,6 +386,8 @@ export default router => {
           } else {
             await booking.cancel(false);
             if (
+              booking.remarks &&
+              booking.remarks.match &&
               booking.remarks.match(/\*小程序端\*/) &&
               booking.remarks.match(/客户申请取消/)
             ) {
