@@ -19,6 +19,9 @@ export default router => {
           throw new HttpError(403);
         }
         const gift = new Gift(req.body as GiftPostBody);
+        if (!gift.price && !gift.priceInPoints) {
+          throw new HttpError(400, "积分和收款售价必须至少设置一项");
+        }
         await gift.save();
         res.json(gift);
       })

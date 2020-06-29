@@ -69,7 +69,7 @@ export class Event {
   @prop({ type: Object })
   props?: Object;
 
-  @prop({ required: true })
+  @prop()
   priceInPoints: number;
 
   @prop()
