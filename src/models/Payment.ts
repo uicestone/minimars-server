@@ -56,10 +56,14 @@ import moment from "moment";
         );
         Object.assign(payment.gatewayData, wechatUnifiedOrderData);
       } else {
+        const originalPayment = await paymentModel.findOne({
+          _id: payment.original
+        });
+        if (!originalPayment) throw new Error("invalid_refund_original");
         const wechatRefundOrderData = await refundOrder(
           payment.original,
           payment.id,
-          payment.amount,
+          originalPayment.amount,
           payment.amount
         );
         Object.assign(payment.gatewayData, wechatRefundOrderData);
