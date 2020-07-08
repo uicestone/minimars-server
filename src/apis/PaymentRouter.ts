@@ -16,6 +16,18 @@ export default router => {
   router
     .route("/payment")
 
+    // create a payment
+    .post(
+      handleAsyncErrors(async (req, res) => {
+        if (req.user.role !== "admin") {
+          throw new HttpError(403);
+        }
+        const payment = new Payment(req.body);
+        await payment.save();
+        res.json(payment);
+      })
+    )
+
     // get all the payments
     .get(
       paginatify,
