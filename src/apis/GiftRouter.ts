@@ -6,6 +6,7 @@ import Gift, { Gift as IGift } from "../models/Gift";
 import { GiftQuery, GiftPostBody, GiftPutBody } from "./interfaces";
 import Booking from "../models/Booking";
 import { DocumentType } from "@typegoose/typegoose";
+import escapeStringRegexp from "escape-string-regexp";
 
 export default router => {
   // Gift CURD
@@ -48,7 +49,9 @@ export default router => {
         }
 
         if (queryParams.keyword) {
-          query.find({ title: new RegExp(queryParams.keyword, "i") });
+          query.find({
+            title: new RegExp(escapeStringRegexp(queryParams.keyword), "i")
+          });
         }
 
         ["store"].forEach(field => {

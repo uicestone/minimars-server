@@ -10,6 +10,7 @@ import Payment, {
   receptionGateways
 } from "../models/Payment";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
+import escapeStringRegexp from "escape-string-regexp";
 
 export default router => {
   // Payment CURD
@@ -64,7 +65,9 @@ export default router => {
         }
 
         if (queryParams.attach) {
-          query.find({ attach: new RegExp("^" + queryParams.attach) });
+          query.find({
+            attach: new RegExp("^" + escapeStringRegexp(queryParams.attach))
+          });
         }
 
         if (queryParams.gateway) {
@@ -156,7 +159,9 @@ export default router => {
       }
 
       if (queryParams.attach) {
-        query.find({ attach: new RegExp("^" + queryParams.attach) });
+        query.find({
+          attach: new RegExp("^" + escapeStringRegexp(queryParams.attach))
+        });
       }
 
       if (queryParams.gateway) {

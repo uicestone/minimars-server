@@ -6,6 +6,7 @@ import Booking, { BookingType, BookingStatus } from "../models/Booking";
 import moment from "moment";
 import Payment, { PaymentGateway } from "../models/Payment";
 import Coupon from "../models/Coupon";
+import escapeStringRegexp from "escape-string-regexp";
 
 // item.type 0 会员卡，24 扫码，25 点评，27 麦淘 30 周末酒店
 // 28/29 小丸子， 26 彩贝壳， 23 现金， 22 银行卡， 20 支付宝，21 微信支付(POS)
@@ -47,7 +48,9 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
     database
   });
 
-  const store = await Store.findOne({ name: new RegExp(storeKey) });
+  const store = await Store.findOne({
+    name: new RegExp(escapeStringRegexp(storeKey))
+  });
 
   if (!store) {
     throw new Error("store_not_found");

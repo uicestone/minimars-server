@@ -5,6 +5,7 @@ import HttpError from "../utils/HttpError";
 import Post from "../models/Post";
 import { isValidHexObjectId } from "../utils/helper";
 import { PostQuery, PostPostBody, PostPutBody } from "./interfaces";
+import escapeStringRegexp from "escape-string-regexp";
 
 export default router => {
   // Post CURD
@@ -37,7 +38,9 @@ export default router => {
         query.select("-content");
 
         if (queryParams.slug) {
-          query.find({ slug: new RegExp("^" + queryParams.slug) });
+          query.find({
+            slug: new RegExp("^" + escapeStringRegexp(queryParams.slug))
+          });
         }
 
         if (queryParams.tag) {
