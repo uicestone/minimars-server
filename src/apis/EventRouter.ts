@@ -6,6 +6,7 @@ import Event, { Event as IEvent } from "../models/Event";
 import { EventPostBody, EventPutBody, EventQuery } from "./interfaces";
 import Booking, { liveBookingStatus } from "../models/Booking";
 import { DocumentType } from "@typegoose/typegoose";
+import escapeStringRegexp from "escape-string-regexp";
 
 export default router => {
   // Event CURD
@@ -48,7 +49,9 @@ export default router => {
         }
 
         if (queryParams.keyword) {
-          query.find({ title: new RegExp(queryParams.keyword, "i") });
+          query.find({
+            title: new RegExp(escapeStringRegexp(queryParams.keyword), "i")
+          });
         }
 
         ["store"].forEach(field => {
