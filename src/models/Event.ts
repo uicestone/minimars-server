@@ -15,6 +15,7 @@ import {
   removeResizeImageUrl,
   removeResizeHtmlImage
 } from "../utils/imageResize";
+import moment from "moment";
 
 @pre("validate", function (next) {
   const event = this as DocumentType<Event>;
@@ -75,7 +76,16 @@ export class Event {
   @prop()
   price?: number;
 
-  @prop({ type: Date })
+  @prop({
+    type: Date,
+    get: v => v,
+    set: v => {
+      if (moment(v, moment.ISO_8601).isValid()) {
+        return moment(v).endOf("day").toDate();
+      }
+      return v;
+    }
+  })
   date?: Date;
 
   @prop({ ref: "Store" })

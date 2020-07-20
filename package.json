@@ -1,6 +1,6 @@
 {
   "name": "minimars-server",
-  "version": "1.2.9",
+  "version": "1.2.10",
   "description": "MINI MARS server apis.",
   "scripts": {
     "dev": "ts-node-dev --no-notify --respawn --transpileOnly src/index.ts",
