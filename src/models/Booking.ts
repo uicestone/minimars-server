@@ -270,6 +270,22 @@ export class Booking {
     }
 
     if (booking.card && ["times", "coupon"].includes(booking.card.type)) {
+      if (!atReception) {
+        if (
+          booking.card.start &&
+          new Date(booking.card.start) >
+            moment(booking.date).endOf("day").toDate()
+        ) {
+          throw new Error("card_not_started");
+        }
+        const cardExpiresAt = booking.card.end || booking.card.expiresAt;
+        if (
+          cardExpiresAt &&
+          new Date(cardExpiresAt) < moment(booking.date).startOf("day").toDate()
+        ) {
+          throw new Error("card_expired");
+        }
+      }
       const cardPayment = new paymentModel({
         customer: booking.customer,
         store: booking.store,
