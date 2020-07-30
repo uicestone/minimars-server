@@ -25,7 +25,7 @@ import autoPopulate from "./plugins/autoPopulate";
 })
 @plugin(updateTimes)
 @plugin(autoPopulate, [{ path: "store", select: "-content" }])
-@index({ name: "text", mobile: "text", cardNo: "text" })
+@index({ name: "text", mobile: "text", cardNo: "text", tags: "text" })
 export class User {
   @prop({ default: "customer" })
   role: string;

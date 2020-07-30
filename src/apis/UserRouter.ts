@@ -185,9 +185,14 @@ export default router => {
           }
         ]);
 
+        if (queryParams.keyword) {
+          // @ts-ignore
+          query.projection({ score: { $meta: "textScore" } });
+        }
+
         const page = await query
           .find()
-          .sort(sort)
+          .sort(queryParams.keyword ? { score: { $meta: "textScore" } } : sort)
           .limit(limit)
           .skip(skip)
           .exec();
