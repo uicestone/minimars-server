@@ -70,6 +70,12 @@ export default router => {
           });
         }
 
+        if (queryParams.title) {
+          query.find({
+            title: new RegExp("^" + escapeStringRegexp(queryParams.title))
+          });
+        }
+
         if (queryParams.gateway) {
           const gateways = queryParams.gateway.includes(",")
             ? (queryParams.gateway.split(",") as PaymentGateway[])
@@ -161,6 +167,12 @@ export default router => {
       if (queryParams.attach) {
         query.find({
           attach: new RegExp("^" + escapeStringRegexp(queryParams.attach))
+        });
+      }
+
+      if (queryParams.title) {
+        query.find({
+          title: new RegExp("^" + escapeStringRegexp(queryParams.title))
         });
       }
 

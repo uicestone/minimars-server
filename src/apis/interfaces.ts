@@ -113,6 +113,7 @@ export interface PaymentQuery extends ListQuery {
   paid?: "false";
   customer?: string;
   attach?: string;
+  title?: string;
   gateway?: PaymentGateway;
   direction?: "payment" | "refund";
   amount?: string;
