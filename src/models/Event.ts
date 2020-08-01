@@ -3,7 +3,9 @@ import {
   getModelForClass,
   plugin,
   pre,
-  DocumentType
+  DocumentType,
+  modelOptions,
+  Severity
 } from "@typegoose/typegoose";
 import { Schema } from "mongoose";
 import updateTimes from "./plugins/updateTimes";
@@ -32,6 +34,7 @@ import moment from "moment";
 })
 @plugin(updateTimes)
 @plugin(autoPopulate, [{ path: "store", select: "-content" }])
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Event {
   @prop({ required: true })
   title: string;

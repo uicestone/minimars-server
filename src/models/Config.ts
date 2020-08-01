@@ -1,7 +1,14 @@
-import { prop, getModelForClass, plugin } from "@typegoose/typegoose";
+import {
+  prop,
+  getModelForClass,
+  plugin,
+  modelOptions,
+  Severity
+} from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 
 @plugin(updateTimes)
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 class ConfigDocument {
   @prop()
   desc: string;

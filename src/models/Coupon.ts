@@ -1,8 +1,16 @@
-import { prop, getModelForClass, plugin, Ref } from "@typegoose/typegoose";
+import {
+  prop,
+  getModelForClass,
+  plugin,
+  Ref,
+  modelOptions,
+  Severity
+} from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
 
 @plugin(updateTimes)
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Coupon {
   @prop({ required: true })
   title: string;

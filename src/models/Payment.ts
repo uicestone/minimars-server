@@ -4,7 +4,9 @@ import {
   plugin,
   pre,
   Ref,
-  DocumentType
+  DocumentType,
+  modelOptions,
+  Severity
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
@@ -208,6 +210,7 @@ import moment from "moment";
 })
 @plugin(autoPopulate, [{ path: "customer", select: "name avatarUrl mobile" }])
 @plugin(updateTimes)
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Payment {
   @prop({ ref: "User", index: true })
   customer?: DocumentType<User>;
