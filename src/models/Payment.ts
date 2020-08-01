@@ -248,25 +248,27 @@ export class Payment {
   @prop()
   original?: string;
 
-  get valid(this: DocumentType<Payment>) {
+  get valid() {
+    const payment = (this as unknown) as DocumentType<Payment>;
     return (
-      this.paid ||
-      this.isNew ||
-      moment().diff((this as any).createdAt, "hours", true) <= 2
+      payment.paid ||
+      payment.isNew ||
+      moment().diff((payment as any).createdAt, "hours", true) <= 2
     );
   }
 
-  get payArgs(this: DocumentType<Payment>) {
-    if (this.gateway !== PaymentGateway.WechatPay || this.paid) return;
-    if (!this.gatewayData.nonce_str || !this.gatewayData.prepay_id) {
-      // if (this.valid && this.amount > 0) {
+  get payArgs() {
+    const payment = (this as unknown) as DocumentType<Payment>;
+    if (payment.gateway !== PaymentGateway.WechatPay || payment.paid) return;
+    if (!payment.gatewayData.nonce_str || !payment.gatewayData.prepay_id) {
+      // if (payment.valid && payment.amount > 0) {
       //   console.trace(
-      //     `[PAY] Incomplete wechat pay gateway data, payment: ${this.id}`
+      //     `[PAY] Incomplete wechat pay gateway data, payment: ${payment.id}`
       //   );
       // }
       return;
     }
-    const wechatGatewayData = this.gatewayData as {
+    const wechatGatewayData = payment.gatewayData as {
       nonce_str: string;
       prepay_id: string;
     };

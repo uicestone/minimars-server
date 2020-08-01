@@ -144,10 +144,11 @@ export class Card {
   @prop({ type: Number })
   discountRate?: number;
 
-  get giftCode(this: DocumentType<Card>): string | undefined {
-    if (!this.isGift || this.status !== CardStatus.VALID) return undefined;
-    const code = sign(this.customer + " " + this.id, process.env.APP_SECRET);
-    // console.log("Hash giftCode:", this.customer, this.id, code);
+  get giftCode(): string | undefined {
+    const card = (this as unknown) as DocumentType<Card>;
+    if (!card.isGift || card.status !== CardStatus.VALID) return undefined;
+    const code = sign(card.customer + " " + card.id, process.env.APP_SECRET);
+    // console.log("Hash giftCode:", card.customer, card.id, code);
     return code;
   }
 
