@@ -21,6 +21,9 @@ import autoPopulate from "./plugins/autoPopulate";
   if (user.role === "customer" && user.points === undefined) {
     user.points = 0;
   }
+  if (user.tags) {
+    user.tags = user.tags.map(t => t.toLowerCase());
+  }
   next();
 })
 @plugin(updateTimes)

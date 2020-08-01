@@ -30,6 +30,9 @@ import moment from "moment";
   if (event.kidsCountLeft !== null && event.kidsCountMax === null) {
     event.kidsCountLeft = null;
   }
+  if (event.tags) {
+    event.tags = event.tags.map(t => t.toLowerCase());
+  }
   next();
 })
 @plugin(updateTimes)

@@ -2,7 +2,8 @@ import {
   prop,
   getModelForClass,
   plugin,
-  DocumentType
+  DocumentType,
+  pre
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
@@ -10,6 +11,12 @@ import autoPopulate from "./plugins/autoPopulate";
 
 @plugin(updateTimes)
 @plugin(autoPopulate, [{ path: "store", select: "-content" }])
+@pre("validate", function (this: DocumentType<CardType>, next) {
+  if (this.customerTags) {
+    this.customerTags = this.customerTags.map(t => t.toLowerCase());
+  }
+  next();
+})
 export class CardType {
   @prop({ required: true })
   title: string;

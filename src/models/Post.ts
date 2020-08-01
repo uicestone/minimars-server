@@ -2,8 +2,8 @@ import {
   prop,
   getModelForClass,
   plugin,
-  index,
-  DocumentType
+  DocumentType,
+  pre
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import { User } from "./User";
@@ -17,6 +17,12 @@ import {
 
 @plugin(updateTimes)
 @plugin(autoPopulate, ["author"])
+@pre("validate", function (this: DocumentType<Post>, next) {
+  if (this.tags) {
+    this.tags = this.tags.map(t => t.toLowerCase());
+  }
+  next();
+})
 export class Post {
   @prop({ required: true })
   title: string;
