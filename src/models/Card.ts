@@ -1,6 +1,5 @@
 import {
   prop,
-  arrayProp,
   getModelForClass,
   plugin,
   Ref,
@@ -89,7 +88,7 @@ export class Card {
   })
   status: CardStatus;
 
-  @arrayProp({ ref: "Payment" })
+  @prop({ ref: "Payment" })
   payments?: DocumentType<Payment>[];
 
   @prop({ type: Date })

@@ -1,9 +1,7 @@
 import {
   prop,
-  arrayProp,
   getModelForClass,
   plugin,
-  index,
   DocumentType
 } from "@typegoose/typegoose";
 import moment from "moment";
@@ -125,7 +123,7 @@ export class Booking {
   @prop() // quantity of gifts
   quantity?: number;
 
-  @arrayProp({ ref: "Payment" })
+  @prop({ ref: "Payment" })
   payments?: DocumentType<Payment>[];
 
   @prop({ remarks: String })
