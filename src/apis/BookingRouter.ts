@@ -434,7 +434,7 @@ export default router => {
           throw new HttpError(403, "已有成功付款记录，无法删除");
         }
 
-        await Payment.deleteOne({
+        await Payment.deleteMany({
           _id: { $in: booking.payments.map(p => p.id) }
         });
         await booking.remove();

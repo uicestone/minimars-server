@@ -14,7 +14,7 @@ import {
   CardQuery,
   CardPostQuery
 } from "./interfaces";
-import { PaymentGateway } from "../models/Payment";
+import Payment, { PaymentGateway } from "../models/Payment";
 import User, { User as IUser } from "../models/User";
 import { Types } from "mongoose";
 import { DocumentType } from "@typegoose/typegoose";
@@ -244,7 +244,16 @@ export default router => {
     // delete the card with this id
     .delete(
       handleAsyncErrors(async (req, res) => {
-        const card = req.item;
+        if (!["admin", "manager"].includes(req.user.role)) {
+          throw new HttpError(403);
+        }
+        const card = req.item as DocumentType<ICard>;
+        if (card.times !== card.timesLeft) {
+          throw new HttpError(400, "次卡已使用，请撤销使用订单后再删除卡");
+        }
+        await Payment.deleteMany({
+          _id: { $in: card.payments.map(p => p.id) }
+        });
         await card.remove();
         res.end();
       })
