@@ -7,6 +7,24 @@ import {
   removeResizeHtmlImage
 } from "../utils/imageResize";
 
+class DailyLimitDate {
+  @prop()
+  date: string;
+  @prop()
+  group: string;
+  @prop({ type: Number })
+  limit: number;
+}
+
+class DailyLimit {
+  @prop({ type: Number })
+  common: number[];
+  @prop({ type: Number })
+  coupon: number[];
+  @prop({ type: DailyLimitDate })
+  dates: DailyLimitDate[];
+}
+
 @plugin(updateTimes)
 export class Store {
   @prop({ unique: true })
@@ -30,6 +48,11 @@ export class Store {
     set: v => removeResizeHtmlImage(v)
   })
   content?: string;
+
+  @prop({
+    default: { common: [], coupon: [], dates: [] }
+  })
+  dailyLimit: DailyLimit;
 
   @prop()
   partyRooms: number;
