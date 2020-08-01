@@ -39,7 +39,7 @@ export class Event {
   @prop({ required: true })
   title: string;
 
-  @prop()
+  @prop({ type: String })
   tags: string[];
 
   @prop({

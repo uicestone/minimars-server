@@ -24,7 +24,7 @@ export class Post {
   @prop({ unique: true, sparse: true })
   slug?: string;
 
-  @prop()
+  @prop({ type: String })
   tags: string[];
 
   @prop({
