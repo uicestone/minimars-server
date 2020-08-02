@@ -120,6 +120,22 @@ export default router => {
           if (!booking.adultsCount) {
             booking.adultsCount = 0;
           }
+          if (booking.card) {
+            const otherBookings = await Booking.find({
+              card: booking.card,
+              status: { $in: paidBookingStatus },
+              date: booking.date
+            });
+            const kidsCountToday =
+              booking.kidsCount +
+              otherBookings.reduce((c, b) => c + b.kidsCount, 0);
+            if (!booking.populated("card")) {
+              await booking.populate("card", "-content").execPopulate();
+            }
+            if (kidsCountToday > booking.card.maxKids) {
+              throw new HttpError(400, "客户会员卡当日预约已到达最大孩子数量");
+            }
+          }
         }
 
         if (body.type === BookingType.EVENT) {
