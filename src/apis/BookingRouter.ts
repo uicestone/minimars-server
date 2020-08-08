@@ -242,6 +242,8 @@ export default router => {
               throw new HttpError(400, "次卡剩余次数不足");
             case "missing_gateway":
               throw new HttpError(400, "未选择支付方式");
+            case "points_gateway_not_supported":
+              throw new HttpError(400, "不支持积分购买");
             default:
               throw err;
           }

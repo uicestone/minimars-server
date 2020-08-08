@@ -410,6 +410,9 @@ export class Booking {
       await pointsPayment.save();
       booking.payments.push(pointsPayment);
     }
+    if (paymentGateway === PaymentGateway.Points && !booking.priceInPoints) {
+      throw new Error("points_gateway_not_supported");
+    }
 
     // we have to save all payments before booking saved, otherwise mongoose remove unsaved ref keys
     // await Promise.all(booking.payments.map(p => p.save()));
