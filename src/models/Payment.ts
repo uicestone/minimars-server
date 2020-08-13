@@ -174,6 +174,10 @@ import moment from "moment";
         await payment.customer.addPoints(payment.amount);
       }
       break;
+    case PaymentGateway.Pr:
+      payment.paid = true;
+      // await payment.paidSuccess();
+      break;
     case PaymentGateway.Pos:
       payment.paid = true;
       // await payment.paidSuccess();
@@ -321,6 +325,7 @@ export enum PaymentGateway {
   Shouqianba = "shouqianba",
   Dianping = "dianping",
   WechatPay = "wechatpay",
+  Pr = "pr",
   Alipay = "alipay",
   UnionPay = "unionpay"
 }
