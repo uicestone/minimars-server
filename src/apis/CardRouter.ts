@@ -31,6 +31,10 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const body = req.body as CardPostBody;
 
+        if (!req.user.mobile) {
+          throw new HttpError(400, "必须先授权获取手机号才能购买/领取会员卡");
+        }
+
         if (body.giftCode) {
           try {
             const [userId, cardId] = (verify(
