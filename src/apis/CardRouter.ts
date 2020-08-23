@@ -238,6 +238,11 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const card = req.item as DocumentType<ICard>;
 
+        if (req.body.expiresAt) {
+          card.expiresAtWas = card.expiresAt;
+          req.body.expiresAt = moment(req.body.expiresAt).endOf("day");
+        }
+
         card.set(req.body as CardPutBody);
 
         await card.save();

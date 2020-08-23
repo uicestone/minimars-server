@@ -38,7 +38,7 @@ export const userVisibleCardStatus = [
   }
 ])
 @pre("save", async function (this: DocumentType<Card>, next) {
-  if (["times", "coupon"].includes(this.type)) {
+  if (["times", "coupon", "period"].includes(this.type)) {
     if (
       this.status === CardStatus.ACTIVATED &&
       (this.timesLeft === 0 || (this.expiresAt && this.expiresAt < new Date()))
@@ -46,7 +46,9 @@ export const userVisibleCardStatus = [
       this.status = CardStatus.EXPIRED;
     } else if (
       this.status === CardStatus.EXPIRED &&
-      (this.timesLeft > 0 || this.expiresAt || this.expiresAt >= new Date())
+      ((this.timesLeft > 0 &&
+        (!this.expiresAt || this.expiresAt >= new Date())) ||
+        (this.type === "period" && this.expiresAt >= new Date()))
     ) {
       this.status = CardStatus.ACTIVATED;
     }
@@ -93,6 +95,9 @@ export class Card {
 
   @prop({ type: Date })
   expiresAt: Date;
+
+  @prop({ type: Date })
+  expiresAtWas: Date;
 
   @prop({ type: String, required: true })
   title: string;
