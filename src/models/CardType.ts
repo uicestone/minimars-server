@@ -48,6 +48,9 @@ export class CardType {
   @prop({ type: Date })
   end: Date;
 
+  @prop()
+  dayType?: "onDaysOnly" | "offDaysOnly";
+
   @prop({ type: Number })
   expiresInDays: number;
 
