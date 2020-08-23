@@ -46,6 +46,8 @@ export class Config {
   appointmentDeadline?: string;
   eventHint?: string;
   playHint?: string;
+  offWeekdays?: string[];
+  onWeekends?: string[];
 }
 
 export const config: Config = {};

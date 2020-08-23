@@ -1,5 +1,6 @@
 import Agenda from "agenda";
 import moment from "moment";
+import axios from "axios";
 import Booking, { BookingStatus } from "../models/Booking";
 import { MongoClient } from "mongodb";
 import Card, { CardStatus } from "../models/Card";
@@ -11,6 +12,7 @@ import Store from "../models/Store";
 import { saveContentImages } from "./helper";
 import importPrevData from "./importPrevData";
 import User from "../models/User";
+import configModel, { Config } from "../models/Config";
 
 let agenda: Agenda;
 
@@ -142,12 +144,56 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("update holidays", async (job, done) => {
+    console.log(`[CRO] Update holidays...`);
+    const year = new Date().getFullYear();
+    const [res1, res2] = await Promise.all([
+      axios.get(
+        `https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/${year}.json`
+      ),
+      axios.get(
+        `https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/${
+          year + 1
+        }.json`
+      )
+    ]);
+    const days = res1.data.days.concat(res2.data.days) as {
+      name: string;
+      date: string;
+      isOffDay: boolean;
+    }[];
+    const conf = days.reduce(
+      (conf: Config, day) => {
+        if (day.isOffDay && [1, 2, 3, 4, 5].includes(moment(day.date).day())) {
+          conf.offWeekdays.push(day.date);
+        } else if (!day.isOffDay && [0, 7].includes(moment(day.date).day())) {
+          conf.onWeekends.push(day.date);
+        }
+        return conf;
+      },
+      { offWeekdays: [], onWeekends: [] }
+    );
+    const [configItemOnWeekends, configItemOffWeekdays] = await Promise.all([
+      configModel.findOne({ onWeekends: { $exists: true } }),
+      configModel.findOne({ offWeekdays: { $exists: true } })
+    ]);
+    configItemOnWeekends.set("onWeekends", conf.onWeekends);
+    configItemOffWeekdays.set("offWeekdays", conf.offWeekdays);
+    await Promise.all([
+      configItemOnWeekends.save(),
+      configItemOffWeekdays.save()
+    ]);
+    console.log(`[CRO] Finished update holidays.`);
+    done();
+  });
+
   agenda.start();
 
   agenda.on("ready", () => {
     agenda.every("1 hour", "cancel expired pending bookings");
     agenda.every("1 hour", "cancel expired pending cards");
     agenda.every("1 day", "finish in_service bookings");
+    agenda.every("1 day", "update holidays");
     agenda.every("0 0 * * *", "set expired coupon cards"); // run everyday at 0:00am
     // agenda.now("create indexes");
   });

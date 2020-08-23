@@ -28,5 +28,7 @@ const initConfig: IConfig = {
   freeParentsPerKid: 1,
   appointmentDeadline: "16:00:00",
   eventHint: "",
-  playHint: ""
+  playHint: "",
+  offWeekdays: [],
+  onWeekends: []
 };
