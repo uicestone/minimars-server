@@ -31,7 +31,16 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const body = req.body as CardPostBody;
 
-        if (!req.user.mobile) {
+        const customer =
+          req.user.role === "customer"
+            ? req.user
+            : await User.findById(body.customer);
+
+        if (!customer) {
+          throw new HttpError(400, "购卡用户无效");
+        }
+
+        if (!customer.mobile) {
           throw new HttpError(400, "必须先授权获取手机号才能购买/领取会员卡");
         }
 
@@ -88,14 +97,6 @@ export default router => {
 
         if (req.user.role === "customer") {
           card.customer = req.user;
-        }
-
-        const customer = await User.findOne({
-          _id: card.customer as Types.ObjectId
-        });
-
-        if (!customer) {
-          throw new HttpError(400, "Invalid card customer.");
         }
 
         if (cardType.maxPerCustomer) {
