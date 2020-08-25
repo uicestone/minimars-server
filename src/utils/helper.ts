@@ -6,6 +6,8 @@ import { DocumentType } from "@typegoose/typegoose";
 import { getExtension } from "mime";
 import { writeFileSync } from "fs";
 import { createHash } from "crypto";
+import { config } from "../models/Config";
+import moment from "moment";
 
 interface TokenData {
   userId: number;
@@ -64,4 +66,14 @@ export const saveContentImages = (content: string) => {
     );
   });
   return content;
+};
+
+export const isOffDay = (date: string) => {
+  if (config.offWeekdays.includes(date)) {
+    return true;
+  }
+  if (config.onWeekends.includes(date)) {
+    return false;
+  }
+  return [0, 1].includes(moment(date).day());
 };

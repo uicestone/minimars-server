@@ -22,7 +22,7 @@ import {
   BookingPriceResponseBody
 } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
-import { isValidHexObjectId } from "../utils/helper";
+import { isValidHexObjectId, isOffDay } from "../utils/helper";
 
 setTimeout(async () => {
   // const u = await User.findOne({ name: "陆秋石" });
@@ -134,6 +134,18 @@ export default router => {
             }
             if (kidsCountToday > booking.card.maxKids) {
               throw new HttpError(400, "客户会员卡当日预约已到达最大孩子数量");
+            }
+            if (
+              booking.card.dayType === "onDaysOnly" &&
+              isOffDay(booking.date)
+            ) {
+              throw new HttpError(400, "该卡只能在法定工作日使用");
+            }
+            if (
+              booking.card.dayType === "offDaysOnly" &&
+              !isOffDay(booking.date)
+            ) {
+              throw new HttpError(400, "该卡只能在法定节假日使用");
             }
           }
         }
