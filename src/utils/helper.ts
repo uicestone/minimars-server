@@ -75,5 +75,5 @@ export const isOffDay = (date: string) => {
   if (config.onWeekends.includes(date)) {
     return false;
   }
-  return [0, 1].includes(moment(date).day());
+  return [0, 6].includes(moment(date).day());
 };
