@@ -39,7 +39,7 @@ export default router => {
         query.select("-content");
 
         if (req.user.role === "customer") {
-          query.find({
+          query.where({
             $or: [
               { customerTags: { $in: req.user.tags || [] } },
               { customerTags: null },
@@ -47,11 +47,13 @@ export default router => {
             ]
           });
         } else if (req.user.role !== "admin") {
-          query.find({ store: { $in: [req.user.store.id, null] } });
+          query.find({ store: { $in: [req.user.store?.id, null] } });
         }
 
         if (req.ua && req.ua.isWechat) {
-          query.find({ openForClient: true });
+          query.where({
+            $or: [{ openForClient: true }, { _id: queryParams.include }]
+          });
         }
 
         let total = await query.countDocuments();
