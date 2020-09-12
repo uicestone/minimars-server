@@ -76,6 +76,7 @@ export interface CardTypePutBody extends Partial<CardType> {}
 
 export interface CardTypeQuery extends ListQuery {
   include?: string;
+  couponSlug?: string;
 }
 
 export interface CouponPostBody extends Partial<Coupon> {}

@@ -56,6 +56,10 @@ export default router => {
           });
         }
 
+        if (queryParams.couponSlug) {
+          query.find({ couponSlug: queryParams.couponSlug });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()

@@ -24,6 +24,9 @@ export class CardType {
   @prop({ required: true, unique: true })
   slug: string;
 
+  @prop()
+  couponSlug?: string;
+
   @prop({ enum: ["times", "period", "balance", "coupon"], required: true })
   type: string;
 

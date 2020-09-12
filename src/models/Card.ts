@@ -105,6 +105,9 @@ export class Card {
   @prop({ type: String, required: true })
   slug: string;
 
+  @prop()
+  couponSlug?: string;
+
   @prop({
     type: String,
     enum: ["times", "period", "balance", "coupon"],
