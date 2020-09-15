@@ -118,8 +118,8 @@ export class Card {
   @prop({ type: Boolean, default: false })
   isGift: boolean;
 
-  @prop({ ref: "Store" })
-  store?: Ref<Store>;
+  @prop({ ref: "Store", required: true })
+  stores: Ref<Store>[];
 
   @prop()
   posterUrl: string;
@@ -188,7 +188,7 @@ export class Card {
     } else {
       const payment = new paymentModel({
         customer: card.customer,
-        store: card.store || atReceptionStore?.id,
+        store: atReceptionStore?.id,
         amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
         title,
         attach,

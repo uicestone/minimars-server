@@ -82,8 +82,8 @@ export default router => {
           customer: body.customer
         });
 
-        if (cardType.store) {
-          card.store = cardType.store.id;
+        if (cardType.stores) {
+          card.stores = cardType.stores.map(s => s.id);
         }
 
         Object.keys(cardType.toObject())

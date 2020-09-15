@@ -33,8 +33,8 @@ export class CardType {
   @prop({ default: false })
   isGift: boolean;
 
-  @prop({ ref: "Store" })
-  store?: DocumentType<Store>;
+  @prop({ ref: "Store", required: true })
+  stores: DocumentType<Store>[];
 
   @prop()
   posterUrl: string;
