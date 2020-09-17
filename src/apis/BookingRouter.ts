@@ -132,6 +132,9 @@ export default router => {
             if (!booking.populated("card")) {
               await booking.populate("card", "-content").execPopulate();
             }
+            if (!booking.card.stores.includes(booking.store.id)) {
+              throw new HttpError(400, "会员卡不支持该门店");
+            }
             if (kidsCountToday > booking.card.maxKids) {
               throw new HttpError(400, "客户会员卡当日预约已到达最大孩子数量");
             }
@@ -146,6 +149,23 @@ export default router => {
               !isOffDay(booking.date)
             ) {
               throw new HttpError(400, "该卡只能在法定节假日使用");
+            }
+          }
+
+          if (req.ua.isWechat || booking.date > moment().format("YYYY-mm-dd")) {
+            try {
+              if (booking.coupon) {
+                await booking.checkStoreLimit("coupon");
+              } else {
+                await booking.checkStoreLimit();
+              }
+            } catch (e) {
+              switch (e.message) {
+                case "store_limit_exceeded":
+                  throw new HttpError(400, "抱歉，该门店当日已达预约上限");
+                default:
+                  throw e;
+              }
             }
           }
         }

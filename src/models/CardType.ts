@@ -10,7 +10,7 @@ import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 
 @plugin(updateTimes)
-@plugin(autoPopulate, [{ path: "store", select: "-content" }])
+@plugin(autoPopulate, [{ path: "stores", select: "-content" }])
 @pre("validate", function (this: DocumentType<CardType>, next) {
   if (this.customerTags) {
     this.customerTags = this.customerTags.map(t => t.toLowerCase());

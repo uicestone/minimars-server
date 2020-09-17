@@ -23,7 +23,10 @@ export default async function (req, res, next) {
         delete req.body[key + "Id"];
       }
     });
-    if (["payments", "cards"].includes(key) && Array.isArray(req.body[key])) {
+    if (
+      ["payments", "cards", "stores"].includes(key) &&
+      Array.isArray(req.body[key])
+    ) {
       req.body[key] = req.body[key].map(item => item.id || item);
     }
   }

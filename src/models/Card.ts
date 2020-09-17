@@ -118,7 +118,7 @@ export class Card {
   @prop({ type: Boolean, default: false })
   isGift: boolean;
 
-  @prop({ ref: "Store", required: true })
+  @prop({ ref: "Store" })
   stores: Ref<Store>[];
 
   @prop()

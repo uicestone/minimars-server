@@ -638,6 +638,36 @@ export class Booking {
       await booking.save();
     }
   }
+
+  async checkStoreLimit(this: DocumentType<Booking>, group = "common") {
+    const dayOfWeek = moment(this.date).day();
+    const special = this.store.dailyLimit.dates.find(
+      d => d.date === this.date && d.group === group
+    )?.limit;
+    const common = this.store.dailyLimit[group][dayOfWeek];
+    let limit: number | null = null;
+    if (special !== undefined) {
+      limit = special;
+    } else if (common !== undefined) {
+      limit = common;
+    }
+    if (limit !== null) {
+      const bookings = await bookingModel.find({
+        type: BookingType.PLAY,
+        store: this.store,
+        date: this.date,
+        status: { $in: paidBookingStatus },
+        coupon: { $exists: true }
+      });
+      const kidsCount = bookings.reduce(
+        (count, booking) => count + booking.kidsCount,
+        0
+      );
+      if (kidsCount + this.kidsCount > limit) {
+        throw new Error("store_limit_exceeded");
+      }
+    }
+  }
 }
 
 const bookingModel = getModelForClass(Booking, {
