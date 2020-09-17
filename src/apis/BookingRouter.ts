@@ -132,7 +132,10 @@ export default router => {
             if (!booking.populated("card")) {
               await booking.populate("card", "-content").execPopulate();
             }
-            if (!booking.card.stores.includes(booking.store.id)) {
+            if (
+              booking.card.stores.length &&
+              !booking.card.stores.includes(booking.store.id)
+            ) {
               throw new HttpError(400, "会员卡不支持该门店");
             }
             if (kidsCountToday > booking.card.maxKids) {
