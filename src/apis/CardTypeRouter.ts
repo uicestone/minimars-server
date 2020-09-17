@@ -47,7 +47,7 @@ export default router => {
             ]
           });
         } else if (req.user.role !== "admin") {
-          query.find({ store: { $in: [req.user.store?.id, null] } });
+          query.find({ stores: { $in: [req.user.store?.id, []] } });
         }
 
         if (req.ua && req.ua.isWechat) {
