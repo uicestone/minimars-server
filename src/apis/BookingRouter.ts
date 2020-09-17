@@ -155,7 +155,7 @@ export default router => {
             }
           }
 
-          if (req.ua.isWechat || booking.date > moment().format("YYYY-mm-dd")) {
+          if (req.ua.isWechat || booking.date > moment().format("YYYY-MM-DD")) {
             try {
               if (booking.coupon) {
                 await booking.checkStoreLimit("coupon");
