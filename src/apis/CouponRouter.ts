@@ -38,7 +38,7 @@ export default router => {
         query.select("-content");
 
         if (req.user.role === "manager") {
-          query.find({ store: { $in: [req.user.store.id, null] } });
+          query.find({ stores: { $in: [req.user.store.id, []] } });
           query.find({ enabled: true });
         } else if (req.user.role !== "admin") {
           throw new HttpError(403);

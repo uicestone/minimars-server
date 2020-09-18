@@ -16,7 +16,7 @@ export class Coupon {
   title: string;
 
   @prop({ ref: "Store" })
-  store?: Ref<Store>;
+  stores: Ref<Store>[];
 
   @prop()
   content: string;
