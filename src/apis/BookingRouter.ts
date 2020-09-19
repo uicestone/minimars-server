@@ -138,7 +138,10 @@ export default router => {
             ) {
               throw new HttpError(400, "会员卡不支持该门店");
             }
-            if (kidsCountToday > booking.card.maxKids) {
+            if (
+              kidsCountToday > booking.card.maxKids &&
+              req.user.role !== "admin"
+            ) {
               throw new HttpError(400, "客户会员卡当日预约已到达最大孩子数量");
             }
             if (
