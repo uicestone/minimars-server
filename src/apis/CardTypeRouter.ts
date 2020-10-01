@@ -56,9 +56,24 @@ export default router => {
           });
         }
 
-        if (queryParams.couponSlug) {
-          query.find({ couponSlug: queryParams.couponSlug });
-        }
+        [
+          "couponSlug",
+          "slug",
+          "openForClient",
+          "openForReception",
+          "type",
+          "stores"
+        ].forEach(field => {
+          if (queryParams[field]) {
+            if (queryParams[field] === "true") {
+              query.find({ [field]: true });
+            } else if (queryParams[field] === "false") {
+              query.find({ [field]: { $in: [false, null] } });
+            } else {
+              query.find({ [field]: queryParams[field] });
+            }
+          }
+        });
 
         let total = await query.countDocuments();
         const page = await query

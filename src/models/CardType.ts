@@ -72,6 +72,9 @@ export class CardType {
   @prop({ type: Boolean, default: false })
   openForClient: boolean;
 
+  @prop({ type: Boolean, default: false })
+  openForReception: boolean;
+
   @prop({ type: String })
   customerTags: string[];
 
