@@ -69,9 +69,15 @@ import moment from "moment";
           payment.amount
         );
         Object.assign(payment.gatewayData, wechatRefundOrderData);
-        if (wechatRefundOrderData.return_code === "SUCCESS") {
+        if (wechatRefundOrderData.result_code === "SUCCESS") {
           payment.paid = true;
           await payment.paidSuccess();
+        } else {
+          if (wechatRefundOrderData.err_code === "NOTENOUGH") {
+            throw new Error("wechat_account_insufficient_balance");
+          } else {
+            throw new Error(wechatRefundOrderData.err_code);
+          }
         }
       }
       break;

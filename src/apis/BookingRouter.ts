@@ -442,7 +442,17 @@ export default router => {
                   req.query.reason
                 }。*小程序端可见*`;
           } else {
-            await booking.cancel(false);
+            try {
+              await booking.cancel(false);
+            } catch (e) {
+              if (
+                e.message === "wechat_account_insufficient_balance" &&
+                req.user.role === "admin"
+              ) {
+                throw new HttpError(400, "微信商户余额不足，退款失败");
+              }
+              throw e;
+            }
             if (
               booking.remarks &&
               booking.remarks.match &&
