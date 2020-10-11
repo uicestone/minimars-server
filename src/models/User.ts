@@ -103,6 +103,12 @@ export class User {
   @prop()
   openid?: string;
 
+  @prop()
+  openidMp?: string;
+
+  @prop()
+  unionid?: string;
+
   @prop({ ref: "Store" }) // manager only
   store?: DocumentType<Store>;
 

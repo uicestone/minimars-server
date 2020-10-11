@@ -19,10 +19,10 @@ export default (router: Router) => {
       console.timeEnd("Wechat login");
       console.log("[WEC] Wechat login user data:", JSON.stringify(userData));
 
-      const { openid, session_key } = userData;
+      const { openid, session_key, unionid } = userData;
       const user = await User.findOneAndUpdate(
         { openid },
-        {},
+        { unionid },
         { upsert: true, new: true }
       );
 
