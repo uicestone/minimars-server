@@ -13,6 +13,7 @@ import { saveContentImages } from "./helper";
 import importPrevData from "./importPrevData";
 import User from "../models/User";
 import configModel, { Config } from "../models/Config";
+import paymentModel, { Payment, PaymentGateway } from "../models/Payment";
 
 let agenda: Agenda;
 
@@ -184,6 +185,43 @@ export const initAgenda = async () => {
       configItemOffWeekdays.save()
     ]);
     console.log(`[CRO] Finished update holidays.`);
+    done();
+  });
+
+  agenda.define("verify user balance", async (job, done) => {
+    console.log(`[CRO] Verify user balance...`);
+    const userBalanceMap: Record<string, number> = {};
+    const balanceCards = await Card.find({
+      type: "balance",
+      status: CardStatus.ACTIVATED
+    });
+    balanceCards.forEach(c => {
+      userBalanceMap[c.customer.toString()] =
+        c.balance + (userBalanceMap[c.customer.toString()] || 0);
+    });
+    console.log(`[CRO] Balance card added.`);
+    const balancePayments = await paymentModel.find({
+      gateway: PaymentGateway.Balance,
+      paid: true
+    });
+    balancePayments.forEach(p => {
+      userBalanceMap[p.customer.id] =
+        (userBalanceMap[p.customer.id] || 0) - p.amount;
+    });
+    const users = await User.find({
+      _id: { $in: Object.keys(userBalanceMap) }
+    });
+    users.forEach(u => {
+      userBalanceMap[u.id] = +userBalanceMap[u.id].toFixed(2);
+      if (u.balance !== userBalanceMap[u.id]) {
+        console.log(
+          `[CRO] User balance mismatch: ${u.id} ${u.name} ${u.mobile} calc ${
+            userBalanceMap[u.id]
+          }, stored ${u.balance}`
+        );
+      }
+    });
+    console.log(`[CRO] Finished verify user balance.`);
     done();
   });
 
