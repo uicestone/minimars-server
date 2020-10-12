@@ -9,6 +9,7 @@ import Payment, {
   PaymentGateway,
   receptionGateways
 } from "../models/Payment";
+import Store from "../models/Store";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
 
@@ -208,11 +209,22 @@ export default router => {
       const payments = await query.find().limit(5e3).exec();
 
       /* original data */
-      const filename = "流水明细.xlsx";
+      const filename = "支付明细.xlsx";
       const path = "/tmp/" + filename;
       const data: any[][] = [
-        ["手机", "已支付", "金额", "余额面额", "明细", "支付方式", "时间"]
+        [
+          "手机",
+          "已支付",
+          "金额",
+          "余额面额",
+          "门店",
+          "明细",
+          "支付方式",
+          "时间"
+        ]
       ];
+
+      const stores = await Store.find();
 
       payments.forEach(payment => {
         const row = [
@@ -220,6 +232,8 @@ export default router => {
           payment.paid,
           payment.amountDeposit || payment.amount,
           payment.amountDeposit ? payment.amount : "-",
+          (stores.find(s => s.id === payment.store.toString()) || { name: "-" })
+            .name,
           payment.title,
           gatewayNames[payment.gateway],
           moment((payment as any).createdAt).format("YYYY-MM-DD HH:mm")
