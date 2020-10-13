@@ -232,8 +232,11 @@ export default router => {
           payment.paid,
           payment.amountDeposit || payment.amount,
           payment.amountDeposit ? payment.amount : "-",
-          (stores.find(s => s.id === payment.store.toString()) || { name: "-" })
-            .name,
+          (
+            stores.find(s => s.id === (payment.store || "").toString()) || {
+              name: "-"
+            }
+          ).name,
           payment.title,
           gatewayNames[payment.gateway],
           moment((payment as any).createdAt).format("YYYY-MM-DD HH:mm")
