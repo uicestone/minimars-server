@@ -234,6 +234,7 @@ export const initAgenda = async () => {
     agenda.every("1 day", "update holidays");
     agenda.every("0 0 * * *", "set expired coupon cards"); // run everyday at 0:00am
     // agenda.now("create indexes");
+    // agenda.now("generate wechat qrcode");
   });
 
   agenda.on("error", err => {

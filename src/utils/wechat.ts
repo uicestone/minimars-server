@@ -1,6 +1,7 @@
 import WXOauth from "@xinglu/wxapp-oauth";
 import { Pay, SignType, utils } from "@sigodenjs/wechatpay";
 import fs from "fs";
+import Axios from "axios";
 
 const {
   WEIXIN_APPID,
@@ -10,6 +11,7 @@ const {
   WEIXIN_MCH_CERT_PATH,
   API_ROOT
 } = process.env;
+const accessToken = { token: "", expiresAt: 0 };
 
 const pfx = WEIXIN_MCH_CERT_PATH ? fs.readFileSync(WEIXIN_MCH_CERT_PATH) : null;
 
@@ -23,6 +25,40 @@ export const pay = new Pay({
   key: WEIXIN_MCH_KEY,
   pfx
 });
+
+export async function getAccessToken(): Promise<string> {
+  if (accessToken.expiresAt > Date.now()) {
+    return accessToken.token;
+  }
+  const res = await Axios.get(
+    `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${WEIXIN_APPID}&secret=${WEIXIN_SECRET}`
+  );
+  if (!res.data?.access_token) throw new Error("invalid_access_token");
+  console.log(`[WEC] Get access token ${res.data.access_token}`);
+  accessToken.token = res.data.access_token;
+  accessToken.expiresAt = Date.now() + 3.6e6;
+  return accessToken.token;
+}
+
+export async function getQrcode(
+  path: string,
+  output = "qrcode.jpg"
+): Promise<void> {
+  const instance = Axios.create({
+    timeout: 10000
+  });
+  instance
+    .post(
+      `https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=${await getAccessToken()}`,
+      { path, width: 1280 },
+      { responseType: "arraybuffer" }
+    )
+    .then(response => {
+      const fileName = `${process.cwd()}/${output}`;
+      console.log(fileName);
+      fs.writeFileSync(fileName, response.data);
+    });
+}
 
 export const unifiedOrder = async (
   outTradeNo: string,
