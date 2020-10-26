@@ -14,6 +14,7 @@ import importPrevData from "./importPrevData";
 import User from "../models/User";
 import configModel, { Config } from "../models/Config";
 import paymentModel, { Payment, PaymentGateway } from "../models/Payment";
+import { getQrcode } from "./wechat";
 
 let agenda: Agenda;
 
@@ -149,14 +150,8 @@ export const initAgenda = async () => {
     console.log(`[CRO] Update holidays...`);
     const year = new Date().getFullYear();
     const [res1, res2] = await Promise.all([
-      axios.get(
-        `https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/${year}.json`
-      ),
-      axios.get(
-        `https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/${
-          year + 1
-        }.json`
-      )
+      axios.get(`${process.env.NATIONAL_HOLIDAY_BASE}/${year}.json`),
+      axios.get(`${process.env.NATIONAL_HOLIDAY_BASE}/${year + 1}.json`)
     ]);
     const days = res1.data.days.concat(res2.data.days) as {
       name: string;
@@ -214,7 +209,7 @@ export const initAgenda = async () => {
     users.forEach(u => {
       userBalanceMap[u.id] = +userBalanceMap[u.id].toFixed(2);
       if (u.balance !== userBalanceMap[u.id]) {
-        console.log(
+        console.error(
           `[CRO] User balance mismatch: ${u.id} ${u.name} ${u.mobile} calc ${
             userBalanceMap[u.id]
           }, stored ${u.balance}`
@@ -222,6 +217,14 @@ export const initAgenda = async () => {
       }
     });
     console.log(`[CRO] Finished verify user balance.`);
+    done();
+  });
+
+  agenda.define("generate wechat qrcode", async (job, done) => {
+    console.log(`[CRO] Generate wechat qrcode...`);
+    const { path } = job.attrs.data;
+    getQrcode(path);
+    console.log(`[CRO] Finished generate wechat qrcode.`);
     done();
   });
 
