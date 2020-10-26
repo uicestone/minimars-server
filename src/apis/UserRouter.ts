@@ -133,6 +133,12 @@ export default router => {
           query.find({ $and });
         }
 
+        ["mobile"].forEach(field => {
+          if (queryParams[field]) {
+            query.where({ [field]: queryParams[field] });
+          }
+        });
+
         let total = await query.countDocuments();
         const [
           { totalBalance, totalBalanceDeposit } = {
