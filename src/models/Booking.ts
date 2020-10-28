@@ -230,6 +230,9 @@ export class Booking {
             booking.price = booking.price * (1 - booking.card.discountRate);
           }
         }
+        if (booking.card.type === "coupon" && booking.card.fixedPrice) {
+          booking.price = booking.card.fixedPrice;
+        }
       }
     }
   }

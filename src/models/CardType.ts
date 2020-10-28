@@ -89,6 +89,9 @@ export class CardType {
 
   @prop({ type: Number })
   discountRate?: number;
+
+  @prop({ type: Number })
+  fixedPrice?: number;
 }
 
 const cardTypeModel = getModelForClass(CardType, {

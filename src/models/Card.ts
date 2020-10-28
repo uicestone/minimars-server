@@ -160,6 +160,9 @@ export class Card {
   @prop({ type: Number })
   discountRate?: number;
 
+  @prop({ type: Number })
+  fixedPrice?: number;
+
   get giftCode(): string | undefined {
     const card = (this as unknown) as DocumentType<Card>;
     if (!card.isGift || card.status !== CardStatus.VALID) return undefined;
