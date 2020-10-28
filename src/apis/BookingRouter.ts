@@ -23,6 +23,7 @@ import {
 } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId, isOffDay } from "../utils/helper";
+import cardModel from "../models/Card";
 
 setTimeout(async () => {
   // const u = await User.findOne({ name: "陆秋石" });
@@ -234,7 +235,10 @@ export default router => {
         }
 
         if (booking.type === BookingType.FOOD && !booking.price) {
-          throw new HttpError(400, "请填写收款金额");
+          const card = await cardModel.findById(booking.card);
+          if (!card.fixedPrice) {
+            throw new HttpError(400, "请填写收款金额");
+          }
         }
 
         try {
