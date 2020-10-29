@@ -21,6 +21,7 @@ import cardModel, { CardStatus } from "./Card";
 import { isValidHexObjectId } from "../utils/helper";
 import { Store } from "./Store";
 import moment from "moment";
+import HttpError from "../utils/HttpError";
 
 @pre("save", async function (next) {
   const payment = this as DocumentType<Payment>;
@@ -75,8 +76,10 @@ import moment from "moment";
         } else {
           if (wechatRefundOrderData.err_code === "NOTENOUGH") {
             throw new Error("wechat_account_insufficient_balance");
+          } else if (wechatRefundOrderData.err_code_des) {
+            throw new HttpError(400, wechatRefundOrderData.err_code_des);
           } else {
-            throw new Error(wechatRefundOrderData.err_code);
+            throw new Error("wechat_refund_failed");
           }
         }
       }
