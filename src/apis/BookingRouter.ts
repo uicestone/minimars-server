@@ -474,7 +474,7 @@ export default router => {
           statusWas !== BookingStatus.IN_SERVICE &&
           booking.status === BookingStatus.IN_SERVICE
         ) {
-          booking.checkInAt = moment().format("HH:mm:ss");
+          booking.checkIn(false);
         }
 
         if (

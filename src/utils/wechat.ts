@@ -130,6 +130,12 @@ export async function sendTemplateMessage(
   type: "writeoff" | "cancel",
   messages: string[]
 ) {
+  if (
+    !user.tags.includes("test") &&
+    !process.env.ENABLE_WECHAT_TEMPLATE_MESSAGE
+  ) {
+    return;
+  }
   if (!user.openidMp) {
     console.log(
       `[WEC] Fail to send template message without openidMp, user ${user.id}.`
@@ -144,11 +150,11 @@ export async function sendTemplateMessage(
   const messageData: Record<string, { value: string; color?: string }> = {};
   messages.forEach((message, index) => {
     if (index === 0) {
-      messageData.first = { value: message, color: "#2f69c8" };
+      messageData.first = { value: message };
     } else if (index === messages.length - 1) {
-      messageData.remark = { value: message, color: "#18e245" };
+      messageData.remark = { value: message, color: "#2f69c8" };
     } else {
-      messageData["keyword" + index] = { value: message, color: "#888888" };
+      messageData["keyword" + index] = { value: message, color: "#18e245" };
     }
   });
   const postData = {
@@ -161,8 +167,8 @@ export async function sendTemplateMessage(
     },
     data: messageData
   };
-  const resData = await request(true, "message/template/send", postData);
-  console.log("[WEC] Template message requested:", resData);
+  await request(true, "message/template/send", postData);
+  console.log(`[WEC] Send ${type} message to user ${user.mobile} ${user.id}.`);
 }
 
 export const unifiedOrder = async (

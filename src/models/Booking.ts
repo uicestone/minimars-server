@@ -15,6 +15,7 @@ import { Card } from "./Card";
 import { Event } from "./Event";
 import { Gift } from "./Gift";
 import { Coupon } from "./Coupon";
+import { sendTemplateMessage } from "../utils/wechat";
 
 const { DEBUG } = process.env;
 
@@ -600,8 +601,18 @@ export class Booking {
     if (save) {
       await booking.save();
     }
-    console.log(`[BOK] Booking ${booking.id} checked in, timer started.`);
-    // send user notification
+    console.log(`[BOK] Booking ${booking.id} checked in.`);
+    await booking.populate("card").execPopulate();
+    if (booking.card?.type === "times") {
+      sendTemplateMessage(booking.customer, "writeoff", [
+        "您的次卡已成功核销",
+        booking.customer.name,
+        `${booking.store.name} ${booking.adultsCount}大${booking.kidsCount}小`,
+        `${booking.kidsCount}`,
+        `${booking.date} ${booking.checkInAt}`,
+        `卡内剩余次数：${booking.card.timesLeft}`
+      ]);
+    }
   }
 
   async cancel(this: DocumentType<Booking>, save = true) {
@@ -624,6 +635,13 @@ export class Booking {
     }
 
     console.log(`[BOK] Cancel booking ${booking._id}.`);
+    sendTemplateMessage(booking.customer, "cancel", [
+      "您的预约已被取消",
+      `${booking.store.name} ${booking.adultsCount}大${booking.kidsCount}小`,
+      `${booking.date}`,
+      "管理员审批",
+      "您的微信支付、次卡、余额将自动原路退回；如有疑问，请联系门店"
+    ]);
 
     if (save) {
       await booking.save();
