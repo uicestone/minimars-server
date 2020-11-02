@@ -14,7 +14,8 @@ import importPrevData from "./importPrevData";
 import User from "../models/User";
 import configModel, { Config } from "../models/Config";
 import paymentModel, { Payment, PaymentGateway } from "../models/Payment";
-import { getQrcode } from "./wechat";
+import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
+import userModel from "../models/User";
 
 let agenda: Agenda;
 
@@ -228,6 +229,39 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("get wechat mp users", async (job, done) => {
+    console.log(`[CRO] Get wechat mp users...`);
+    const openids = await getMpUserOpenids();
+    let start = 0;
+    while (start < openids.length) {
+      const chunk = openids.slice(start, start + 100);
+      const usersInfo = await getUsersInfo(chunk);
+      console.log(`[CRO] Got users info ${start} +100.`);
+      const usersExists = await userModel.find({
+        openidMp: null,
+        unionid: { $in: usersInfo.filter(u => u.unionid).map(u => u.unionid) }
+      });
+      if (usersExists.length) {
+        console.log(
+          `[CRO] ${usersExists.length} users matching unionid without openidMp.`
+        );
+      }
+      for (const user of usersExists) {
+        const userInfo = usersInfo.find(u => u.unionid === user.unionid);
+        await userModel.updateOne(
+          { _id: user.id },
+          { openidMp: userInfo.openid }
+        );
+        console.log(
+          `[CRO] User openidMp updated, user ${user.id}, openidMp ${userInfo.openid}`
+        );
+      }
+      start += 100;
+    }
+    console.log(`[CRO] Finished get wechat mp users.`);
+    done();
+  });
+
   agenda.start();
 
   agenda.on("ready", () => {
@@ -236,6 +270,7 @@ export const initAgenda = async () => {
     agenda.every("1 day", "finish in_service bookings");
     agenda.every("1 day", "update holidays");
     agenda.every("0 0 * * *", "set expired coupon cards"); // run everyday at 0:00am
+    agenda.every("1 day", "get wechat mp users");
     // agenda.now("create indexes");
     // agenda.now("generate wechat qrcode");
   });

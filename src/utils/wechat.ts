@@ -1,7 +1,9 @@
 import WXOauth from "@xinglu/wxapp-oauth";
 import { Pay, SignType, utils } from "@sigodenjs/wechatpay";
 import fs from "fs";
-import Axios from "axios";
+import Axios, { AxiosRequestConfig } from "axios";
+import { User } from "../models/User";
+import { DocumentType } from "@typegoose/typegoose";
 
 const {
   WEIXIN_APPID,
@@ -9,9 +11,12 @@ const {
   WEIXIN_MCH_ID,
   WEIXIN_MCH_KEY,
   WEIXIN_MCH_CERT_PATH,
+  WEIXIN_APPID_MP,
+  WEIXIN_SECRET_MP,
   API_ROOT
 } = process.env;
 const accessToken = { token: "", expiresAt: 0 };
+const accessTokenMp = { token: "", expiresAt: 0 };
 
 const pfx = WEIXIN_MCH_CERT_PATH ? fs.readFileSync(WEIXIN_MCH_CERT_PATH) : null;
 
@@ -26,38 +31,138 @@ export const pay = new Pay({
   pfx
 });
 
-export async function getAccessToken(): Promise<string> {
-  if (accessToken.expiresAt > Date.now()) {
-    return accessToken.token;
+function handleError(res: any) {
+  if (!res || !res.data) {
+    throw new Error("wechat_api_network_error");
+  } else if (res.data.errcode) {
+    console.error(`[WEC] Wechat API error: ${res.data.errmsg}.`);
+    throw new Error("wechat_api_error");
   }
-  const res = await Axios.get(
-    `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${WEIXIN_APPID}&secret=${WEIXIN_SECRET}`
-  );
-  if (!res.data?.access_token) throw new Error("invalid_access_token");
-  console.log(`[WEC] Get access token ${res.data.access_token}`);
-  accessToken.token = res.data.access_token;
-  accessToken.expiresAt = Date.now() + 3.6e6;
-  return accessToken.token;
+  return res.data;
+}
+
+async function request(
+  isMp: boolean,
+  path: string,
+  data: any = null,
+  config: AxiosRequestConfig = {}
+) {
+  const client = Axios.create({
+    baseURL: "https://api.weixin.qq.com/cgi-bin/"
+  });
+  if (path !== "token") {
+    client.interceptors.request.use(async (config: AxiosRequestConfig) => {
+      if (!config.params) config.params = {};
+      config.params.access_token = await getAccessToken(isMp);
+      return config;
+    });
+  }
+  let res: any;
+  if (data) {
+    res = await client.post(path, data, config);
+  } else {
+    res = await client.get(path, config);
+  }
+  return handleError(res);
+}
+
+export async function getAccessToken(isMp = false): Promise<string> {
+  const at = isMp ? accessTokenMp : accessToken;
+  if (at.expiresAt > Date.now()) {
+    return at.token;
+  }
+  const data = await request(isMp, "token", null, {
+    params: {
+      grant_type: "client_credential",
+      appid: isMp ? WEIXIN_APPID_MP : WEIXIN_APPID,
+      secret: isMp ? WEIXIN_SECRET_MP : WEIXIN_SECRET
+    }
+  });
+  if (!data?.access_token) throw new Error("invalid_access_token");
+  console.log(`[WEC] Get access token ${data.access_token}`);
+  at.token = data.access_token;
+  at.expiresAt = Date.now() + 3.6e6;
+  return at.token;
 }
 
 export async function getQrcode(
   path: string,
   output = "qrcode.jpg"
 ): Promise<void> {
-  const instance = Axios.create({
-    timeout: 10000
-  });
-  instance
-    .post(
-      `https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=${await getAccessToken()}`,
-      { path, width: 1280 },
-      { responseType: "arraybuffer" }
-    )
-    .then(response => {
-      const fileName = `${process.cwd()}/${output}`;
-      console.log(fileName);
-      fs.writeFileSync(fileName, response.data);
+  const data = await request(
+    true,
+    "wxaapp/createwxaqrcode",
+    { path, width: 1280 },
+    { responseType: "arraybuffer" }
+  );
+  const fileName = `${process.cwd()}/${output}`;
+  console.log(fileName);
+  fs.writeFileSync(fileName, data);
+}
+
+export async function getMpUserOpenids() {
+  let nextOpenid = "";
+  let openids: string[] = [];
+  while (true) {
+    const data = await request(true, "user/get", null, {
+      params: { next_openid: nextOpenid }
     });
+    openids = openids.concat(data.data.openid);
+    if (data.count < 1e4) break;
+    else nextOpenid = data.next_openid;
+  }
+  return openids;
+}
+
+export async function getUsersInfo(openids: string[]) {
+  const { user_info_list: usersInfo } = await request(
+    true,
+    "user/info/batchget",
+    {
+      user_list: openids.map(openid => ({ openid, lang: "zh_CN" }))
+    }
+  );
+  return usersInfo;
+}
+
+export async function sendTemplateMessage(
+  user: DocumentType<User>,
+  type: "writeoff" | "cancel",
+  messages: string[]
+) {
+  if (!user.openidMp) {
+    console.log(
+      `[WEC] Fail to send template message without openidMp, user ${user.id}.`
+    );
+    return;
+  }
+  const {
+    WEIXIN_TEMPLATE_ID_WRITEOFF: writeoff,
+    WEIXIN_TEMPLATE_ID_CANCEL: cancel
+  } = process.env;
+  const templates = { writeoff, cancel };
+  const messageData: Record<string, { value: string; color?: string }> = {};
+  messages.forEach((message, index) => {
+    if (index === 0) {
+      messageData.first = { value: message, color: "#2f69c8" };
+    } else if (index === messages.length - 1) {
+      messageData.remark = { value: message, color: "#18e245" };
+    } else {
+      messageData["keyword" + index] = { value: message, color: "#888888" };
+    }
+  });
+  const postData = {
+    touser: user.openidMp,
+    template_id: templates[type],
+    // url: "http://weixin.qq.com/download",
+    miniprogram: {
+      appid: WEIXIN_APPID,
+      pagepath: "/pages/index/index"
+    },
+    data: messageData
+  };
+  const resData = await request(true, "message/template/send", postData);
+  console.log("[WEC] Template message requested:", resData);
 }
 
 export const unifiedOrder = async (
