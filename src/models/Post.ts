@@ -14,6 +14,7 @@ import {
   removeResizeImageUrl,
   removeResizeHtmlImage
 } from "../utils/imageResize";
+import moment from "moment";
 
 @plugin(updateTimes)
 @plugin(autoPopulate, ["author"])
@@ -32,6 +33,20 @@ export class Post {
 
   @prop({ type: String })
   tags: string[];
+
+  @prop({
+    type: Date,
+    get: v => moment(v).format("YYYY-MM-DD"),
+    set: v => v && moment(v).startOf("day").toDate()
+  })
+  start?: Date;
+
+  @prop({
+    type: Date,
+    get: v => moment(v).format("YYYY-MM-DD"),
+    set: v => v && moment(v).endOf("day").toDate()
+  })
+  end?: Date;
 
   @prop({
     required: true,

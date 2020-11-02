@@ -47,6 +47,15 @@ export default router => {
           query.find({ tags: queryParams.tag });
         }
 
+        if (req.ua.isWechat) {
+          query.where({
+            $and: [
+              { $or: [{ end: null }, { end: { $gte: new Date() } }] },
+              { $or: [{ start: null }, { start: { $lte: new Date() } }] }
+            ]
+          });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()
