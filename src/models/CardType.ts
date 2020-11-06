@@ -92,6 +92,9 @@ export class CardType {
 
   @prop({ type: Number })
   fixedPrice?: number;
+
+  @prop({ type: Number })
+  quantity?: number;
 }
 
 const cardTypeModel = getModelForClass(CardType, {

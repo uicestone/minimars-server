@@ -20,6 +20,7 @@ import { Types } from "mongoose";
 import { DocumentType } from "@typegoose/typegoose";
 import { verify } from "jsonwebtoken";
 import moment from "moment";
+import cardTypeModel from "../models/CardType";
 
 export default router => {
   // Card CURD
@@ -110,6 +111,10 @@ export default router => {
           }
         }
 
+        if (cardType.quantity === 0) {
+          throw new HttpError(400, "抱歉，该卡券已售罄");
+        }
+
         if (cardType.times) {
           card.timesLeft = cardType.times;
         }
@@ -143,6 +148,13 @@ export default router => {
             default:
               throw err;
           }
+        }
+
+        if (typeof cardType.quantity === "number") {
+          await cardTypeModel.updateOne(
+            { _id: cardType.id },
+            { $inc: { quantity: -1 } }
+          );
         }
 
         await card.save();
