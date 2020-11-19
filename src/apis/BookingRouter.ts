@@ -438,6 +438,7 @@ export default router => {
             req.user.role === "customer" &&
             statusWas !== BookingStatus.PENDING
           ) {
+            booking.statusWas = booking.status;
             booking.status = BookingStatus.PENDING_REFUND;
             booking.remarks =
               booking.remarks ||
@@ -445,6 +446,9 @@ export default router => {
                 `\n${moment().format("YYYY-MM-DD HH:mm")} 客户申请取消，原因：${
                   req.query.reason
                 }。*小程序端可见*`;
+          } else if (req.user.role === "manager") {
+            booking.statusWas = booking.status;
+            booking.status = BookingStatus.PENDING_REFUND;
           } else {
             try {
               await booking.cancel(false);

@@ -103,6 +103,12 @@ export class Booking {
   })
   status: BookingStatus;
 
+  @prop({
+    type: String,
+    enum: Object.values(BookingStatus)
+  })
+  statusWas?: BookingStatus;
+
   @prop()
   price?: number;
 
