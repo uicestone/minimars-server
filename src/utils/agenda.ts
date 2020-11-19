@@ -16,6 +16,7 @@ import configModel, { Config } from "../models/Config";
 import paymentModel, { Payment, PaymentGateway } from "../models/Payment";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
 import userModel from "../models/User";
+import { queryTickets } from "./pospal";
 
 let agenda: Agenda;
 
@@ -262,6 +263,14 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("query pospal tickets", async (job, done) => {
+    console.log(`[CRO] Query pospal tickets...`);
+    const result = await queryTickets();
+    console.log(result);
+    console.log(`[CRO] Finished query pospal tickets.`);
+    done();
+  });
+
   agenda.start();
 
   agenda.on("ready", () => {
@@ -272,7 +281,7 @@ export const initAgenda = async () => {
     agenda.every("0 0 * * *", "set expired coupon cards"); // run everyday at 0:00am
     agenda.every("1 day", "get wechat mp users");
     // agenda.now("create indexes");
-    // agenda.now("generate wechat qrcode");
+    // agenda.now("query pospal tickets");
   });
 
   agenda.on("error", err => {

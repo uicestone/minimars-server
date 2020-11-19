@@ -109,6 +109,9 @@ export class User {
   @prop()
   unionid?: string;
 
+  @prop()
+  pospalId?: string;
+
   @prop({ ref: "Store" }) // manager only
   store?: DocumentType<Store>;
 
