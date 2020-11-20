@@ -110,10 +110,10 @@ export class Card {
 
   @prop({
     type: String,
-    enum: ["times", "period", "balance", "coupon"],
+    enum: ["times", "period", "balance", "coupon", "partner"],
     required: true
   })
-  type: "times" | "period" | "balance" | "coupon";
+  type: "times" | "period" | "balance" | "coupon" | "partner";
 
   @prop({ type: Boolean, default: false })
   isGift: boolean;
@@ -162,6 +162,9 @@ export class Card {
 
   @prop({ type: Number })
   fixedPrice?: number;
+
+  @prop()
+  partnerUrl?: string;
 
   get giftCode(): string | undefined {
     const card = (this as unknown) as DocumentType<Card>;

@@ -21,6 +21,7 @@ import { DocumentType } from "@typegoose/typegoose";
 import { verify } from "jsonwebtoken";
 import moment from "moment";
 import cardTypeModel from "../models/CardType";
+import bookingModel, { paidBookingStatus } from "../models/Booking";
 
 export default router => {
   // Card CURD
@@ -272,6 +273,13 @@ export default router => {
         const card = req.item as DocumentType<ICard>;
         if (card.times !== card.timesLeft) {
           throw new HttpError(400, "次卡已使用，请撤销使用订单后再删除卡");
+        }
+        const usedCount = await bookingModel.count({
+          card: card.id,
+          status: { $in: paidBookingStatus }
+        });
+        if (usedCount) {
+          throw new HttpError(400, "该卡已使用，请撤销订单后再删除卡");
         }
         await Payment.deleteMany({
           _id: { $in: card.payments.map(p => p.id) }

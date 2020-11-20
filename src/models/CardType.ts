@@ -27,8 +27,11 @@ export class CardType {
   @prop()
   couponSlug?: string;
 
-  @prop({ enum: ["times", "period", "balance", "coupon"], required: true })
-  type: string;
+  @prop({
+    enum: ["times", "period", "balance", "coupon", "partner"],
+    required: true
+  })
+  type: "times" | "period" | "balance" | "coupon" | "partner";
 
   @prop({ default: false })
   isGift: boolean;
@@ -95,6 +98,9 @@ export class CardType {
 
   @prop({ type: Number })
   quantity?: number;
+
+  @prop()
+  partnerUrl?: string;
 }
 
 const cardTypeModel = getModelForClass(CardType, {
