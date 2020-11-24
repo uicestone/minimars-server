@@ -6,6 +6,11 @@ import {
   removeResizeImageUrl,
   removeResizeHtmlImage
 } from "../utils/imageResize";
+import { Socket } from "net";
+import { JxCtl } from "jingxing-doors";
+
+export const storeGateControllers: { [serial: string]: JxCtl } = {};
+export const storeServerSockets: { [storeId: string]: Socket } = {};
 
 class DailyLimitDate {
   @prop()
@@ -23,6 +28,10 @@ class DailyLimit {
   coupon: number[];
   @prop({ type: DailyLimitDate })
   dates: DailyLimitDate[];
+}
+
+class Door {
+  ip: string;
 }
 
 @plugin(updateTimes)
@@ -56,6 +65,9 @@ export class Store {
 
   @prop()
   partyRooms: number;
+
+  @prop()
+  doors: Door[];
 
   @prop()
   ip: string;
