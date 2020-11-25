@@ -17,7 +17,7 @@ export default function handleCreateServer(io: SocketIoServer) {
       `[SYS] Socket connect from: ${socket.remoteAddress}:${socket.remotePort} at ${client.connectedAt}.`
     );
     const heartBeatInterval = setInterval(() => {
-      socket.write(`PING. Server time is ${moment().format("HH:mm:ss")}.`);
+      socket.write(`PING. Server time: ${moment().format("HH:mm:ss")}.\r\n`);
     }, pingInterval);
 
     socket.setKeepAlive(true);

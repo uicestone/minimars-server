@@ -66,7 +66,7 @@ export class Store {
   @prop()
   partyRooms: number;
 
-  @prop()
+  @prop({ type: Door })
   doors: Door[];
 
   @prop()

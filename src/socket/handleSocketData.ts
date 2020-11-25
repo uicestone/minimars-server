@@ -1,6 +1,7 @@
 import { Socket } from "net";
 import { DocumentType } from "@typegoose/typegoose";
-import storeModel, { Store } from "../models/Store";
+import storeModel, { Store, storeGateControllers } from "../models/Store";
+import { JxCtl } from "jingxing-doors";
 
 export default function handleSocketData(
   socket: Socket,
@@ -17,6 +18,11 @@ export default function handleSocketData(
       if (matchStore && matchStore[1]) {
         client.store = await storeModel.findById(matchStore[1]);
         console.log(`[SOK] Identified store ${client.store.name}.`);
+        // storeGateControllers[client.store.id] = new JxCtl(
+        //   socket,
+        //   "192.168.3.250"
+        // );
+        // storeGateControllers[client.store.id].openDoor(1);
       }
     }
   };
