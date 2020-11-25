@@ -6,7 +6,7 @@
     "dev": "ts-node-dev --no-notify --respawn --ignore-watch=node_modules src/index.ts",
     "start": "ts-node src",
     "test": "echo \"No test specified.\" && exit 0",
-    "build": "tsc && cp -r src/resource build/",
+    "build": "tsc && cp -r src/resource dist/",
     "lint": "eslint ./src/*.ts ./src/*/*.ts ./src/*/*/*.ts"
   },
   "author": "Uice Lu",
