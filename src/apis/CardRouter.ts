@@ -15,8 +15,7 @@ import {
   CardPostQuery
 } from "./interfaces";
 import Payment, { PaymentGateway } from "../models/Payment";
-import User, { User as IUser } from "../models/User";
-import { Types } from "mongoose";
+import User from "../models/User";
 import { DocumentType } from "@typegoose/typegoose";
 import { verify } from "jsonwebtoken";
 import moment from "moment";
