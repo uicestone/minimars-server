@@ -11,11 +11,12 @@ import { config } from "../models/Config";
 import paymentModel, { Payment, PaymentGateway } from "./Payment";
 import { User } from "./User";
 import { Store } from "./Store";
-import { Card } from "./Card";
+import cardModel, { Card, CardStatus } from "./Card";
 import { Event } from "./Event";
 import { Gift } from "./Gift";
 import { Coupon } from "./Coupon";
 import { sendTemplateMessage } from "../utils/wechat";
+import cardTypeModel from "./CardType";
 
 const { DEBUG } = process.env;
 
@@ -480,6 +481,54 @@ export class Booking {
         this.customer.tags.push(this.gift.tagCustomer);
         await this.customer.save();
       }
+    }
+
+    if (this.coupon && this.coupon.rewardCardTypes) {
+      const rewardCardTypes = await cardTypeModel.find({
+        slug: { $in: this.coupon.rewardCardTypes.split(" ") }
+      });
+      await Promise.all(
+        rewardCardTypes.map(async cardType => {
+          const card = new cardModel({
+            customer: this.customer.id
+          });
+
+          if (cardType.stores) {
+            card.stores = cardType.stores.map(s => s.id);
+          }
+
+          Object.keys(cardType.toObject())
+            .filter(
+              key =>
+                !["_id", "__v", "createdAt", "updatedAt", "store"].includes(key)
+            )
+            .forEach(key => {
+              card.set(key, cardType[key]);
+            });
+
+          if (cardType.times) {
+            card.timesLeft = cardType.times;
+          }
+
+          if (cardType.expiresInDays && !cardType.end) {
+            card.expiresAt = moment(card.start)
+              .add(cardType.expiresInDays, "days")
+              // .subtract(1, "day")
+              .endOf("day")
+              .toDate();
+          } else if (cardType.end) {
+            card.expiresAt = cardType.end;
+          }
+
+          card.status = CardStatus.ACTIVATED;
+
+          await card.save();
+          console.log(
+            `[CRD] Rewarded card ${card.slug} to customer ${this.customer.id}.`
+          );
+          return card;
+        })
+      );
     }
 
     console.log(`[PAY] Booking payment success: ${this.id}.`);
