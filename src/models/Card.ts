@@ -179,6 +179,10 @@ export class Card {
     return code;
   }
 
+  get balanceReward(): number {
+    return +(this.balance - this.price).toFixed(2);
+  }
+
   async createPayment(
     this: DocumentType<Card>,
     {

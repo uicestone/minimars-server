@@ -21,6 +21,7 @@ import { verify } from "jsonwebtoken";
 import moment from "moment";
 import cardTypeModel from "../models/CardType";
 import bookingModel, { paidBookingStatus } from "../models/Booking";
+import userModel from "../models/User";
 
 export default router => {
   // Card CURD
@@ -279,6 +280,18 @@ export default router => {
         });
         if (usedCount) {
           throw new HttpError(400, "该卡已使用，请撤销订单后再删除卡");
+        }
+        if (card.type === "balance") {
+          const customer = await userModel.findById(card.customer);
+          if (
+            customer.balanceDeposit < card.price ||
+            customer.balanceReward < card.balanceReward
+          ) {
+            throw new HttpError(400, "用户余额已不足以撤销本储值卡");
+          }
+          customer.balanceDeposit -= card.price;
+          customer.balanceReward -= card.balanceReward;
+          await customer.save();
         }
         await Payment.deleteMany({
           _id: { $in: card.payments.map(p => p.id) }
