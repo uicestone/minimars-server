@@ -127,7 +127,7 @@ export default router => {
             .endOf("day")
             .toDate();
         } else if (cardType.end) {
-          card.expiresAt = cardType.end;
+          card.expiresAt = moment(cardType.end).endOf("day").toDate();
         }
 
         try {
