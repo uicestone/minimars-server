@@ -138,13 +138,13 @@ export const initAgenda = async () => {
     done();
   });
 
-  agenda.define("set expired coupon cards", async (job, done) => {
-    console.log(`[CRO] Set expired coupon cards...`);
+  agenda.define("set expired cards", async (job, done) => {
+    console.log(`[CRO] Set expired cards...`);
     await Card.updateMany(
-      { type: "coupon", expiresAt: { $lt: new Date() } },
+      { type: { $in: ["coupon", "period"] }, expiresAt: { $lt: new Date() } },
       { $set: { status: CardStatus.EXPIRED } }
     );
-    console.log(`[CRO] Finished setting expired coupon cards.`);
+    console.log(`[CRO] Finished setting expired cards.`);
     done();
   });
 
@@ -278,7 +278,7 @@ export const initAgenda = async () => {
     agenda.every("1 hour", "cancel expired pending cards");
     agenda.every("1 day", "finish in_service bookings");
     agenda.every("1 day", "update holidays");
-    agenda.every("0 0 * * *", "set expired coupon cards"); // run everyday at 0:00am
+    agenda.every("0 0 * * *", "set expired cards"); // run everyday at 0:00am
     agenda.every("1 day", "get wechat mp users");
     // agenda.now("create indexes");
     // agenda.now("query pospal tickets");
