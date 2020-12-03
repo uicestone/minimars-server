@@ -483,9 +483,12 @@ export class Booking {
       }
     }
 
-    if (this.coupon && this.coupon.rewardCardTypes) {
+    const rewardCardTypesString =
+      this.coupon?.rewardCardTypes || this.card?.rewardCardTypes;
+
+    if (rewardCardTypesString) {
       const rewardCardTypes = await cardTypeModel.find({
-        slug: { $in: this.coupon.rewardCardTypes.split(" ") }
+        slug: { $in: rewardCardTypesString.split(" ") }
       });
       await Promise.all(
         rewardCardTypes.map(async cardType => {

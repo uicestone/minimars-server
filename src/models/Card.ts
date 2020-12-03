@@ -222,53 +222,6 @@ export class Card {
 
   async paymentSuccess(this: DocumentType<Card>) {
     this.status = this.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
-    if (this.rewardCardTypes) {
-      const rewardCardTypes = await cardTypeModel.find({
-        slug: { $in: this.rewardCardTypes.split(" ") }
-      });
-      await Promise.all(
-        rewardCardTypes.map(async cardType => {
-          const card = new cardModel({
-            customer: this.customer
-          });
-
-          if (cardType.stores) {
-            card.stores = cardType.stores.map(s => s.id);
-          }
-
-          Object.keys(cardType.toObject())
-            .filter(
-              key =>
-                !["_id", "__v", "createdAt", "updatedAt", "store"].includes(key)
-            )
-            .forEach(key => {
-              card.set(key, cardType[key]);
-            });
-
-          if (cardType.times) {
-            card.timesLeft = cardType.times;
-          }
-
-          if (cardType.expiresInDays && !cardType.end) {
-            card.expiresAt = moment(card.start)
-              .add(cardType.expiresInDays, "days")
-              // .subtract(1, "day")
-              .endOf("day")
-              .toDate();
-          } else if (cardType.end) {
-            card.expiresAt = cardType.end;
-          }
-
-          card.status = CardStatus.ACTIVATED;
-
-          await card.save();
-          console.log(
-            `[CRD] Rewarded card ${card.slug} to customer ${this.customer}.`
-          );
-          return card;
-        })
-      );
-    }
     console.log(`[CRD] Card ${this.id} payment success.`);
     // send user notification
   }
