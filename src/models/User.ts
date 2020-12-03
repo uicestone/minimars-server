@@ -128,8 +128,8 @@ export class User {
     return +((this.balanceDeposit || 0) + (this.balanceReward || 0)).toFixed(2);
   }
 
-  @prop({ type: String })
-  tags: string[];
+  @prop({ type: String, default: [] })
+  tags: string[] = [];
 
   @prop()
   points?: number;

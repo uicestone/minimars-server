@@ -49,7 +49,7 @@ export default (router: Router) => {
 
       const userData = oAuth.decrypt(encryptedData, session_key, iv);
       const {
-        openId: openid,
+        openid,
         nickName,
         avatarUrl,
         gender,
