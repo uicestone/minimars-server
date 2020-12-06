@@ -6,7 +6,7 @@ import HttpError from "../utils/HttpError";
 import { utils } from "@sigodenjs/wechatpay";
 import { signToken } from "../utils/helper";
 import Payment from "../models/Payment";
-import Card, { CardStatus, userVisibleCardStatus } from "../models/Card";
+import Card from "../models/Card";
 import Booking from "../models/Booking";
 
 export default (router: Router) => {
@@ -20,11 +20,13 @@ export default (router: Router) => {
       console.log("[WEC] Wechat login user data:", JSON.stringify(userData));
 
       const { openid, session_key, unionid } = userData;
-      const user = await User.findOneAndUpdate(
-        { openid },
-        { unionid },
-        { upsert: true, new: true }
-      );
+      let user = await User.findOne({ openid });
+      if (user) {
+        user.set({ unionid });
+        await user.save();
+      } else {
+        user = await User.create({ openid, unionid });
+      }
 
       console.log(`[WEC] Wechat login ${user.id}, session_key: ${session_key}`);
 
@@ -55,22 +57,25 @@ export default (router: Router) => {
         gender,
         city,
         province,
-        country
+        country,
+        unionid
       } = userData;
 
-      const user = await User.findOneAndUpdate(
-        { openid },
-        {
-          openid,
-          name: nickName,
-          gender,
-          avatarUrl,
-          region: `${country} ${province} ${city}`
-        },
-        { upsert: true, new: true }
-      );
-
-      await user.save();
+      let user = await User.findOne({ openid });
+      const userInfo = {
+        openid,
+        unionid,
+        name: nickName,
+        gender,
+        avatarUrl,
+        region: `${country} ${province} ${city}`
+      };
+      if (user) {
+        user.set(userInfo);
+        await user.save();
+      } else {
+        user = await User.create(userInfo);
+      }
 
       res.json({
         user,
