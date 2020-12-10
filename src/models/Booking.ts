@@ -516,7 +516,7 @@ export class Booking {
           if (cardType.end) {
             card.expiresAt = moment(cardType.end).endOf("day").toDate();
           } else if (cardType.expiresInDays !== undefined) {
-            card.expiresAt = moment(card.start)
+            card.expiresAt = moment(card.start || undefined)
               .add(cardType.expiresInDays, "days")
               // .subtract(1, "day")
               .endOf("day")
