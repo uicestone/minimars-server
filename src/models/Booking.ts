@@ -513,14 +513,14 @@ export class Booking {
             card.timesLeft = cardType.times;
           }
 
-          if (cardType.expiresInDays && !cardType.end) {
+          if (cardType.end) {
+            card.expiresAt = moment(cardType.end).endOf("day").toDate();
+          } else if (cardType.expiresInDays !== undefined) {
             card.expiresAt = moment(card.start)
               .add(cardType.expiresInDays, "days")
               // .subtract(1, "day")
               .endOf("day")
               .toDate();
-          } else if (cardType.end) {
-            card.expiresAt = cardType.end;
           }
 
           card.status = CardStatus.ACTIVATED;
