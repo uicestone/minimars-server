@@ -51,7 +51,7 @@ export default (router: Router) => {
 
       const userData = oAuth.decrypt(encryptedData, session_key, iv);
       const {
-        openid,
+        openId: openid,
         nickName,
         avatarUrl,
         gender,
@@ -60,6 +60,10 @@ export default (router: Router) => {
         country,
         unionid
       } = userData;
+
+      if (!openid) {
+        throw new HttpError(400, "微信登录失败，未获取到openId");
+      }
 
       let user = await User.findOne({ openid });
       const userInfo = {
