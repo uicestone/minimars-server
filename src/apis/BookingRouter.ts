@@ -23,7 +23,7 @@ import {
 } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId, isOffDay } from "../utils/helper";
-import cardModel from "../models/Card";
+import cardModel, { CardStatus } from "../models/Card";
 
 setTimeout(async () => {
   // const u = await User.findOne({ name: "陆秋石" });
@@ -449,8 +449,19 @@ export default router => {
           } else if (req.user.role === "manager") {
             booking.statusWas = booking.status;
             booking.status = BookingStatus.PENDING_REFUND;
+            await cardModel.updateMany(
+              { rewardedFromBooking: booking, status: CardStatus.ACTIVATED },
+              { status: CardStatus.PENDING }
+            );
           } else {
             try {
+              await cardModel.updateMany(
+                {
+                  rewardedFromBooking: booking,
+                  status: { $in: [CardStatus.ACTIVATED, CardStatus.PENDING] }
+                },
+                { status: CardStatus.CANCELED }
+              );
               await booking.cancel(false);
             } catch (e) {
               if (
@@ -472,6 +483,18 @@ export default router => {
               )} 取消申请通过，已发起退款，微信支付将在1-7天内原路退回。*小程序端可见*`;
             }
           }
+        }
+
+        if (
+          statusWas === BookingStatus.PENDING_REFUND &&
+          booking.status === booking.statusWas
+        ) {
+          // admin reject cancel booking
+          // recover pending rewarded cards now
+          await cardModel.updateMany(
+            { rewardedFromBooking: booking, status: CardStatus.PENDING },
+            { status: CardStatus.ACTIVATED }
+          );
         }
 
         if (

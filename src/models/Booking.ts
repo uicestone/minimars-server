@@ -524,6 +524,7 @@ export class Booking {
           }
 
           card.status = CardStatus.ACTIVATED;
+          card.rewardedFromBooking = this;
 
           await card.save();
           console.log(

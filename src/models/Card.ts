@@ -8,12 +8,11 @@ import {
 } from "@typegoose/typegoose";
 import { sign } from "jsonwebtoken";
 import updateTimes from "./plugins/updateTimes";
+import { Booking } from "./Booking";
 import { User } from "./User";
 import { Store } from "./Store";
 import paymentModel, { PaymentGateway, Payment } from "./Payment";
 import autoPopulate from "./plugins/autoPopulate";
-import cardTypeModel from "./CardType";
-import moment from "moment";
 
 const { DEBUG } = process.env;
 
@@ -170,6 +169,9 @@ export class Card {
 
   @prop()
   rewardCardTypes?: string;
+
+  @prop({ ref: "Booking" })
+  rewardedFromBooking?: Ref<Booking>;
 
   get giftCode(): string | undefined {
     const card = (this as unknown) as DocumentType<Card>;
