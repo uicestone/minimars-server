@@ -12,14 +12,6 @@ module.exports = {
     }
   },
   deploy: {
-    production: {
-      user: "www-data",
-      host: ["s.mini-mars.com"],
-      ref: "origin/master",
-      repo: "https://github.com/uicestone/minimars-server",
-      path: "/var/www/minimars-server",
-      "post-deploy": "yarn && pm2 startOrRestart ecosystem.config.js"
-    },
     testing: {
       user: "www-data",
       host: ["stirad.com"],
@@ -27,7 +19,7 @@ module.exports = {
       repo: "https://github.com/uicestone/minimars-server",
       path: "/var/www/minimars-server",
       "post-deploy":
-        "yarn && yarn build && rm -r dist && pm2 startOrRestart ecosystem.config.js"
+        "yarn && yarn build && pm2 startOrRestart ecosystem.config.js"
     }
   }
 };
