@@ -52,13 +52,13 @@ export default (router: Router) => {
       const userData = oAuth.decrypt(encryptedData, session_key, iv);
       const {
         openId: openid,
+        unionId: unionid,
         nickName,
         avatarUrl,
         gender,
         city,
         province,
-        country,
-        unionid
+        country
       } = userData;
 
       if (!openid) {
@@ -111,9 +111,10 @@ export default (router: Router) => {
       const openIdUser = await User.findOne({ openid });
       if (oldCustomer && oldCustomer.id !== openIdUser.id) {
         console.log(`[WEC] Merge user ${openIdUser.id} to ${oldCustomer.id}.`);
-        const { openid, avatarUrl, gender, region } = openIdUser;
+        const { openid, unionid, avatarUrl, gender, region } = openIdUser;
         oldCustomer.set({
           openid,
+          unionid,
           avatarUrl,
           gender,
           region,
