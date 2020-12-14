@@ -4,8 +4,6 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import User, { User as IUser } from "../models/User";
 import { hashPwd, isValidHexObjectId } from "../utils/helper";
-import { config } from "../models/Config";
-import Payment, { PaymentGateway } from "../models/Payment";
 import idCard from "idcard";
 import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
@@ -140,56 +138,6 @@ export default router => {
         });
 
         let total = await query.countDocuments();
-        const [
-          { totalBalance, totalBalanceDeposit } = {
-            totalBalance: 0,
-            totalBalanceDeposit: 0
-          }
-        ] = await User.aggregate([
-          //@ts-ignore
-          { $match: query._conditions },
-          {
-            $group: {
-              _id: null,
-              totalBalanceDeposit: {
-                $sum: "$balanceDeposit"
-              },
-              totalBalanceReward: {
-                $sum: "$balanceReward"
-              }
-            }
-          },
-          {
-            $project: {
-              _id: false,
-              totalBalanceDeposit: true,
-              totalBalance: {
-                $sum: ["$totalBalanceDeposit", "$totalBalanceReward"]
-              }
-            }
-          }
-        ]);
-
-        const [
-          { totalValidCardBalance, totalValidCardBalanceDeposit } = {
-            totalValidCardBalance: 0,
-            totalValidCardBalanceDeposit: 0
-          }
-        ] = await Card.aggregate([
-          //@ts-ignore
-          { $match: { status: CardStatus.VALID } },
-          {
-            $group: {
-              _id: null,
-              totalValidCardBalanceDeposit: {
-                $sum: "$price"
-              },
-              totalValidCardBalance: {
-                $sum: "$balance"
-              }
-            }
-          }
-        ]);
 
         if (queryParams.keyword) {
           // @ts-ignore
@@ -206,14 +154,6 @@ export default router => {
         if (skip + page.length > total) {
           total = skip + page.length;
         }
-
-        res.set("total-balance", Math.round(totalBalance));
-        res.set("total-balance-deposit", Math.round(totalBalanceDeposit));
-        res.set("total-valid-card-balance", Math.round(totalValidCardBalance));
-        res.set(
-          "total-valid-card-balance-deposit",
-          Math.round(totalValidCardBalanceDeposit)
-        );
 
         res.paginatify(limit, skip, total).json(page);
       })

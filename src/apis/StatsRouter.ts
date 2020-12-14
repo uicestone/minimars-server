@@ -1,12 +1,122 @@
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import moment from "moment";
 import getStats from "../utils/getStats";
-import XlsxPopulate from "xlsx-populate";
+import User from "../models/User";
+import Card, { CardStatus } from "../models/Card";
+import Store from "../models/Store";
 
 moment.locale("zh-cn");
 
 export default router => {
-  // Store CURD
+  router.route("/stats/user-balance").get(
+    handleAsyncErrors(async (req, res) => {
+      const [
+        { totalBalance, totalBalanceDeposit } = {
+          totalBalance: 0,
+          totalBalanceDeposit: 0
+        }
+      ] = await User.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalBalanceDeposit: {
+              $sum: "$balanceDeposit"
+            },
+            totalBalanceReward: {
+              $sum: "$balanceReward"
+            }
+          }
+        },
+        {
+          $project: {
+            _id: false,
+            totalBalanceDeposit: true,
+            totalBalance: {
+              $sum: ["$totalBalanceDeposit", "$totalBalanceReward"]
+            }
+          }
+        }
+      ]);
+
+      const [
+        { totalValidCardBalance, totalValidCardBalanceDeposit } = {
+          totalValidCardBalance: 0,
+          totalValidCardBalanceDeposit: 0
+        }
+      ] = await Card.aggregate([
+        { $match: { status: CardStatus.VALID } },
+        {
+          $group: {
+            _id: null,
+            totalValidCardBalanceDeposit: {
+              $sum: "$price"
+            },
+            totalValidCardBalance: {
+              $sum: "$balance"
+            }
+          }
+        }
+      ]);
+
+      res.json({
+        totalBalance,
+        totalBalanceDeposit,
+        totalValidCardBalance,
+        totalValidCardBalanceDeposit
+      });
+    })
+  );
+
+  router.route("/stats/times-card").get(
+    handleAsyncErrors(async (req, res) => {
+      const totalTimesCardByStore: {
+        _id: string[];
+        times: number;
+        priceLeft: number;
+      }[] = await Card.aggregate([
+        {
+          $match: {
+            timesLeft: { $gt: 0 },
+            type: "times",
+            expiresAt: { $gte: new Date() }
+          }
+        },
+        {
+          $group: {
+            _id: "$stores",
+            times: { $sum: "$timesLeft" },
+            priceLeft: {
+              $sum: {
+                $multiply: [{ $divide: ["$timesLeft", "$times"] }, "$price"]
+              }
+            }
+          }
+        }
+      ]);
+
+      const stores = await Store.find();
+
+      const result = totalTimesCardByStore
+        .sort((a, b) => {
+          return JSON.stringify(a._id) > JSON.stringify(b._id) ? 1 : -1;
+        })
+        .map(storeGroup => {
+          const storeNames =
+            stores
+              .filter(s => storeGroup._id.map(i => i.toString()).includes(s.id))
+              .map(s => s.name)
+              .join("，") || "通用";
+          return {
+            storeNames,
+            times: storeGroup.times,
+            priceLeft: storeGroup.priceLeft
+          };
+        });
+
+      res.json(result);
+    })
+  );
+
   router.route("/stats/:date?").get(
     handleAsyncErrors(async (req, res) => {
       const dateInput = req.params.date;
@@ -16,40 +126,6 @@ export default router => {
         req.query.store || req.user.store
       );
       res.json(stats);
-    })
-  );
-
-  router.route("/daily-report/:date?").get(
-    handleAsyncErrors(async (req, res) => {
-      const dateInput = req.params.date;
-      const workbook = await XlsxPopulate.fromFileAsync(
-        "./reports/templates/daily.xlsx"
-      );
-      const date = moment(dateInput).format("YYYY-MM-DD");
-      const startOfMonth = moment(date).startOf("month").toDate();
-      const [year, month, day, dayOfWeek] = moment(date)
-        .format("YYYY MM DD dd")
-        .split(" ");
-      const stats = await getStats(date);
-      const statsM = await getStats(date, startOfMonth);
-      const data = {};
-      Object.keys(data).forEach(key => {
-        let replace = data[key];
-        if (typeof replace === "number") {
-          replace = +replace.toFixed(2);
-        }
-        if (replace === undefined || replace === null) {
-          replace = "";
-        }
-        workbook.find(`{{${key}}}`, replace);
-      });
-
-      const filename = `日报 ${date}.xlsx`;
-      const path = `./reports/${filename}`;
-
-      await workbook.toFileAsync(path);
-
-      res.download(path, filename);
     })
   );
 
