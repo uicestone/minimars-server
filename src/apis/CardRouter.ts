@@ -80,32 +80,11 @@ export default router => {
           throw new HttpError(404, `CardType '${body.slug}' not exists.`);
         }
 
-        const card = new Card({
-          customer: body.customer
-        });
-
-        if (cardType.stores) {
-          card.stores = cardType.stores.map(s => s.id);
-        }
-
-        Object.keys(cardType.toObject())
-          .filter(
-            key =>
-              !["_id", "__v", "createdAt", "updatedAt", "store"].includes(key)
-          )
-          .forEach(key => {
-            card.set(key, cardType[key]);
-          });
-
-        if (req.user.role === "customer") {
-          card.customer = req.user;
-        }
-
         if (cardType.maxPerCustomer) {
           const cardsOfSlug = await Card.find({
             slug: cardType.slug,
             status: { $in: userVisibleCardStatus },
-            customer: card.customer
+            customer
           });
           if (cardsOfSlug.length + 1 > cardType.maxPerCustomer) {
             throw new HttpError(400, "超过该会员卡限制购买数");
@@ -116,18 +95,7 @@ export default router => {
           throw new HttpError(400, "抱歉，该卡券已售罄");
         }
 
-        if (cardType.times) {
-          card.timesLeft = cardType.times;
-        }
-
-        if (cardType.end) {
-          card.expiresAt = moment(cardType.end).endOf("day").toDate();
-        } else if (cardType.expiresInDays !== undefined) {
-          card.expiresAt = moment(card.start || undefined)
-            .add(cardType.expiresInDays, "days")
-            .endOf("day")
-            .toDate();
-        }
+        const card = cardType.issue(customer);
 
         try {
           await card.createPayment({

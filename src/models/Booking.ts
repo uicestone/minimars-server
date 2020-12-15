@@ -11,7 +11,7 @@ import { config } from "../models/Config";
 import paymentModel, { Payment, PaymentGateway } from "./Payment";
 import { User } from "./User";
 import { Store } from "./Store";
-import cardModel, { Card, CardStatus } from "./Card";
+import { Card } from "./Card";
 import { Event } from "./Event";
 import { Gift } from "./Gift";
 import { Coupon } from "./Coupon";
@@ -484,7 +484,8 @@ export class Booking {
     }
 
     const rewardCardTypesString =
-      this.coupon?.rewardCardTypes || this.card?.rewardCardTypes;
+      this.coupon?.rewardCardTypes ||
+      (this.card.type !== "balance" && this.card?.rewardCardTypes);
 
     if (rewardCardTypesString) {
       const rewardCardTypes = await cardTypeModel.find({
@@ -492,38 +493,9 @@ export class Booking {
       });
       await Promise.all(
         rewardCardTypes.map(async cardType => {
-          const card = new cardModel({
-            customer: this.customer.id
-          });
+          const card = cardType.issue(this.customer);
 
-          if (cardType.stores) {
-            card.stores = cardType.stores.map(s => s.id);
-          }
-
-          Object.keys(cardType.toObject())
-            .filter(
-              key =>
-                !["_id", "__v", "createdAt", "updatedAt", "store"].includes(key)
-            )
-            .forEach(key => {
-              card.set(key, cardType[key]);
-            });
-
-          if (cardType.times) {
-            card.timesLeft = cardType.times;
-          }
-
-          if (cardType.end) {
-            card.expiresAt = moment(cardType.end).endOf("day").toDate();
-          } else if (cardType.expiresInDays !== undefined) {
-            card.expiresAt = moment(card.start || undefined)
-              .add(cardType.expiresInDays, "days")
-              // .subtract(1, "day")
-              .endOf("day")
-              .toDate();
-          }
-
-          card.status = CardStatus.ACTIVATED;
+          card.paymentSuccess();
           card.rewardedFromBooking = this;
 
           await card.save();

@@ -25,26 +25,6 @@ import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId, isOffDay } from "../utils/helper";
 import cardModel, { CardStatus } from "../models/Card";
 
-setTimeout(async () => {
-  // const u = await User.findOne({ name: "陆秋石" });
-  // const s = await Store.findOne();
-  // const b = new Booking({
-  //   customer: u,
-  //   store: s,
-  //   checkInAt: moment().format("HH:mm:ss"),
-  //   date: "2020-03-28",
-  //   type: "play"
-  // });
-  // const p = new Payment({
-  //   customer: u,
-  //   amount: 999,
-  //   gateway: PaymentGateway.Cash
-  // });
-  // await p.save();
-  // b.payments.push(p);
-  // b.save();
-}, 500);
-
 export default router => {
   // Booking CURD
   router

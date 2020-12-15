@@ -9,6 +9,9 @@ import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
+import { User } from "./User";
+import cardModel from "./Card";
+import moment from "moment";
 
 @plugin(updateTimes)
 @plugin(autoPopulate, [{ path: "stores", select: "-content" }])
@@ -116,6 +119,39 @@ export class CardType {
 
   @prop()
   rewardCardTypes?: string;
+
+  issue(this: DocumentType<CardType>, customer: DocumentType<User>) {
+    const card = new cardModel({
+      customer: customer.id
+    });
+
+    if (this.stores) {
+      card.stores = this.stores.map(s => s.id);
+    }
+
+    Object.keys(this.toObject())
+      .filter(
+        key => !["_id", "__v", "createdAt", "updatedAt", "store"].includes(key)
+      )
+      .forEach(key => {
+        card.set(key, this[key]);
+      });
+
+    if (this.times) {
+      card.timesLeft = this.times;
+    }
+
+    if (this.end) {
+      card.expiresAt = moment(this.end).endOf("day").toDate();
+    } else if (this.expiresInDays !== undefined) {
+      card.expiresAt = moment(card.start || undefined)
+        .add(this.expiresInDays, "days")
+        .endOf("day")
+        .toDate();
+    }
+
+    return card;
+  }
 }
 
 const cardTypeModel = getModelForClass(CardType, {

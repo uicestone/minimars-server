@@ -3,7 +3,7 @@ import moment from "moment";
 import axios from "axios";
 import Booking, { BookingStatus } from "../models/Booking";
 import { MongoClient } from "mongodb";
-import Card, { CardStatus } from "../models/Card";
+import cardModel, { Card, CardStatus } from "../models/Card";
 import Gift from "../models/Gift";
 import CardType from "../models/CardType";
 import Event from "../models/Event";
@@ -11,12 +11,13 @@ import Post from "../models/Post";
 import Store from "../models/Store";
 import { saveContentImages } from "./helper";
 import importPrevData from "./importPrevData";
-import User from "../models/User";
+import userModel, { User } from "../models/User";
 import configModel, { Config } from "../models/Config";
-import paymentModel, { Payment, PaymentGateway } from "../models/Payment";
+import paymentModel, { PaymentGateway } from "../models/Payment";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
-import userModel from "../models/User";
 import { queryTickets } from "./pospal";
+import cardTypeModel from "../models/CardType";
+import { DocumentType } from "@typegoose/typegoose";
 
 let agenda: Agenda;
 
@@ -88,7 +89,7 @@ export const initAgenda = async () => {
   });
 
   agenda.define("cancel expired pending cards", async (job, done) => {
-    const cards = await Card.find({
+    const cards = await cardModel.find({
       status: CardStatus.PENDING,
       createdAt: {
         $lt: moment().subtract(2, "hours").toDate()
@@ -114,7 +115,7 @@ export const initAgenda = async () => {
   });
 
   agenda.define("create indexes", async (job, done) => {
-    User.createIndexes();
+    userModel.createIndexes();
     console.log("[CRO] Index created.");
     done();
   });
@@ -140,11 +141,67 @@ export const initAgenda = async () => {
 
   agenda.define("set expired cards", async (job, done) => {
     console.log(`[CRO] Set expired cards...`);
-    await Card.updateMany(
+    await cardModel.updateMany(
       { type: { $in: ["coupon", "period"] }, expiresAt: { $lt: new Date() } },
       { $set: { status: CardStatus.EXPIRED } }
     );
     console.log(`[CRO] Finished setting expired cards.`);
+    done();
+  });
+
+  agenda.define("check balance reward cards", async (job, done) => {
+    console.log(`[CRO] Check balance reward cards...`);
+    const cards = await cardModel.find({
+      status: { $in: [CardStatus.ACTIVATED, CardStatus.VALID] }
+    });
+    const users = await userModel.find({
+      _id: { $in: cards.map(c => c.customer) }
+    });
+    const userMap: Map<
+      string,
+      DocumentType<User> & { cards: DocumentType<Card>[] }
+    > = new Map();
+    users.forEach(u => {
+      userMap.set(u.id, Object.assign(u, { cards: [] }));
+    });
+    cards.forEach(c => {
+      const u = userMap.get(c.customer.toString());
+      if (!u) return;
+      u.cards.push(c);
+    });
+    const cardTypes = await cardTypeModel.find({
+      rewardCardTypes: { $exists: true },
+      type: "balance"
+    });
+    for (const cardType of cardTypes) {
+      const rewardCardTypes = await cardTypeModel.find({
+        slug: cardType.rewardCardTypes.split(" ")
+      });
+
+      for (const [, user] of userMap) {
+        const shouldRewardCount = user.cards.filter(
+          c => c.slug === cardType.slug
+        ).length;
+        for (const rewardCardType of rewardCardTypes) {
+          const fixRewardCount =
+            shouldRewardCount -
+            user.cards.filter(c => c.slug === rewardCardType.slug).length;
+          for (let i = 0; i < fixRewardCount; i++) {
+            console.log(
+              `[CRO] User ${user.id} missing reward ${rewardCardType.slug} from ${cardType.slug}`
+            );
+            const rewardedCard = rewardCardType.issue(user);
+            rewardedCard.paymentSuccess();
+            try {
+              await rewardedCard.save();
+            } catch (e) {
+              console.error(e.message);
+            }
+          }
+        }
+      }
+    }
+    console.log(`[CRO] Finished check balance reward cards.`);
     done();
   });
 
@@ -188,7 +245,7 @@ export const initAgenda = async () => {
   agenda.define("verify user balance", async (job, done) => {
     console.log(`[CRO] Verify user balance...`);
     const userBalanceMap: Record<string, number> = {};
-    const balanceCards = await Card.find({
+    const balanceCards = await cardModel.find({
       type: "balance",
       status: CardStatus.ACTIVATED
     });
@@ -205,7 +262,7 @@ export const initAgenda = async () => {
       userBalanceMap[p.customer.id] =
         (userBalanceMap[p.customer.id] || 0) - p.amount;
     });
-    const users = await User.find({
+    const users = await userModel.find({
       _id: { $in: Object.keys(userBalanceMap) }
     });
     users.forEach(u => {
@@ -278,10 +335,9 @@ export const initAgenda = async () => {
     agenda.every("1 hour", "cancel expired pending cards");
     agenda.every("1 day", "finish in_service bookings");
     agenda.every("1 day", "update holidays");
-    agenda.every("0 0 * * *", "set expired cards"); // run everyday at 0:00am
+    agenda.every("0 0 * * *", "set expired cards"); // run everyday at 0am
     agenda.every("1 day", "get wechat mp users");
-    // agenda.now("create indexes");
-    // agenda.now("query pospal tickets");
+    agenda.every("0 20 * * *", "check balance reward cards"); // run everyday at 8pm
   });
 
   agenda.on("error", err => {
