@@ -125,7 +125,6 @@ export default router => {
         } else if (cardType.expiresInDays !== undefined) {
           card.expiresAt = moment(card.start || undefined)
             .add(cardType.expiresInDays, "days")
-            // .subtract(1, "day")
             .endOf("day")
             .toDate();
         }
@@ -155,6 +154,33 @@ export default router => {
           await cardTypeModel.updateOne(
             { _id: cardType.id },
             { $inc: { quantity: -1 } }
+          );
+        }
+
+        if (card.type === "times") {
+          const expiredTimesCards = await Card.find({
+            customer: card.customer,
+            stores: { $all: card.stores },
+            timesLeft: { $gt: 0 },
+            expiresAt: { $lt: card.expiresAt },
+            end: null
+          });
+          await Promise.all(
+            expiredTimesCards.map(ec => {
+              ec.expiresAtWas = ec.expiresAt;
+              ec.expiresAt = card.expiresAt;
+              ec.status = CardStatus.ACTIVATED;
+              console.log(
+                `[CRD] Customer ${
+                  ec.customer
+                } expired times card extends from ${moment(
+                  ec.expiresAtWas
+                ).format("YYYY-MM-DD HH:mm:ss")} to ${moment(
+                  card.expiresAt
+                ).format("YYYY-MM-DD HH:mm:ss")}.`
+              );
+              return ec.save();
+            })
           );
         }
 
