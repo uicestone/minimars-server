@@ -90,11 +90,15 @@ export async function getQrcode(
   output = "qrcode.jpg"
 ): Promise<void> {
   const data = await request(
-    true,
+    false,
     "wxaapp/createwxaqrcode",
     { path, width: 1280 },
     { responseType: "arraybuffer" }
   );
+  if (data.errcode) {
+    console.error(`[WEC] ${data.errcode} ${data.errmsg}.`);
+    return;
+  }
   const fileName = `${process.cwd()}/${output}`;
   console.log(fileName);
   fs.writeFileSync(fileName, data);
