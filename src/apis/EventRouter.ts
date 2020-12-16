@@ -137,7 +137,7 @@ export default router => {
           throw new HttpError(403);
         }
         const event = req.item as DocumentType<IEvent>;
-        const bookingCount = await Booking.count({ event: event.id });
+        const bookingCount = await Booking.countDocuments({ event: event.id });
 
         if (bookingCount > 0) {
           throw new HttpError(400, "已经存在报名记录，不能删除");

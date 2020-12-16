@@ -268,7 +268,7 @@ export default router => {
         if (card.times !== card.timesLeft) {
           throw new HttpError(400, "次卡已使用，请撤销使用订单后再删除卡");
         }
-        const usedCount = await bookingModel.count({
+        const usedCount = await bookingModel.countDocuments({
           card: card.id,
           status: { $in: paidBookingStatus }
         });

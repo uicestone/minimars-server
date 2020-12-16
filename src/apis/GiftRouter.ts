@@ -117,7 +117,7 @@ export default router => {
           throw new HttpError(403);
         }
         const gift = req.item as DocumentType<IGift>;
-        const bookingCount = await Booking.count({ gift: gift.id });
+        const bookingCount = await Booking.countDocuments({ gift: gift.id });
 
         if (bookingCount > 0) {
           throw new HttpError(400, "已经存在兑换记录，不能删除");
