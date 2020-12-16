@@ -485,7 +485,7 @@ export class Booking {
 
     const rewardCardTypesString =
       this.coupon?.rewardCardTypes ||
-      (this.card.type !== "balance" && this.card?.rewardCardTypes);
+      (this.card?.type !== "balance" && this.card?.rewardCardTypes);
 
     if (rewardCardTypesString) {
       const rewardCardTypes = await cardTypeModel.find({
