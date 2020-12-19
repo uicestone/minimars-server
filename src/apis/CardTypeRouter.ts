@@ -56,6 +56,10 @@ export default router => {
           });
         }
 
+        if (queryParams.title) {
+          query.where({ title: new RegExp(queryParams.title) });
+        }
+
         [
           "couponSlug",
           "slug",
