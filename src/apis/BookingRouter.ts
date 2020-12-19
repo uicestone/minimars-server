@@ -216,7 +216,7 @@ export default router => {
 
         if (booking.type === BookingType.FOOD && !booking.price) {
           const card = await cardModel.findById(booking.card);
-          if ([undefined, null].includes(card.fixedPrice)) {
+          if (card && [undefined, null].includes(card.fixedPrice)) {
             throw new HttpError(400, "请填写收款金额");
           }
         }
