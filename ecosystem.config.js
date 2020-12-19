@@ -4,7 +4,8 @@ module.exports = {
     // script: "./node_modules/.bin/ts-node",
     // args: "src/index.ts",
     script: "./dist/index.js",
-    watch: "./package.json",
+    watch: "./dist",
+    watch_delay: 30000,
     log_date_format: "YYYY-MM-DD HH:mm:ss.SSS (ZZ)",
     log: true,
     env: {
