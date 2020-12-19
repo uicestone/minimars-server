@@ -663,6 +663,7 @@ export class Booking {
       }
     } else {
       booking.status = BookingStatus.CANCELED;
+      booking.refundSuccess();
     }
 
     console.log(`[BOK] Cancel booking ${booking._id}.`);
