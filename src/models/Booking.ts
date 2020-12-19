@@ -437,7 +437,7 @@ export class Booking {
     } else if ([BookingType.GIFT, BookingType.EVENT].includes(this.type)) {
       this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
-      this.status = BookingStatus.IN_SERVICE;
+      await this.checkIn(false);
     } else {
       this.status = BookingStatus.BOOKED;
     }
@@ -481,30 +481,6 @@ export class Booking {
         this.customer.tags.push(this.gift.tagCustomer);
         await this.customer.save();
       }
-    }
-
-    const rewardCardTypesString =
-      this.coupon?.rewardCardTypes ||
-      (this.card?.type !== "balance" && this.card?.rewardCardTypes);
-
-    if (rewardCardTypesString) {
-      const rewardCardTypes = await cardTypeModel.find({
-        slug: { $in: rewardCardTypesString.split(" ") }
-      });
-      await Promise.all(
-        rewardCardTypes.map(async cardType => {
-          const card = cardType.issue(this.customer);
-
-          card.paymentSuccess();
-          card.rewardedFromBooking = this;
-
-          await card.save();
-          console.log(
-            `[CRD] Rewarded card ${card.slug} to customer ${this.customer.id}.`
-          );
-          return card;
-        })
-      );
     }
 
     console.log(`[PAY] Booking payment success: ${this.id}.`);
@@ -633,7 +609,34 @@ export class Booking {
       await booking.save();
     }
     console.log(`[BOK] Booking ${booking.id} checked in.`);
-    await booking.populate("card").execPopulate();
+    if (!booking.populated("card")) {
+      await booking.populate("card").execPopulate();
+    }
+
+    const rewardCardTypesString =
+      this.coupon?.rewardCardTypes ||
+      (this.card?.type !== "balance" && this.card?.rewardCardTypes);
+
+    if (rewardCardTypesString) {
+      const rewardCardTypes = await cardTypeModel.find({
+        slug: { $in: rewardCardTypesString.split(" ") }
+      });
+      await Promise.all(
+        rewardCardTypes.map(async cardType => {
+          const card = cardType.issue(this.customer);
+
+          card.paymentSuccess();
+          card.rewardedFromBooking = this;
+
+          await card.save();
+          console.log(
+            `[CRD] Rewarded card ${card.slug} to customer ${this.customer.id}.`
+          );
+          return card;
+        })
+      );
+    }
+
     if (booking.card?.type === "times") {
       sendTemplateMessage(booking.customer, "writeoff", [
         "您的次卡已成功核销",
