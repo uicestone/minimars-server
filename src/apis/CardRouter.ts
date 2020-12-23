@@ -245,13 +245,25 @@ export default router => {
     .put(
       handleAsyncErrors(async (req, res) => {
         const card = req.item as DocumentType<ICard>;
+        const body = req.body as CardPutBody;
 
-        if (req.body.expiresAt) {
+        const statusWas = card.status;
+        card.set(body);
+
+        if (body.expiresAt && req.user.role === "admin") {
+          // extend card expire time
           card.expiresAtWas = card.expiresAt;
-          req.body.expiresAt = moment(req.body.expiresAt).endOf("day");
+          card.expiresAt = moment(card.expiresAt).endOf("day").toDate();
         }
 
-        card.set(req.body as CardPutBody);
+        if (
+          body.status === CardStatus.CANCELED &&
+          statusWas !== CardStatus.CANCELED &&
+          req.user.role === "admin"
+        ) {
+          card.status = statusWas;
+          await card.refund();
+        }
 
         await card.save();
         res.json(card);
@@ -275,13 +287,13 @@ export default router => {
         if (usedCount) {
           throw new HttpError(400, "该卡已使用，请撤销订单后再删除卡");
         }
-        if (card.type === "balance") {
+        if (card.type === "balance" && card.status === CardStatus.ACTIVATED) {
           const customer = await userModel.findById(card.customer);
           if (
             customer.balanceDeposit < card.price ||
             customer.balanceReward < card.balanceReward
           ) {
-            throw new HttpError(400, "用户余额已不足以撤销本储值卡");
+            throw new HttpError(400, "用户余额已不足以删除本储值卡");
           }
           customer.balanceDeposit -= card.price;
           customer.balanceReward -= card.balanceReward;

@@ -9,10 +9,11 @@ import {
 import { sign } from "jsonwebtoken";
 import updateTimes from "./plugins/updateTimes";
 import { Booking } from "./Booking";
-import { User } from "./User";
+import userModel, { User } from "./User";
 import { Store } from "./Store";
 import paymentModel, { PaymentGateway, Payment } from "./Payment";
 import autoPopulate from "./plugins/autoPopulate";
+import HttpError from "../utils/HttpError";
 
 const { DEBUG } = process.env;
 
@@ -226,6 +227,79 @@ export class Card {
     this.status = this.isGift ? CardStatus.VALID : CardStatus.ACTIVATED;
     console.log(`[CRD] Card ${this.id} payment success.`);
     // send user notification
+  }
+
+  async createRefundPayment(this: DocumentType<Card>) {
+    const card = this;
+
+    // repopulate payments with customers
+    await card.populate("payments").execPopulate();
+
+    const extraPayments = card.payments.filter(
+      (p: DocumentType<Payment>) =>
+        ![PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
+        p.amount > 0 &&
+        p.paid
+    );
+
+    await Promise.all(
+      extraPayments.map(async (p: DocumentType<Payment>) => {
+        const refundPayment = new paymentModel({
+          customer: p.customer,
+          store: p.store,
+          amount: -p.amount,
+          title: `退款：${p.title}`,
+          attach: p.attach,
+          gateway: p.gateway,
+          original: p.id
+        });
+        await refundPayment.save();
+        card.payments.push(refundPayment);
+      })
+    );
+
+    this.refundSuccess();
+  }
+
+  async refundSuccess(this: DocumentType<Card>) {
+    this.status = CardStatus.CANCELED;
+    // send user notification
+  }
+
+  async refund(this: DocumentType<Card>, save = true) {
+    console.log("refund", this.type, this.status);
+    if (this.status === CardStatus.CANCELED) {
+      return;
+    }
+    if (this.type === "balance" && this.status === CardStatus.ACTIVATED) {
+      const customer = await userModel.findById(this.customer);
+      if (
+        customer.balanceDeposit < this.price ||
+        customer.balanceReward < this.balanceReward
+      ) {
+        throw new HttpError(400, "用户余额已不足以退款本储值卡");
+      }
+      customer.balanceDeposit -= this.price;
+      customer.balanceReward -= this.balanceReward;
+      await customer.save();
+    }
+
+    if (this.payments.filter(p => p.paid).length) {
+      console.log(`[CRD] Refund this ${this._id}.`);
+      // we don't directly change status to canceled, will auto change on refund fullfil
+      await this.createRefundPayment();
+      if (!this.payments.filter(p => p.amount < 0).some(p => !p.paid)) {
+        this.refundSuccess();
+      }
+    } else {
+      this.refundSuccess();
+    }
+
+    console.log(`[CRD] Refund card ${this.id}.`);
+
+    if (save) {
+      await this.save();
+    }
   }
 }
 
