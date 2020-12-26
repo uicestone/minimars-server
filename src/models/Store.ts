@@ -32,6 +32,7 @@ class DailyLimit {
 
 class Door {
   ip: string;
+  name: string;
 }
 
 @plugin(updateTimes)

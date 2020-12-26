@@ -18,11 +18,13 @@ export default function handleSocketData(
       if (matchStore && matchStore[1]) {
         client.store = await storeModel.findById(matchStore[1]);
         console.log(`[SOK] Identified store ${client.store.name}.`);
-        // storeGateControllers[client.store.id] = new JxCtl(
-        //   socket,
-        //   "192.168.3.250"
-        // );
-        // storeGateControllers[client.store.id].openDoor(1);
+        client.store.ip = socket.remoteAddress;
+        client.store.save();
+        storeGateControllers[client.store.id] = new JxCtl(
+          socket,
+          client.store.doors[0].ip
+        );
+        storeGateControllers[client.store.id].init();
       }
     }
   };
