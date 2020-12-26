@@ -9,7 +9,8 @@ export default function handleSocketData(
 ) {
   return async (data: Buffer | string) => {
     console.log(
-      `[SOK] Got data from ${socket.remoteAddress}:${socket.remotePort}`
+      `[SOK] Got data from ${socket.remoteAddress}:${socket.remotePort}`,
+      data
     );
     if (data.slice(-2).toString() === "\r\n") {
       const str = data.slice(0, -2).toString();
