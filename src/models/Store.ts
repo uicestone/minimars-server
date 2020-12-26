@@ -31,7 +31,9 @@ class DailyLimit {
 }
 
 class Door {
+  @prop()
   ip: string;
+  @prop()
   name: string;
 }
 
