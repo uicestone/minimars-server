@@ -1968,10 +1968,10 @@ isstream@~0.1.2:
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
   integrity sha1-R+Y/evVa+m+S4VAOaQ64uFKcCZo=
 
-jingxing-doors@^0.4.6:
-  version "0.4.6"
-  resolved "https://registry.yarnpkg.com/jingxing-doors/-/jingxing-doors-0.4.6.tgz#922ff42e4e4f29be0e5f9d32a72d31ca6591f81a"
-  integrity sha512-Chy8SbRTkB1V+MWgXBOd0vesVbRJSS9SgApqPdG+TaNXcXAoumfYuSKuaXkrgK3gSNHokAqzZ0RC1DQAnMODyw==
+jingxing-doors@^0.4.7:
+  version "0.4.7"
+  resolved "https://registry.yarnpkg.com/jingxing-doors/-/jingxing-doors-0.4.7.tgz#9de7d6b49f28dba13f519504e8ea2085eddd93ec"
+  integrity sha512-IR46PVgin9CthbUp+zl1fZzgOST1P/zKKGC2qRhiTtbnlLS+Y0tRZKsL10/jB34RW9FlZOOBDJ3gi1gJsTGhkg==
   dependencies:
     "@types/crc" "^3.4.0"
     "@types/dotenv" "^6.1.1"
