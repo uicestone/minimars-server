@@ -35,7 +35,7 @@
     "express": "^4.16.4",
     "express-useragent": "^1.0.13",
     "idcard": "^4.1.0",
-    "jingxing-doors": "^0.4.3",
+    "jingxing-doors": "^0.4.6",
     "jsonwebtoken": "^8.5.1",
     "md5": "^2.3.0",
     "method-override": "^3.0.0",
