@@ -634,8 +634,9 @@ export class Booking {
       const rewardCardTypes = await CardTypeModel.find({
         slug: { $in: rewardCardTypesString.split(" ") }
       });
-      await Promise.all(
-        rewardCardTypes.map(async cardType => {
+
+      for (let n = 0; n < this.kidsCount; n++) {
+        for (const cardType of rewardCardTypes) {
           const card = cardType.issue(this.customer);
 
           card.paymentSuccess();
@@ -645,9 +646,8 @@ export class Booking {
           console.log(
             `[CRD] Rewarded card ${card.slug} to customer ${this.customer.id}.`
           );
-          return card;
-        })
-      );
+        }
+      }
     }
 
     if (booking.card?.type === "times") {
