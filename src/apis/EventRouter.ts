@@ -4,7 +4,7 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import Event, { Event as IEvent } from "../models/Event";
 import { EventPostBody, EventPutBody, EventQuery } from "./interfaces";
-import Booking, { liveBookingStatus } from "../models/Booking";
+import Booking, { validBookingStatus } from "../models/Booking";
 import { DocumentType } from "@typegoose/typegoose";
 import escapeStringRegexp from "escape-string-regexp";
 
@@ -113,7 +113,7 @@ export default router => {
           // re-calculate kidsCountLeft
           const eventBookings = await Booking.find({
             event,
-            status: { $in: liveBookingStatus }
+            status: { $in: validBookingStatus }
           });
           event.kidsCountLeft =
             event.kidsCountMax -

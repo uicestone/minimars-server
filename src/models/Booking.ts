@@ -55,6 +55,13 @@ export const paidBookingStatus = [
   BookingStatus.FINISHED
 ];
 
+export const validBookingStatus = [
+  BookingStatus.PENDING,
+  BookingStatus.BOOKED,
+  BookingStatus.IN_SERVICE,
+  BookingStatus.FINISHED
+];
+
 @plugin(autoPopulate, [
   { path: "customer", select: "name avatarUrl mobile tags" },
   { path: "store", select: "name" },
