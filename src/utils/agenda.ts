@@ -44,7 +44,7 @@ export const initAgenda = async () => {
     }
 
     for (const booking of bookings) {
-      await booking.cancel();
+      await booking.cancel(true);
     }
 
     done();
