@@ -7,12 +7,14 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import PaymentModel, {
   gatewayNames,
+  Payment,
   PaymentGateway,
   receptionGateways
 } from "../models/Payment";
 import StoreModel from "../models/Store";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
+import { DocumentType } from "@typegoose/typegoose";
 
 export default (router: Router) => {
   // Payment CURD
@@ -300,13 +302,13 @@ export default (router: Router) => {
 
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        const payment = req.item;
+        const payment = req.item as DocumentType<Payment>;
         const body = req.body as PaymentPutBody;
         let set: PaymentPutBody = {};
 
         if (
-          (req.user.role =
-            "manager" && receptionGateways.includes(payment.gateway))
+          (req.user.role = "manager") &&
+          receptionGateways.includes(payment.gateway)
         ) {
           ["paid", "gateway"].forEach(key => {
             if (body[key] !== undefined) {

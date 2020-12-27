@@ -1,3 +1,6 @@
+/// <reference types="../../node_modules/@types/express" />
+/// <reference types="./types/express-request-response" />
+
 import express from "express";
 import bodyParser from "body-parser";
 import SocketIo from "socket.io";

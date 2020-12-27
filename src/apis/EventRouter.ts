@@ -108,9 +108,9 @@ export default (router: Router) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const event = req.item;
+        const event = req.item as DocumentType<Event>;
         event.set(req.body as EventPutBody);
-        if (req.item.kidsCountMax) {
+        if (event.kidsCountMax) {
           // re-calculate kidsCountLeft
           const eventBookings = await BookingModel.find({
             event,

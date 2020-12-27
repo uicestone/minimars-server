@@ -41,8 +41,10 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         renameSync(
           req.file.path,
+          // @ts-ignore
           req.file.destination + req.file.hashedFullName
         );
+        // @ts-ignore
         const fileUriPrefix = "uploads/" + req.file.hashedFullName;
         const file = new FileModel();
         file.name = req.file.originalname;
