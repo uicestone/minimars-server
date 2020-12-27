@@ -8,7 +8,7 @@ import moment from "moment";
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { config } from "../models/Config";
-import paymentModel, { Payment, PaymentGateway } from "./Payment";
+import paymentModel, { Payment, PaymentGateway, Scene } from "./Payment";
 import { User } from "./User";
 import { Store } from "./Store";
 import { Card } from "./Card";
@@ -27,14 +27,6 @@ export enum BookingStatus {
   PENDING_REFUND = "pending_refund",
   FINISHED = "finished",
   CANCELED = "canceled"
-}
-
-export enum BookingType {
-  PLAY = "play",
-  PARTY = "party",
-  EVENT = "event",
-  GIFT = "gift",
-  FOOD = "food"
 }
 
 export const liveBookingStatus = [
@@ -80,8 +72,8 @@ export class Booking {
   @prop({ ref: "Store" })
   store: DocumentType<Store>;
 
-  @prop({ enum: Object.values(BookingType), required: true })
-  type: BookingType;
+  @prop({ enum: Object.values(Scene), required: true })
+  type: Scene;
 
   @prop({ required: true, index: true })
   date: string;
@@ -271,13 +263,13 @@ export class Booking {
     let attach = `booking ${booking._id}`;
     let title = "";
 
-    if (booking.type === BookingType.GIFT) {
+    if (booking.type === Scene.GIFT) {
       title = `${booking.gift.title} ${booking.quantity}份 ${
         booking.store?.name || "门店通用"
       } `;
-    } else if (booking.type === BookingType.EVENT) {
+    } else if (booking.type === Scene.EVENT) {
       title = `${booking.event.title} ${booking.kidsCount}人 ${booking.store.name} `;
-    } else if (booking.type === BookingType.FOOD) {
+    } else if (booking.type === Scene.FOOD) {
       title = `餐饮消费`;
     } else {
       title = `${booking.store.name} ${booking.adultsCount}大${
@@ -439,9 +431,9 @@ export class Booking {
 
   async paymentSuccess(this: DocumentType<Booking>, atReception = false) {
     // conditional change booking status
-    if (this.type === BookingType.FOOD) {
+    if (this.type === Scene.FOOD) {
       this.status = BookingStatus.FINISHED;
-    } else if ([BookingType.GIFT, BookingType.EVENT].includes(this.type)) {
+    } else if ([Scene.GIFT, Scene.EVENT].includes(this.type)) {
       this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
       await this.checkIn(false);
@@ -451,7 +443,7 @@ export class Booking {
 
     console.log(`[BOK] Auto set booking status ${this.status} for ${this.id}.`);
 
-    if (this.type === BookingType.EVENT) {
+    if (this.type === Scene.EVENT) {
       if (!this.populated("event")) {
         await this.populate({
           path: "event",
@@ -468,7 +460,7 @@ export class Booking {
         );
         await this.event.save();
       }
-    } else if (this.type === BookingType.GIFT) {
+    } else if (this.type === Scene.GIFT) {
       if (!this.populated("gift")) {
         await this.populate("gift").execPopulate();
       }
@@ -585,7 +577,7 @@ export class Booking {
 
   async refundSuccess(this: DocumentType<Booking>) {
     this.status = BookingStatus.CANCELED;
-    if (this.type === BookingType.EVENT) {
+    if (this.type === Scene.EVENT) {
       if (!this.populated("event")) {
         await this.populate({
           path: "event",
@@ -599,7 +591,7 @@ export class Booking {
         this.event.kidsCountLeft += this.kidsCount;
         await this.event.save();
       }
-    } else if (this.type === BookingType.GIFT) {
+    } else if (this.type === Scene.GIFT) {
       if (!this.populated("gift")) {
         await this.populate("gift").execPopulate();
       }
@@ -722,7 +714,7 @@ export class Booking {
     }
     if (limit !== null) {
       const bookings = await bookingModel.find({
-        type: BookingType.PLAY,
+        type: Scene.PLAY,
         store: this.store,
         date: this.date,
         status: { $in: paidBookingStatus },

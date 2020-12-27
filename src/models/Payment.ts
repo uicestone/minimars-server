@@ -23,6 +23,15 @@ import { Store } from "./Store";
 import moment from "moment";
 import HttpError from "../utils/HttpError";
 
+export enum Scene {
+  PLAY = "play",
+  PARTY = "party",
+  EVENT = "event",
+  GIFT = "gift",
+  FOOD = "food",
+  CARD = "card"
+}
+
 @pre("save", async function (next) {
   const payment = this as DocumentType<Payment>;
 
@@ -225,6 +234,9 @@ import HttpError from "../utils/HttpError";
 @plugin(updateTimes)
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Payment {
+  @prop({ enum: Object.values(Scene), required: true })
+  scene: Scene;
+
   @prop({ ref: "User", index: true })
   customer?: DocumentType<User>;
 

@@ -2,9 +2,9 @@ import { createConnection } from "mysql";
 import User from "../models/User";
 import Card, { CardStatus } from "../models/Card";
 import Store from "../models/Store";
-import Booking, { BookingType, BookingStatus } from "../models/Booking";
+import Booking, { BookingStatus } from "../models/Booking";
 import moment from "moment";
-import Payment, { PaymentGateway } from "../models/Payment";
+import Payment, { PaymentGateway, Scene } from "../models/Payment";
 import Coupon from "../models/Coupon";
 import escapeStringRegexp from "escape-string-regexp";
 
@@ -207,7 +207,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
     let user = userMobileMap.get(item.phone);
     if (!user) {
       user = new User({
-        childGender: item.childGender = "1" ? "男" : "女",
+        childGender: (item.childGender = "1" ? "男" : "女"),
         childName: item.childName,
         avatarUrl: item.headimg,
         name: item.name,
@@ -334,7 +334,7 @@ export default async (database: "mmts" | "mmjn", storeKey: "静安" | "长宁") 
     const booking = new Booking({
       customer,
       store,
-      type: BookingType.PLAY,
+      type: Scene.PLAY,
       date: moment(item.enterTime).format("YYYY-MM-DD"),
       checkInAt: moment(item.enterTime).format("HH:mm:ss"),
       adultsCount: +item.enterPeople - item.cost,

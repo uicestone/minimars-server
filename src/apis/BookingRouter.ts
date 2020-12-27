@@ -6,12 +6,11 @@ import HttpError from "../utils/HttpError";
 import Booking, {
   Booking as IBooking,
   BookingStatus,
-  BookingType,
   paidBookingStatus
 } from "../models/Booking";
 import User from "../models/User";
 import Store from "../models/Store";
-import Payment, { PaymentGateway } from "../models/Payment";
+import Payment, { PaymentGateway, Scene } from "../models/Payment";
 import { config } from "../models/Config";
 import {
   BookingPostBody,
@@ -74,7 +73,7 @@ export default router => {
         await booking.populate("store").execPopulate();
 
         if (!booking.store || !booking.store.name) {
-          if (booking.type !== BookingType.GIFT) {
+          if (booking.type !== Scene.GIFT) {
             throw new HttpError(400, "门店信息错误");
           }
         }
@@ -94,7 +93,7 @@ export default router => {
           throw new HttpError(403, "只能为自己预订");
         }
 
-        if (booking.type === BookingType.PLAY) {
+        if (booking.type === Scene.PLAY) {
           if (!booking.kidsCount) {
             booking.kidsCount = 0;
           }
@@ -157,7 +156,7 @@ export default router => {
           }
         }
 
-        if (body.type === BookingType.EVENT) {
+        if (body.type === Scene.EVENT) {
           if (!booking.populated("event")) {
             await booking
               .populate({ path: "event", select: "-content" })
@@ -181,7 +180,7 @@ export default router => {
           }
         }
 
-        if (body.type === BookingType.GIFT) {
+        if (body.type === Scene.GIFT) {
           if (!booking.populated("gift")) {
             await booking.populate("gift").execPopulate();
           }
@@ -196,7 +195,7 @@ export default router => {
           }
           if (booking.gift.maxQuantityPerCustomer) {
             const historyGiftBookings = await Booking.find({
-              type: BookingType.GIFT,
+              type: Scene.GIFT,
               status: { $in: paidBookingStatus },
               gift: booking.gift,
               customer: booking.customer
@@ -214,7 +213,7 @@ export default router => {
           }
         }
 
-        if (booking.type === BookingType.FOOD && !booking.price) {
+        if (booking.type === Scene.FOOD && !booking.price) {
           const card = await cardModel.findById(booking.card);
           if (card && [undefined, null].includes(card.fixedPrice)) {
             throw new HttpError(400, "请填写收款金额");
@@ -539,7 +538,7 @@ export default router => {
       await booking.populate("store").execPopulate();
 
       if (!booking.store || !booking.store.name) {
-        if (booking.type !== BookingType.GIFT) {
+        if (booking.type !== Scene.GIFT) {
           throw new HttpError(400, "门店信息错误");
         }
       }
