@@ -655,36 +655,36 @@ export class Booking {
   }
 
   async cancel(this: DocumentType<Booking>, save = true) {
-    const booking = this;
-
-    if (booking.status === BookingStatus.CANCELED) {
+    if (this.status === BookingStatus.CANCELED) {
       return;
     }
 
-    if (booking.payments.filter(p => p.paid).length) {
-      console.log(`[BOK] Refund booking ${booking._id}.`);
+    if (this.payments.filter(p => p.paid).length) {
+      console.log(`[BOK] Refund booking ${this._id}.`);
       // we don't directly change status to canceled, will auto change on refund fullfil
-      booking.status = BookingStatus.PENDING_REFUND;
-      await booking.createRefundPayment();
-      if (!booking.payments.filter(p => p.amount < 0).some(p => !p.paid)) {
-        booking.refundSuccess();
+      this.status = BookingStatus.PENDING_REFUND;
+      await this.createRefundPayment();
+      if (!this.payments.filter(p => p.amount < 0).some(p => !p.paid)) {
+        this.refundSuccess();
       }
     } else {
-      booking.status = BookingStatus.CANCELED;
-      booking.refundSuccess();
+      this.refundSuccess();
     }
 
-    console.log(`[BOK] Cancel booking ${booking._id}.`);
-    sendTemplateMessage(booking.customer, "cancel", [
-      "您的预约已被取消",
-      `${booking.store.name} ${booking.adultsCount}大${booking.kidsCount}小`,
-      `${booking.date}`,
-      "管理员审批",
-      "您的微信支付、次卡、余额将自动原路退回；如有疑问，请联系门店"
-    ]);
+    console.log(`[BOK] Cancel this ${this._id}.`);
 
     if (save) {
-      await booking.save();
+      await this.save();
+    }
+
+    if (this.type === Scene.PLAY && this.store) {
+      sendTemplateMessage(this.customer, "cancel", [
+        "您的预约已被取消",
+        `${this.store.name} ${this.adultsCount}大${this.kidsCount}小`,
+        `${this.date}`,
+        "管理员审批",
+        "您的微信支付、次卡、余额将自动原路退回；如有疑问，请联系门店"
+      ]);
     }
   }
 
