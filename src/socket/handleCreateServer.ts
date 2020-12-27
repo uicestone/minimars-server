@@ -39,6 +39,7 @@ export default function handleCreateServer(io: SocketIoServer) {
 
     socket.on("error", async function (err) {
       console.error(`[DEBUG] Socket error:`, err.message);
+      socket.destroy(err);
     });
 
     // When socket timeout.
