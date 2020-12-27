@@ -38,7 +38,7 @@ export default function handleCreateServer(io: SocketIoServer) {
     });
 
     socket.on("error", async function (err) {
-      console.error(`[DEBUG] Socket error:`, err.message);
+      console.error(`[SOK] Socket error: ${err.message}, destroy...`);
       socket.destroy(err);
     });
 
