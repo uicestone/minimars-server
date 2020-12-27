@@ -100,11 +100,20 @@ export default router => {
           });
         }
 
-        ["store", "customer", "amount"].forEach(field => {
+        ["store", "customer"].forEach(field => {
           if (queryParams[field]) {
             query.find({ [field]: queryParams[field] });
           }
         });
+
+        if (queryParams.amount) {
+          const amounts = queryParams.amount
+            .split(/[\/\s、，]+/)
+            .filter(a => a)
+            .map(a => +a);
+          console.log(amounts);
+          query.find({ amount: { $in: amounts } });
+        }
 
         let total = await query.countDocuments();
         const [{ totalAmount } = { totalAmount: 0 }] = await Payment.aggregate([
