@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import multer, { diskStorage } from "multer";
 import { createHash } from "crypto";
 import { renameSync } from "fs";
@@ -29,7 +30,7 @@ const storage = diskStorage({
 
 const upload = multer({ storage: storage });
 
-export default router => {
+export default (router: Router) => {
   // File CURD
   router
     .route("/file")
@@ -37,7 +38,7 @@ export default router => {
     // create a file
     .post(
       upload.single("file"),
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         renameSync(
           req.file.path,
           req.file.destination + req.file.hashedFullName
@@ -67,7 +68,7 @@ export default router => {
 
     // get the file with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const file = req.item;
         res.json(file);
       })
@@ -75,7 +76,7 @@ export default router => {
 
     // delete the file with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const file = req.item;
         await file.remove();
         // TODO unlink file

@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import UserModel from "../models/User";
 import HttpError from "../utils/HttpError";
@@ -8,9 +9,9 @@ import {
   AuthTokenUserIdResponseBody
 } from "./interfaces";
 
-export default router => {
+export default (router: Router) => {
   router.route("/auth/login").post(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const body = req.body as AuthLoginPostBody;
       if (!body.login) {
         throw new HttpError(400, "请输入用户名");
@@ -57,7 +58,7 @@ export default router => {
   );
 
   router.route("/auth/user").get(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const user = await UserModel.findOne({ _id: req.user });
       if (!user) {
         throw new HttpError(401, "用户未登录");
@@ -77,7 +78,7 @@ export default router => {
   );
 
   router.route("/auth/token/:userId").get(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       if (req.user.role !== "admin") {
         throw new HttpError(403);
       }

@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -8,14 +9,14 @@ import { GiftQuery, GiftPostBody, GiftPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import escapeStringRegexp from "escape-string-regexp";
 
-export default router => {
+export default (router: Router) => {
   // Gift CURD
   router
     .route("/gift")
 
     // create a gift
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -31,7 +32,7 @@ export default router => {
     // get all the gifts
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as GiftQuery;
         const { limit, skip } = req.pagination;
         const query = GiftModel.find().populate("customer");
@@ -92,14 +93,14 @@ export default router => {
 
     // get the gift with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const gift = req.item;
         res.json(gift);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -112,7 +113,7 @@ export default router => {
 
     // delete the gift with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }

@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import moment from "moment";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
@@ -24,14 +25,14 @@ import {
 import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId, isOffDay } from "../utils/helper";
 
-export default router => {
+export default (router: Router) => {
   // Booking CURD
   router
     .route("/booking")
 
     // create a booking
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as BookingPostBody;
         const query = req.query as BookingPostQuery;
 
@@ -279,7 +280,7 @@ export default router => {
     // get all the bookings
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as BookingQuery;
         const { limit, skip } = req.pagination;
         const query = BookingModel.find();
@@ -387,14 +388,14 @@ export default router => {
 
     // get the booking with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const booking = req.item;
         res.json(booking);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const booking = req.item as DocumentType<Booking>;
 
         // TODO restrict for roles
@@ -501,7 +502,7 @@ export default router => {
 
     // delete the booking with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -521,7 +522,7 @@ export default router => {
     );
 
   router.route("/booking-price").post(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const booking = new BookingModel(req.body as BookingPricePostBody);
 
       if (!booking.customer) {

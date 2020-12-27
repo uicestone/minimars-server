@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -22,14 +23,14 @@ import { DocumentType } from "@typegoose/typegoose";
 import { verify } from "jsonwebtoken";
 import moment from "moment";
 
-export default router => {
+export default (router: Router) => {
   // Card CURD
   router
     .route("/card")
 
     // create a card
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as CardPostBody;
 
         const customer =
@@ -161,7 +162,7 @@ export default router => {
     // get all the cards
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as CardQuery;
         const { limit, skip } = req.pagination;
         const query = CardModel.find();
@@ -235,14 +236,14 @@ export default router => {
 
     // get the card with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const card = req.item;
         res.json(card);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const card = req.item as DocumentType<Card>;
         const body = req.body as CardPutBody;
 
@@ -271,7 +272,7 @@ export default router => {
 
     // delete the card with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (!["admin", "manager"].includes(req.user.role)) {
           throw new HttpError(403);
         }

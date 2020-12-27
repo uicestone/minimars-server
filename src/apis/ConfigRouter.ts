@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import ConfigModel, { config } from "../models/Config";
@@ -5,14 +6,14 @@ import HttpError from "../utils/HttpError";
 import reduceConfig from "../utils/reduceConfig";
 import initConfig from "../utils/initConfig";
 
-export default router => {
+export default (router: Router) => {
   // Config CURD
   router
     .route("/config")
 
     // create a config
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -25,7 +26,7 @@ export default router => {
     // get all the configs
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const items = await ConfigModel.find().sort({ createdAt: -1 }).exec();
 
         res.json(req.query.seperate ? items : reduceConfig(items));
@@ -53,14 +54,14 @@ export default router => {
 
     // get the config with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const configItem = req.item;
         res.json(configItem);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const configItem = req.item;
         const set = req.body[req.params.key]
           ? req.body
@@ -74,7 +75,7 @@ export default router => {
 
     // delete the config with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const configItem = req.item;
         await configItem.remove();
         res.end();
@@ -86,7 +87,7 @@ export default router => {
 
     // load or reload config from database
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         initConfig(config);
         res.end();
       })

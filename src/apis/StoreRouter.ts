@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -5,14 +6,14 @@ import HttpError from "../utils/HttpError";
 import StoreModel from "../models/Store";
 import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
 
-export default router => {
+export default (router: Router) => {
   // Store CURD
   router
     .route("/store")
 
     // create a store
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -25,7 +26,7 @@ export default router => {
     // get all the stores
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as StoreQuery;
         const { limit, skip } = req.pagination;
         const query = StoreModel.find();
@@ -68,14 +69,14 @@ export default router => {
 
     // get the store with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const store = req.item;
         res.json(store);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -88,7 +89,7 @@ export default router => {
 
     // delete the store with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }

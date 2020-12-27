@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -8,14 +9,14 @@ import { EventPostBody, EventPutBody, EventQuery } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import escapeStringRegexp from "escape-string-regexp";
 
-export default router => {
+export default (router: Router) => {
   // Event CURD
   router
     .route("/event")
 
     // create an event
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -31,7 +32,7 @@ export default router => {
     // get all the events
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as EventQuery;
         const { limit, skip } = req.pagination;
         const query = EventModel.find().populate("customer");
@@ -96,14 +97,14 @@ export default router => {
 
     // get the event with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const event = req.item;
         res.json(event);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -132,7 +133,7 @@ export default router => {
 
     // delete the event with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }

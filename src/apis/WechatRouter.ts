@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import UserModel from "../models/User";
 import PaymentModel from "../models/Payment";
@@ -11,7 +11,7 @@ import { signToken } from "../utils/helper";
 
 export default (router: Router) => {
   router.route("/wechat/login").post(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const { code } = req.body;
       if (!code) throw new HttpError(400, "OAuth code missing.");
       console.time("Wechat login");
@@ -40,7 +40,7 @@ export default (router: Router) => {
   );
 
   router.route("/wechat/signup").post(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const { session_key, encryptedData, iv } = req.body;
       if (!session_key || !encryptedData || !iv) {
         console.error(
@@ -90,7 +90,7 @@ export default (router: Router) => {
     })
   );
   router.route("/wechat/update-mobile").post(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const { encryptedData, session_key, iv, openid } = req.body;
       if (!session_key || !encryptedData || !iv || !openid) {
         console.error(
@@ -151,7 +151,7 @@ export default (router: Router) => {
     })
   );
   router.route("/wechat/decrypt").post(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const { encryptedData, session_key, iv } = req.body;
       if (!session_key || !encryptedData || !iv) {
         throw new HttpError(400, "微信信息解密失败");
@@ -162,7 +162,7 @@ export default (router: Router) => {
   );
 
   router.route("/wechat/pay/notify").post(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       let data: any = await utils.fromXML(req.body);
       const returnData = await pay.payNotify(data, async parsedData => {
         const successData = {

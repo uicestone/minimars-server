@@ -41,7 +41,7 @@ export default (app, router) => {
     router = R(router);
   });
 
-  router.get("/", (req, res) => {
+  router.get("/", (req: Request, res: Response) => {
     res.send("Welcome!");
   });
 

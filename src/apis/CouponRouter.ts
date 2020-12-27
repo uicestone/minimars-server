@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -6,14 +7,14 @@ import CouponModel, { Coupon } from "../models/Coupon";
 import { CouponQuery, CouponPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 
-export default router => {
+export default (router: Router) => {
   // Coupon CURD
   router
     .route("/coupon")
 
     // create a coupon
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -26,7 +27,7 @@ export default router => {
     // get all the coupons
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as CouponQuery;
         const { limit, skip } = req.pagination;
         const query = CouponModel.find().populate("customer");
@@ -79,14 +80,14 @@ export default router => {
 
     // get the coupon with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const coupon = req.item;
         res.json(coupon);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -100,7 +101,7 @@ export default router => {
 
     // delete the coupon with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }

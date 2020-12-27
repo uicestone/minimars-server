@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import moment from "moment";
 import xlsx from "xlsx";
 import paginatify from "../middlewares/paginatify";
@@ -13,14 +14,14 @@ import StoreModel from "../models/Store";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
 
-export default router => {
+export default (router: Router) => {
   // Payment CURD
   router
     .route("/payment")
 
     // create a payment
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -33,7 +34,7 @@ export default router => {
     // get all the payments
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as PaymentQuery;
         const { limit, skip } = req.pagination;
         const query = PaymentModel.find();
@@ -149,7 +150,7 @@ export default router => {
     );
 
   router.route("/payment-sheet").get(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       if (!["admin", "accountant", "manager"].includes(req.user.role)) {
         throw new HttpError(403);
       }
@@ -291,14 +292,14 @@ export default router => {
 
     // get the payment with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const payment = req.item;
         res.json(payment);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const payment = req.item;
         const body = req.body as PaymentPutBody;
         let set: PaymentPutBody = {};
@@ -326,7 +327,7 @@ export default router => {
 
     // delete the payment with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const payment = req.item;
         await payment.remove();
         res.end();

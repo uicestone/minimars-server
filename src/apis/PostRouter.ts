@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -7,14 +8,14 @@ import { isValidHexObjectId } from "../utils/helper";
 import { PostQuery, PostPostBody, PostPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
 
-export default router => {
+export default (router: Router) => {
   // Post CURD
   router
     .route("/post")
 
     // create a post
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -27,7 +28,7 @@ export default router => {
     // get all the posts
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as PostQuery;
         const { limit, skip } = req.pagination;
         const query = PostModel.find().populate("customer");
@@ -92,14 +93,14 @@ export default router => {
 
     // get the post with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const post = req.item;
         res.json(post);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -112,7 +113,7 @@ export default router => {
 
     // delete the post with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }

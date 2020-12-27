@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -6,14 +7,14 @@ import CardTypeModel, { CardType } from "../models/CardType";
 import { CardTypeQuery, CardTypePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 
-export default router => {
+export default (router: Router) => {
   // CardType CURD
   router
     .route("/card-type")
 
     // create a cardType
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -26,7 +27,7 @@ export default router => {
     // get all the cardTypes
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as CardTypeQuery;
         const { limit, skip } = req.pagination;
         const query = CardTypeModel.find().populate("customer");
@@ -113,14 +114,14 @@ export default router => {
 
     // get the cardType with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const cardType = req.item;
         res.json(cardType);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -142,7 +143,7 @@ export default router => {
 
     // delete the cardType with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }

@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import moment from "moment";
 import getStats from "../utils/getStats";
@@ -7,9 +8,9 @@ import StoreModel from "../models/Store";
 
 moment.locale("zh-cn");
 
-export default router => {
+export default (router: Router) => {
   router.route("/stats/user-balance").get(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const [
         { totalBalance, totalBalanceDeposit } = {
           totalBalance: 0,
@@ -68,7 +69,7 @@ export default router => {
   );
 
   router.route("/stats/times-card").get(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const totalTimesCardByStore: {
         _id: string[];
         times: number;
@@ -118,7 +119,7 @@ export default router => {
   );
 
   router.route("/stats/:date?").get(
-    handleAsyncErrors(async (req, res) => {
+    handleAsyncErrors(async (req: Request, res: Response) => {
       const dateInput = req.params.date;
       const stats = await getStats(
         dateInput,

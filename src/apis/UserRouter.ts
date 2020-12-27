@@ -1,3 +1,4 @@
+import { Router, Request, Response } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -10,14 +11,14 @@ import { DocumentType } from "@typegoose/typegoose";
 
 const { DEBUG } = process.env;
 
-export default router => {
+export default (router: Router) => {
   // User CURD
   router
     .route("/user")
 
     // create a user
     .post(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPostBody;
         if (req.user.role !== "admin") {
           [
@@ -86,7 +87,7 @@ export default router => {
     // get all the users
     .get(
       paginatify,
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (!["admin", "manager", "eventManager"].includes(req.user.role)) {
           throw new HttpError(403);
         }
@@ -181,14 +182,14 @@ export default router => {
 
     // get the user with that id
     .get(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const user = req.item;
         res.json(user);
       })
     )
 
     .put(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPutBody;
         if (req.user.role !== "admin") {
           [
@@ -272,7 +273,7 @@ export default router => {
 
     // delete the user with this id
     .delete(
-      handleAsyncErrors(async (req, res) => {
+      handleAsyncErrors(async (req: Request, res: Response) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
