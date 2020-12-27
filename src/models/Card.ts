@@ -11,7 +11,7 @@ import updateTimes from "./plugins/updateTimes";
 import { Booking } from "./Booking";
 import UserModel, { User } from "./User";
 import { Store } from "./Store";
-import PaymentModel, { PaymentGateway, Payment } from "./Payment";
+import PaymentModel, { PaymentGateway, Payment, Scene } from "./Payment";
 import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
 
@@ -205,6 +205,7 @@ export class Card {
       await card.paymentSuccess();
     } else {
       const payment = new PaymentModel({
+        scene: Scene.CARD,
         customer: card.customer,
         store: atReceptionStore?.id,
         amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
@@ -245,6 +246,7 @@ export class Card {
     await Promise.all(
       extraPayments.map(async (p: DocumentType<Payment>) => {
         const refundPayment = new PaymentModel({
+          scene: p.scene,
           customer: p.customer,
           store: p.store,
           amount: -p.amount,

@@ -8,7 +8,7 @@ import moment from "moment";
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { config } from "../models/Config";
-import paymentModel, { Payment, PaymentGateway, Scene } from "./Payment";
+import PaymentModel, { Payment, PaymentGateway, Scene } from "./Payment";
 import { User } from "./User";
 import { Store } from "./Store";
 import { Card } from "./Card";
@@ -294,7 +294,8 @@ export class Booking {
           throw new Error("card_expired");
         }
       }
-      const cardPayment = new paymentModel({
+      const cardPayment = new PaymentModel({
+        scene: booking.type,
         customer: booking.customer,
         store: booking.store,
         amount:
@@ -322,7 +323,8 @@ export class Booking {
 
     if (booking.coupon) {
       title = booking.coupon.title + " " + title;
-      const couponPayment = new paymentModel({
+      const couponPayment = new PaymentModel({
+        scene: booking.type,
         customer: booking.customer,
         store: booking.store,
         amount: booking.coupon.priceThirdParty * booking.kidsCount,
@@ -346,7 +348,8 @@ export class Booking {
       paymentGateway !== PaymentGateway.Points
     ) {
       balancePayAmount = Math.min(totalPayAmount, booking.customer.balance);
-      const balancePayment = new paymentModel({
+      const balancePayment = new PaymentModel({
+        scene: booking.type,
         customer: booking.customer,
         store: booking.store,
         amount: balancePayAmount,
@@ -377,7 +380,8 @@ export class Booking {
         throw new Error("missing_gateway");
       }
 
-      const extraPayment = new paymentModel({
+      const extraPayment = new PaymentModel({
+        scene: booking.type,
         customer: booking.customer,
         store: booking.store?.id,
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
@@ -397,7 +401,8 @@ export class Booking {
       booking.payments.push(extraPayment);
     }
     if (booking.priceInPoints && paymentGateway === PaymentGateway.Points) {
-      const pointsPayment = new paymentModel({
+      const pointsPayment = new PaymentModel({
+        scene: booking.type,
         customer: booking.customer,
         store: booking.store,
         amount: 0,
@@ -519,7 +524,8 @@ export class Booking {
 
     for (const payment of balanceAndCardPayments) {
       const p = payment;
-      const refundPayment = new paymentModel({
+      const refundPayment = new PaymentModel({
+        scene: p.scene,
         customer: p.customer,
         store: booking.store,
         amount: -p.amount,
@@ -542,7 +548,8 @@ export class Booking {
 
     for (const payment of pointsPayments) {
       const p = payment;
-      const refundPayment = new paymentModel({
+      const refundPayment = new PaymentModel({
+        scene: p.scene,
         customer: p.customer,
         store: booking.store,
         amount: 0,
@@ -559,7 +566,8 @@ export class Booking {
 
     await Promise.all(
       extraPayments.map(async (p: DocumentType<Payment>) => {
-        const refundPayment = new paymentModel({
+        const refundPayment = new PaymentModel({
+          scene: p.scene,
           customer: p.customer,
           store: booking.store,
           amount: -p.amount,
