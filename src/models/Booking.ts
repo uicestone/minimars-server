@@ -463,6 +463,9 @@ export class Booking {
       }
       if (this.event.kidsCountMax) {
         this.event.kidsCountLeft -= this.kidsCount;
+        console.log(
+          `[BOK] Event ${this.event.id} kids left ${this.event.kidsCountLeft}, ${this.kidsCount} occupied by booking ${this.id}.`
+        );
         await this.event.save();
       }
     } else if (this.type === BookingType.GIFT) {
@@ -474,6 +477,9 @@ export class Booking {
       }
       if (this.gift.quantity) {
         this.gift.quantity -= this.quantity;
+        console.log(
+          `[BOK] Gift ${this.gift.id} quantity left ${this.event.kidsCountLeft}, ${this.quantity} occupied by booking ${this.id}.`
+        );
         await this.gift.save();
       }
     }
