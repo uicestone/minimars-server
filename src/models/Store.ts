@@ -76,7 +76,7 @@ export class Store {
   ip: string;
 }
 
-const storeModel = getModelForClass(Store, {
+const StoreModel = getModelForClass(Store, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -88,4 +88,4 @@ const storeModel = getModelForClass(Store, {
   }
 });
 
-export default storeModel;
+export default StoreModel;

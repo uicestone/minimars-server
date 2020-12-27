@@ -9,9 +9,9 @@ import {
 import { sign } from "jsonwebtoken";
 import updateTimes from "./plugins/updateTimes";
 import { Booking } from "./Booking";
-import userModel, { User } from "./User";
+import UserModel, { User } from "./User";
 import { Store } from "./Store";
-import paymentModel, { PaymentGateway, Payment } from "./Payment";
+import PaymentModel, { PaymentGateway, Payment } from "./Payment";
 import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
 
@@ -204,7 +204,7 @@ export class Card {
     if (totalPayAmount < 0.01) {
       await card.paymentSuccess();
     } else {
-      const payment = new paymentModel({
+      const payment = new PaymentModel({
         customer: card.customer,
         store: atReceptionStore?.id,
         amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
@@ -244,7 +244,7 @@ export class Card {
 
     await Promise.all(
       extraPayments.map(async (p: DocumentType<Payment>) => {
-        const refundPayment = new paymentModel({
+        const refundPayment = new PaymentModel({
           customer: p.customer,
           store: p.store,
           amount: -p.amount,
@@ -272,7 +272,7 @@ export class Card {
       return;
     }
     if (this.type === "balance" && this.status === CardStatus.ACTIVATED) {
-      const customer = await userModel.findById(this.customer);
+      const customer = await UserModel.findById(this.customer);
       if (
         customer.balanceDeposit < this.price ||
         customer.balanceReward < this.balanceReward
@@ -303,7 +303,7 @@ export class Card {
   }
 }
 
-const cardModel = getModelForClass(Card, {
+const CardModel = getModelForClass(Card, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -315,4 +315,4 @@ const cardModel = getModelForClass(Card, {
   }
 });
 
-export default cardModel;
+export default CardModel;

@@ -1,13 +1,13 @@
 import { Router } from "express";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
-import User from "../models/User";
+import UserModel from "../models/User";
+import PaymentModel from "../models/Payment";
+import CardModel from "../models/Card";
+import BookingModel from "../models/Booking";
 import { oAuth, pay } from "../utils/wechat";
 import HttpError from "../utils/HttpError";
 import { utils } from "@sigodenjs/wechatpay";
 import { signToken } from "../utils/helper";
-import Payment from "../models/Payment";
-import Card from "../models/Card";
-import Booking from "../models/Booking";
 
 export default (router: Router) => {
   router.route("/wechat/login").post(
@@ -20,12 +20,12 @@ export default (router: Router) => {
       console.log("[WEC] Wechat login user data:", JSON.stringify(userData));
 
       const { openid, session_key, unionid } = userData;
-      let user = await User.findOne({ openid });
+      let user = await UserModel.findOne({ openid });
       if (user) {
         user.set({ unionid });
         await user.save();
       } else {
-        user = await User.create({ openid, unionid });
+        user = await UserModel.create({ openid, unionid });
       }
 
       console.log(`[WEC] Wechat login ${user.id}, session_key: ${session_key}`);
@@ -65,7 +65,7 @@ export default (router: Router) => {
         throw new HttpError(400, "微信登录失败，未获取到openId");
       }
 
-      let user = await User.findOne({ openid });
+      let user = await UserModel.findOne({ openid });
       const userInfo = {
         openid,
         unionid,
@@ -78,7 +78,7 @@ export default (router: Router) => {
         user.set(userInfo);
         await user.save();
       } else {
-        user = await User.create(userInfo);
+        user = await UserModel.create(userInfo);
       }
 
       res.json({
@@ -107,8 +107,8 @@ export default (router: Router) => {
         iv
       );
       if (!mobile) throw new HttpError(400, "数据解析异常");
-      const oldCustomer = await User.findOne({ mobile });
-      const openIdUser = await User.findOne({ openid });
+      const oldCustomer = await UserModel.findOne({ mobile });
+      const openIdUser = await UserModel.findOne({ openid });
       if (oldCustomer && oldCustomer.id !== openIdUser.id) {
         console.log(`[WEC] Merge user ${openIdUser.id} to ${oldCustomer.id}.`);
         const { openid, unionid, avatarUrl, gender, region } = openIdUser;
@@ -120,15 +120,15 @@ export default (router: Router) => {
           region,
           mobile
         });
-        await Booking.updateMany(
+        await BookingModel.updateMany(
           { customer: openIdUser },
           { customer: oldCustomer }
         ).exec();
-        await Card.updateMany(
+        await CardModel.updateMany(
           { customer: openIdUser },
           { customer: oldCustomer }
         ).exec();
-        await Payment.updateMany(
+        await PaymentModel.updateMany(
           { customer: openIdUser },
           { customer: oldCustomer }
         ).exec();
@@ -181,7 +181,9 @@ export default (router: Router) => {
           `[PAY] WechatPay success. Data: ${JSON.stringify(parsedData)}`
         );
 
-        const payment = await Payment.findOne({ _id: parsedData.out_trade_no });
+        const payment = await PaymentModel.findOne({
+          _id: parsedData.out_trade_no
+        });
 
         console.log(`[PAY] Payment found, id: ${parsedData.out_trade_no}.`);
 

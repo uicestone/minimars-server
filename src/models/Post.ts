@@ -68,7 +68,7 @@ export class Post {
   author: DocumentType<User>;
 }
 
-const postModel = getModelForClass(Post, {
+const PostModel = getModelForClass(Post, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -80,4 +80,4 @@ const postModel = getModelForClass(Post, {
   }
 });
 
-export default postModel;
+export default PostModel;

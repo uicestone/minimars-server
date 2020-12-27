@@ -2,7 +2,7 @@ import multer, { diskStorage } from "multer";
 import { createHash } from "crypto";
 import { renameSync } from "fs";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
-import File, { File as IFile } from "../models/File";
+import FileModel, { File } from "../models/File";
 import HttpError from "../utils/HttpError";
 import { DocumentType } from "@typegoose/typegoose";
 
@@ -43,7 +43,7 @@ export default router => {
           req.file.destination + req.file.hashedFullName
         );
         const fileUriPrefix = "uploads/" + req.file.hashedFullName;
-        const file = new File() as DocumentType<IFile>;
+        const file = new FileModel();
         file.name = req.file.originalname;
         file.uri = fileUriPrefix;
         await file.save();
@@ -56,7 +56,7 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        const file = await File.findById(req.params.fileId);
+        const file = await FileModel.findById(req.params.fileId);
         if (!file) {
           throw new HttpError(404, `找不到文件：${req.params.fileId}`);
         }

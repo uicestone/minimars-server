@@ -1,9 +1,9 @@
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import moment from "moment";
 import getStats from "../utils/getStats";
-import User from "../models/User";
-import Card, { CardStatus } from "../models/Card";
-import Store from "../models/Store";
+import UserModel from "../models/User";
+import CardModel, { CardStatus } from "../models/Card";
+import StoreModel from "../models/Store";
 
 moment.locale("zh-cn");
 
@@ -15,7 +15,7 @@ export default router => {
           totalBalance: 0,
           totalBalanceDeposit: 0
         }
-      ] = await User.aggregate([
+      ] = await UserModel.aggregate([
         {
           $group: {
             _id: null,
@@ -43,7 +43,7 @@ export default router => {
           totalValidCardBalance: 0,
           totalValidCardBalanceDeposit: 0
         }
-      ] = await Card.aggregate([
+      ] = await CardModel.aggregate([
         { $match: { status: CardStatus.VALID } },
         {
           $group: {
@@ -73,7 +73,7 @@ export default router => {
         _id: string[];
         times: number;
         priceLeft: number;
-      }[] = await Card.aggregate([
+      }[] = await CardModel.aggregate([
         {
           $match: {
             timesLeft: { $gt: 0 },
@@ -94,7 +94,7 @@ export default router => {
         }
       ]);
 
-      const stores = await Store.find();
+      const stores = await StoreModel.find();
 
       const result = totalTimesCardByStore
         .sort((a, b) => {

@@ -4,12 +4,12 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Payment, {
+import PaymentModel, {
   gatewayNames,
   PaymentGateway,
   receptionGateways
 } from "../models/Payment";
-import Store from "../models/Store";
+import StoreModel from "../models/Store";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
 
@@ -24,7 +24,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const payment = new Payment(req.body);
+        const payment = new PaymentModel(req.body);
         await payment.save();
         res.json(payment);
       })
@@ -36,7 +36,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as PaymentQuery;
         const { limit, skip } = req.pagination;
-        const query = Payment.find();
+        const query = PaymentModel.find();
         const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
@@ -116,7 +116,9 @@ export default router => {
         }
 
         let total = await query.countDocuments();
-        const [{ totalAmount } = { totalAmount: 0 }] = await Payment.aggregate([
+        const [
+          { totalAmount } = { totalAmount: 0 }
+        ] = await PaymentModel.aggregate([
           //@ts-ignore
           { $match: query._conditions },
           {
@@ -152,7 +154,7 @@ export default router => {
         throw new HttpError(403);
       }
       const queryParams = req.query as PaymentQuery;
-      const query = Payment.find().sort({ _id: -1 });
+      const query = PaymentModel.find().sort({ _id: -1 });
 
       if (req.user.role === "manager") {
         query.find({ store: req.user.store.id });
@@ -233,7 +235,7 @@ export default router => {
         ]
       ];
 
-      const stores = await Store.find();
+      const stores = await StoreModel.find();
 
       payments.forEach(payment => {
         const row = [
@@ -275,7 +277,7 @@ export default router => {
           // TODO manager can operate payment of same store
           throw new HttpError(403);
         }
-        const payment = await Payment.findById(req.params.paymentId);
+        const payment = await PaymentModel.findById(req.params.paymentId);
         if (!payment) {
           throw new HttpError(
             404,

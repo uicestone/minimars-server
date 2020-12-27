@@ -1,6 +1,6 @@
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
-import Config, { config } from "../models/Config";
+import ConfigModel, { config } from "../models/Config";
 import HttpError from "../utils/HttpError";
 import reduceConfig from "../utils/reduceConfig";
 import initConfig from "../utils/initConfig";
@@ -16,7 +16,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const configItem = new Config(req.body);
+        const configItem = new ConfigModel(req.body);
         await configItem.save();
         res.json(configItem);
       })
@@ -26,7 +26,7 @@ export default router => {
     .get(
       paginatify,
       handleAsyncErrors(async (req, res) => {
-        const items = await Config.find().sort({ createdAt: -1 }).exec();
+        const items = await ConfigModel.find().sort({ createdAt: -1 }).exec();
 
         res.json(req.query.seperate ? items : reduceConfig(items));
       })
@@ -40,7 +40,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const config = await Config.findOne({
+        const config = await ConfigModel.findOne({
           [req.params.key]: { $exists: true }
         });
         if (!config) {

@@ -2,26 +2,25 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Card, {
-  Card as ICard,
+import CardModel, {
+  Card,
   CardStatus,
   userVisibleCardStatus
 } from "../models/Card";
 import CardType from "../models/CardType";
+import Payment, { PaymentGateway } from "../models/Payment";
+import UserModel from "../models/User";
+import CardTypeModel from "../models/CardType";
+import BookingModel, { paidBookingStatus } from "../models/Booking";
 import {
   CardPostBody,
   CardPutBody,
   CardQuery,
   CardPostQuery
 } from "./interfaces";
-import Payment, { PaymentGateway } from "../models/Payment";
-import User from "../models/User";
 import { DocumentType } from "@typegoose/typegoose";
 import { verify } from "jsonwebtoken";
 import moment from "moment";
-import cardTypeModel from "../models/CardType";
-import bookingModel, { paidBookingStatus } from "../models/Booking";
-import userModel from "../models/User";
 
 export default router => {
   // Card CURD
@@ -36,7 +35,7 @@ export default router => {
         const customer =
           req.user.role === "customer"
             ? req.user
-            : await User.findById(body.customer);
+            : await UserModel.findById(body.customer);
 
         if (!customer) {
           throw new HttpError(400, "购卡用户无效");
@@ -57,7 +56,7 @@ export default router => {
               `[CRD] Gift code parsed, userId: ${userId}, cardId: ${cardId}.`
             );
 
-            const card = await Card.findOne({ _id: cardId });
+            const card = await CardModel.findOne({ _id: cardId });
             if (card.customer.toString() === userId) {
               // verify success, now change owner
               card.customer = body.customer || req.user.id;
@@ -81,7 +80,7 @@ export default router => {
         }
 
         if (cardType.maxPerCustomer) {
-          const cardsOfSlug = await Card.find({
+          const cardsOfSlug = await CardModel.find({
             slug: cardType.slug,
             status: { $in: userVisibleCardStatus },
             customer
@@ -119,14 +118,14 @@ export default router => {
         }
 
         if (typeof cardType.quantity === "number") {
-          await cardTypeModel.updateOne(
+          await CardTypeModel.updateOne(
             { _id: cardType.id },
             { $inc: { quantity: -1 } }
           );
         }
 
         if (card.type === "times") {
-          const expiredTimesCards = await Card.find({
+          const expiredTimesCards = await CardModel.find({
             customer: card.customer,
             stores: { $all: card.stores },
             timesLeft: { $gt: 0 },
@@ -165,7 +164,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as CardQuery;
         const { limit, skip } = req.pagination;
-        const query = Card.find();
+        const query = CardModel.find();
         const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
@@ -222,7 +221,7 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        const card = await Card.findById(req.params.cardId);
+        const card = await CardModel.findById(req.params.cardId);
         if (!card) {
           throw new HttpError(404, `Card not found: ${req.params.cardId}`);
         }
@@ -244,7 +243,7 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
-        const card = req.item as DocumentType<ICard>;
+        const card = req.item as DocumentType<Card>;
         const body = req.body as CardPutBody;
 
         const statusWas = card.status;
@@ -276,11 +275,11 @@ export default router => {
         if (!["admin", "manager"].includes(req.user.role)) {
           throw new HttpError(403);
         }
-        const card = req.item as DocumentType<ICard>;
+        const card = req.item as DocumentType<Card>;
         if (card.times !== card.timesLeft) {
           throw new HttpError(400, "次卡已使用，请撤销使用订单后再删除卡");
         }
-        const usedCount = await bookingModel.countDocuments({
+        const usedCount = await BookingModel.countDocuments({
           card: card.id,
           status: { $in: paidBookingStatus }
         });
@@ -288,7 +287,7 @@ export default router => {
           throw new HttpError(400, "该卡已使用，请撤销订单后再删除卡");
         }
         if (card.type === "balance" && card.status === CardStatus.ACTIVATED) {
-          const customer = await userModel.findById(card.customer);
+          const customer = await UserModel.findById(card.customer);
           if (
             customer.balanceDeposit < card.price ||
             customer.balanceReward < card.balanceReward

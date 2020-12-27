@@ -2,7 +2,7 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Store from "../models/Store";
+import StoreModel from "../models/Store";
 import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
 
 export default router => {
@@ -16,7 +16,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const store = new Store(req.body as StorePostBody);
+        const store = new StoreModel(req.body as StorePostBody);
         await store.save();
         res.json(store);
       })
@@ -28,7 +28,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as StoreQuery;
         const { limit, skip } = req.pagination;
-        const query = Store.find();
+        const query = StoreModel.find();
 
         query.select("-content");
 
@@ -57,7 +57,7 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        const store = await Store.findById(req.params.storeId);
+        const store = await StoreModel.findById(req.params.storeId);
         if (!store) {
           throw new HttpError(404, `Store not found: ${req.params.storeId}`);
         }

@@ -2,9 +2,9 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Gift, { Gift as IGift } from "../models/Gift";
+import BookingModel from "../models/Booking";
+import GiftModel, { Gift } from "../models/Gift";
 import { GiftQuery, GiftPostBody, GiftPutBody } from "./interfaces";
-import Booking from "../models/Booking";
 import { DocumentType } from "@typegoose/typegoose";
 import escapeStringRegexp from "escape-string-regexp";
 
@@ -19,7 +19,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const gift = new Gift(req.body as GiftPostBody);
+        const gift = new GiftModel(req.body as GiftPostBody);
         if (!gift.price && !gift.priceInPoints) {
           throw new HttpError(400, "积分和收款售价必须至少设置一项");
         }
@@ -34,7 +34,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as GiftQuery;
         const { limit, skip } = req.pagination;
-        const query = Gift.find().populate("customer");
+        const query = GiftModel.find().populate("customer");
         const sort = parseSortString(queryParams.order) || {
           order: -1
         };
@@ -81,7 +81,7 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        const gift = await Gift.findById(req.params.giftId);
+        const gift = await GiftModel.findById(req.params.giftId);
         if (!gift) {
           throw new HttpError(404, `Gift not found: ${req.params.giftId}`);
         }
@@ -116,8 +116,10 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const gift = req.item as DocumentType<IGift>;
-        const bookingCount = await Booking.countDocuments({ gift: gift.id });
+        const gift = req.item as DocumentType<Gift>;
+        const bookingCount = await BookingModel.countDocuments({
+          gift: gift.id
+        });
 
         if (bookingCount > 0) {
           throw new HttpError(400, "已经存在兑换记录，不能删除");

@@ -7,10 +7,10 @@ import {
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
+import { User } from "./User";
+import CardModel from "./Card";
 import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
-import { User } from "./User";
-import cardModel from "./Card";
 import moment from "moment";
 
 @plugin(updateTimes)
@@ -21,7 +21,7 @@ import moment from "moment";
   }
   if (this.rewardCardTypes) {
     for (const slug of this.rewardCardTypes.split(" ")) {
-      const card = await cardTypeModel.findOne({ slug });
+      const card = await CardTypeModel.findOne({ slug });
       if (!card) {
         throw new HttpError(400, `不存在这个卡券种类：${slug}`);
       }
@@ -121,7 +121,7 @@ export class CardType {
   rewardCardTypes?: string;
 
   issue(this: DocumentType<CardType>, customer: DocumentType<User>) {
-    const card = new cardModel({
+    const card = new CardModel({
       customer: customer.id
     });
 
@@ -154,7 +154,7 @@ export class CardType {
   }
 }
 
-const cardTypeModel = getModelForClass(CardType, {
+const CardTypeModel = getModelForClass(CardType, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -166,4 +166,4 @@ const cardTypeModel = getModelForClass(CardType, {
   }
 });
 
-export default cardTypeModel;
+export default CardTypeModel;

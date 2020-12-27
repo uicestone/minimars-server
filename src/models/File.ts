@@ -19,7 +19,7 @@ export class File {
   }
 }
 
-const fileModel = getModelForClass(File, {
+const FileModel = getModelForClass(File, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -31,4 +31,4 @@ const fileModel = getModelForClass(File, {
   }
 });
 
-export default fileModel;
+export default FileModel;

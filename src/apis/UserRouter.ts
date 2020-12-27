@@ -2,12 +2,11 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import User, { User as IUser } from "../models/User";
+import UserModel, { User } from "../models/User";
 import { hashPwd, isValidHexObjectId } from "../utils/helper";
 import idCard from "idcard";
 import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
-import Card, { CardStatus } from "../models/Card";
 
 const { DEBUG } = process.env;
 
@@ -41,7 +40,7 @@ export default router => {
           body.password = await hashPwd(body.password);
         }
         if (body.mobile) {
-          const userMobileExists = await User.findOne({
+          const userMobileExists = await UserModel.findOne({
             mobile: body.mobile
           });
           if (userMobileExists) {
@@ -49,17 +48,17 @@ export default router => {
           }
         }
         if (body.cardNo) {
-          const userCardNoExists = await User.findOne({
+          const userCardNoExists = await UserModel.findOne({
             cardNo: body.cardNo
           });
           if (userCardNoExists) {
             throw new HttpError(409, `会员卡号${body.cardNo}已被使用.`);
           }
         }
-        const user = new User(body);
+        const user = new UserModel(body);
         if (body.idCardNo) {
           body.idCardNo = body.idCardNo.replace("*", "X").toUpperCase();
-          const userIdCardNoExists = await User.findOne({
+          const userIdCardNoExists = await UserModel.findOne({
             idCardNo: body.idCardNo
           });
           if (userIdCardNoExists) {
@@ -93,7 +92,7 @@ export default router => {
         }
         const queryParams = req.query as UserQuery;
         const { limit, skip } = req.pagination;
-        const query = User.find();
+        const query = UserModel.find();
         const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
@@ -164,7 +163,7 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        const user = await User.findById(req.params.userId);
+        const user = await UserModel.findById(req.params.userId);
         if (
           !["admin", "manager", "eventManager"].includes(req.user.role) &&
           req.user.id !== req.params.userId
@@ -209,13 +208,13 @@ export default router => {
             delete body[f];
           });
         }
-        const user = req.item as DocumentType<IUser>;
+        const user = req.item as DocumentType<User>;
         if (body.password) {
           console.log(`[USR] User ${user.id} password reset.`);
           body.password = await hashPwd(body.password);
         }
         if (body.mobile) {
-          const userMobileExists = await User.findOne({
+          const userMobileExists = await UserModel.findOne({
             mobile: body.mobile,
             _id: { $ne: user.id }
           });
@@ -224,7 +223,7 @@ export default router => {
           }
         }
         if (body.cardNo) {
-          const userCardNoExists = await User.findOne({
+          const userCardNoExists = await UserModel.findOne({
             cardNo: body.cardNo,
             _id: { $ne: user.id }
           });
@@ -234,7 +233,7 @@ export default router => {
         }
         if (body.idCardNo) {
           body.idCardNo = body.idCardNo.replace("*", "X").toUpperCase();
-          const userIdCardNoExists = await User.findOne({
+          const userIdCardNoExists = await UserModel.findOne({
             idCardNo: body.idCardNo,
             _id: { $ne: user.id }
           });

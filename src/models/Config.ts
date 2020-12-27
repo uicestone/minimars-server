@@ -17,12 +17,12 @@ class ConfigDocument {
   value: any;
 
   public static async get(key: string, defaults: any) {
-    const doc = await configModel.findOne({ key });
+    const doc = await ConfigModel.findOne({ key });
     return doc ? doc.value : defaults;
   }
 }
 
-const configModel = getModelForClass(ConfigDocument, {
+const ConfigModel = getModelForClass(ConfigDocument, {
   schemaOptions: {
     collection: "configs",
     strict: false,
@@ -36,7 +36,7 @@ const configModel = getModelForClass(ConfigDocument, {
   }
 });
 
-export default configModel;
+export default ConfigModel;
 
 export class Config {
   sockPrice?: number;

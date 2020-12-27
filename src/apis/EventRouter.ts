@@ -2,9 +2,9 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Event, { Event as IEvent } from "../models/Event";
+import BookingModel, { validBookingStatus } from "../models/Booking";
+import EventModel, { Event } from "../models/Event";
 import { EventPostBody, EventPutBody, EventQuery } from "./interfaces";
-import Booking, { validBookingStatus } from "../models/Booking";
 import { DocumentType } from "@typegoose/typegoose";
 import escapeStringRegexp from "escape-string-regexp";
 
@@ -19,7 +19,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const event = new Event(req.body as EventPostBody);
+        const event = new EventModel(req.body as EventPostBody);
         if (!event.price && !event.priceInPoints) {
           throw new HttpError(400, "积分和收款售价必须至少设置一项");
         }
@@ -34,7 +34,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as EventQuery;
         const { limit, skip } = req.pagination;
-        const query = Event.find().populate("customer");
+        const query = EventModel.find().populate("customer");
         const sort = parseSortString(queryParams.order) || {
           order: -1
         };
@@ -85,7 +85,7 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        const event = await Event.findById(req.params.eventId);
+        const event = await EventModel.findById(req.params.eventId);
         if (!event) {
           throw new HttpError(404, `Event not found: ${req.params.eventId}`);
         }
@@ -111,7 +111,7 @@ export default router => {
         event.set(req.body as EventPutBody);
         if (req.item.kidsCountMax) {
           // re-calculate kidsCountLeft
-          const eventBookings = await Booking.find({
+          const eventBookings = await BookingModel.find({
             event,
             status: { $in: validBookingStatus }
           });
@@ -136,8 +136,10 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const event = req.item as DocumentType<IEvent>;
-        const bookingCount = await Booking.countDocuments({ event: event.id });
+        const event = req.item as DocumentType<Event>;
+        const bookingCount = await BookingModel.countDocuments({
+          event: event.id
+        });
 
         if (bookingCount > 0) {
           throw new HttpError(400, "已经存在报名记录，不能删除");

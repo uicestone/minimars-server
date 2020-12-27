@@ -11,15 +11,15 @@ import {
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { User } from "./User";
-import Booking from "./Booking";
+import BookingModel from "./Booking";
+import CardModel, { CardStatus } from "./Card";
+import { Store } from "./Store";
 import {
   unifiedOrder as wechatUnifiedOrder,
   payArgs as wechatPayArgs,
   refundOrder
 } from "../utils/wechat";
-import cardModel, { CardStatus } from "./Card";
 import { isValidHexObjectId } from "../utils/helper";
-import { Store } from "./Store";
 import moment from "moment";
 import HttpError from "../utils/HttpError";
 
@@ -68,7 +68,7 @@ export enum Scene {
         );
         Object.assign(payment.gatewayData, wechatUnifiedOrderData);
       } else {
-        const originalPayment = await paymentModel.findOne({
+        const originalPayment = await PaymentModel.findOne({
           _id: payment.original
         });
         if (!originalPayment) throw new Error("invalid_refund_original");
@@ -149,7 +149,7 @@ export enum Scene {
       ) {
         throw new Error("invalid_card_payment_gateway_data");
       }
-      const card = await cardModel.findOne({ _id: payment.gatewayData.cardId });
+      const card = await CardModel.findOne({ _id: payment.gatewayData.cardId });
 
       if (payment.gatewayData.cardRefund) {
         card.timesLeft += payment.gatewayData.times;
@@ -308,7 +308,7 @@ export class Payment {
     switch (paymentAttach[0]) {
       case "booking":
         if (!isValidHexObjectId(paymentAttach[1])) break;
-        const booking = await Booking.findOne({ _id: paymentAttach[1] });
+        const booking = await BookingModel.findOne({ _id: paymentAttach[1] });
         if (payment.amount >= 0) {
           // TODO: no, single payment success is not booking payment success
           // so right now we don't trigger paidSuccess for balance/card/coupon payment
@@ -322,7 +322,7 @@ export class Payment {
         break;
       case "card":
         if (!isValidHexObjectId(paymentAttach[1])) break;
-        const card = await cardModel.findOne({ _id: paymentAttach[1] });
+        const card = await CardModel.findOne({ _id: paymentAttach[1] });
         await card.paymentSuccess();
         await card.save();
         console.log(`[PAY] Card purchase success, id: ${card._id}.`);
@@ -392,7 +392,7 @@ export const receptionGateways = [
   PaymentGateway.Coupon
 ];
 
-const paymentModel = getModelForClass(Payment, {
+const PaymentModel = getModelForClass(Payment, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -404,4 +404,4 @@ const paymentModel = getModelForClass(Payment, {
   }
 });
 
-export default paymentModel;
+export default PaymentModel;

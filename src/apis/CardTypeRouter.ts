@@ -2,10 +2,9 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import CardType, { CardType as ICardType } from "../models/CardType";
+import CardTypeModel, { CardType } from "../models/CardType";
 import { CardTypeQuery, CardTypePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
-import User from "../models/User";
 
 export default router => {
   // CardType CURD
@@ -18,7 +17,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const cardType = new CardType(req.body);
+        const cardType = new CardTypeModel(req.body);
         await cardType.save();
         res.json(cardType);
       })
@@ -30,7 +29,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as CardTypeQuery;
         const { limit, skip } = req.pagination;
-        const query = CardType.find().populate("customer");
+        const query = CardTypeModel.find().populate("customer");
         const sort = parseSortString(queryParams.order) || {
           type: -1,
           price: 1
@@ -100,7 +99,7 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        const cardType = await CardType.findById(req.params.cardTypeId);
+        const cardType = await CardTypeModel.findById(req.params.cardTypeId);
         if (!cardType) {
           throw new HttpError(
             404,
@@ -125,7 +124,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const cardType = req.item as DocumentType<ICardType>;
+        const cardType = req.item as DocumentType<CardType>;
         const body = req.body as CardTypePutBody;
         if (body.type && body.type !== cardType.type) {
           cardType.set({

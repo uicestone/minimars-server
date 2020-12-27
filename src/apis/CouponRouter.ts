@@ -2,10 +2,9 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Coupon, { Coupon as ICoupon } from "../models/Coupon";
+import CouponModel, { Coupon } from "../models/Coupon";
 import { CouponQuery, CouponPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
-import User from "../models/User";
 
 export default router => {
   // Coupon CURD
@@ -18,7 +17,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const coupon = new Coupon(req.body);
+        const coupon = new CouponModel(req.body);
         await coupon.save();
         res.json(coupon);
       })
@@ -30,7 +29,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as CouponQuery;
         const { limit, skip } = req.pagination;
-        const query = Coupon.find().populate("customer");
+        const query = CouponModel.find().populate("customer");
         const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
@@ -69,7 +68,7 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        const coupon = await Coupon.findById(req.params.couponId);
+        const coupon = await CouponModel.findById(req.params.couponId);
         if (!coupon) {
           throw new HttpError(404, `Coupon not found: ${req.params.couponId}`);
         }
@@ -91,7 +90,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const coupon = req.item as DocumentType<ICoupon>;
+        const coupon = req.item as DocumentType<Coupon>;
         const body = req.body as CouponPutBody;
         coupon.set(body);
         await coupon.save();

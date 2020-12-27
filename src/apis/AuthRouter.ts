@@ -1,13 +1,12 @@
 import handleAsyncErrors from "../utils/handleAsyncErrors";
-import User from "../models/User";
+import UserModel from "../models/User";
 import HttpError from "../utils/HttpError";
-import { signToken, comparePwd, hashPwd } from "../utils/helper";
+import { signToken, comparePwd } from "../utils/helper";
 import {
   AuthLoginPostBody,
   AuthLoginResponseBody,
   AuthTokenUserIdResponseBody
 } from "./interfaces";
-import { userVisibleCardStatus } from "../models/Card";
 
 export default router => {
   router.route("/auth/login").post(
@@ -21,7 +20,7 @@ export default router => {
         throw new HttpError(400, "请输入密码");
       }
 
-      const user = await User.findOne({ login: body.login }).select([
+      const user = await UserModel.findOne({ login: body.login }).select([
         "+password"
       ]);
 
@@ -59,7 +58,7 @@ export default router => {
 
   router.route("/auth/user").get(
     handleAsyncErrors(async (req, res) => {
-      const user = await User.findOne({ _id: req.user });
+      const user = await UserModel.findOne({ _id: req.user });
       if (!user) {
         throw new HttpError(401, "用户未登录");
       }
@@ -82,7 +81,7 @@ export default router => {
       if (req.user.role !== "admin") {
         throw new HttpError(403);
       }
-      const user = await User.findOne({ _id: req.params.userId });
+      const user = await UserModel.findOne({ _id: req.params.userId });
       if (!user) {
         throw new HttpError(404, "用户不存在");
       }

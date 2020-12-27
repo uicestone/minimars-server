@@ -2,7 +2,7 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Post from "../models/Post";
+import PostModel from "../models/Post";
 import { isValidHexObjectId } from "../utils/helper";
 import { PostQuery, PostPostBody, PostPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
@@ -18,7 +18,7 @@ export default router => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const post = new Post(req.body as PostPostBody);
+        const post = new PostModel(req.body as PostPostBody);
         post.author = req.user;
         await post.save();
         res.json(post);
@@ -30,7 +30,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as PostQuery;
         const { limit, skip } = req.pagination;
-        const query = Post.find().populate("customer");
+        const query = PostModel.find().populate("customer");
         const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
@@ -78,8 +78,8 @@ export default router => {
     .all(
       handleAsyncErrors(async (req, res, next) => {
         const post = isValidHexObjectId(req.params.postId)
-          ? await Post.findById(req.params.postId)
-          : await Post.findOne({ slug: req.params.postId });
+          ? await PostModel.findById(req.params.postId)
+          : await PostModel.findOne({ slug: req.params.postId });
 
         if (!post) {
           throw new HttpError(404, `Post not found: ${req.params.postId}`);

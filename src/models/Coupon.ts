@@ -9,16 +9,16 @@ import {
   DocumentType
 } from "@typegoose/typegoose";
 import HttpError from "../utils/HttpError";
-import cardTypeModel from "./CardType";
-import updateTimes from "./plugins/updateTimes";
+import CardTypeModel from "./CardType";
 import { Store } from "./Store";
+import updateTimes from "./plugins/updateTimes";
 
 @plugin(updateTimes)
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 @pre("validate", async function (this: DocumentType<Coupon>, next) {
   if (this.rewardCardTypes) {
     for (const slug of this.rewardCardTypes.split(" ")) {
-      const card = await cardTypeModel.findOne({ slug });
+      const card = await CardTypeModel.findOne({ slug });
       if (!card) {
         throw new HttpError(400, `不存在这个卡券种类：${slug}`);
       }
@@ -64,7 +64,7 @@ export class Coupon {
   rewardCardTypes?: string;
 }
 
-const cardModel = getModelForClass(Coupon, {
+const CouponModel = getModelForClass(Coupon, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -76,4 +76,4 @@ const cardModel = getModelForClass(Coupon, {
   }
 });
 
-export default cardModel;
+export default CouponModel;

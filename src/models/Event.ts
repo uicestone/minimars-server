@@ -104,7 +104,7 @@ export class Event {
   kidAgeRange: string;
 }
 
-const eventModel = getModelForClass(Event, {
+const EventModel = getModelForClass(Event, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -116,4 +116,4 @@ const eventModel = getModelForClass(Event, {
   }
 });
 
-export default eventModel;
+export default EventModel;

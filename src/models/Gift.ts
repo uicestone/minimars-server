@@ -2,7 +2,6 @@ import {
   prop,
   getModelForClass,
   plugin,
-  Ref,
   DocumentType
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
@@ -59,7 +58,7 @@ export class Gift {
   maxQuantityPerCustomer?: number;
 }
 
-const giftModel = getModelForClass(Gift, {
+const GiftModel = getModelForClass(Gift, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -71,4 +70,4 @@ const giftModel = getModelForClass(Gift, {
   }
 });
 
-export default giftModel;
+export default GiftModel;

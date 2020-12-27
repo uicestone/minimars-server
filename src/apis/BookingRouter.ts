@@ -3,14 +3,15 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import Booking, {
-  Booking as IBooking,
+import BookingModel, {
+  Booking,
   BookingStatus,
   paidBookingStatus
 } from "../models/Booking";
-import User from "../models/User";
-import Store from "../models/Store";
-import Payment, { PaymentGateway, Scene } from "../models/Payment";
+import UserModel from "../models/User";
+import StoreModel from "../models/Store";
+import PaymentModel, { PaymentGateway, Scene } from "../models/Payment";
+import CardModel, { CardStatus } from "../models/Card";
 import { config } from "../models/Config";
 import {
   BookingPostBody,
@@ -22,7 +23,6 @@ import {
 } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId, isOffDay } from "../utils/helper";
-import cardModel, { CardStatus } from "../models/Card";
 
 export default router => {
   // Booking CURD
@@ -40,7 +40,7 @@ export default router => {
           // throw new HttpError(403, "Only admin can set status directly.");
         }
 
-        const booking = new Booking(body);
+        const booking = new BookingModel(body);
 
         if (!booking.customer) {
           if (req.user.role === "customer") {
@@ -50,7 +50,7 @@ export default router => {
             query.customerKeyword &&
             ["admin", "manager", "eventManager"].includes(req.user.role)
           ) {
-            booking.customer = new User({
+            booking.customer = new UserModel({
               role: "customer",
               mobile: query.customerKeyword
             });
@@ -101,7 +101,7 @@ export default router => {
             booking.adultsCount = 0;
           }
           if (booking.card) {
-            const otherBookings = await Booking.find({
+            const otherBookings = await BookingModel.find({
               card: booking.card,
               status: { $in: paidBookingStatus },
               date: booking.date
@@ -194,7 +194,7 @@ export default router => {
             throw new HttpError(400, "礼品库存不足");
           }
           if (booking.gift.maxQuantityPerCustomer) {
-            const historyGiftBookings = await Booking.find({
+            const historyGiftBookings = await BookingModel.find({
               type: Scene.GIFT,
               status: { $in: paidBookingStatus },
               gift: booking.gift,
@@ -214,7 +214,7 @@ export default router => {
         }
 
         if (booking.type === Scene.FOOD && !booking.price) {
-          const card = await cardModel.findById(booking.card);
+          const card = await CardModel.findById(booking.card);
           if (card && [undefined, null].includes(card.fixedPrice)) {
             throw new HttpError(400, "请填写收款金额");
           }
@@ -282,7 +282,7 @@ export default router => {
       handleAsyncErrors(async (req, res) => {
         const queryParams = req.query as BookingQuery;
         const { limit, skip } = req.pagination;
-        const query = Booking.find();
+        const query = BookingModel.find();
         const sort = parseSortString(queryParams.order) || {
           createdAt: -1
         };
@@ -309,7 +309,7 @@ export default router => {
             // @ts-ignore
             query.find({ customer: queryParams.customerKeyword });
           } else {
-            const matchCustomers = await User.find({
+            const matchCustomers = await UserModel.find({
               $text: { $search: queryParams.customerKeyword }
             });
             query.find({ customer: { $in: matchCustomers } });
@@ -366,7 +366,9 @@ export default router => {
 
     .all(
       handleAsyncErrors(async (req, res, next) => {
-        const booking = await Booking.findOne({ _id: req.params.bookingId });
+        const booking = await BookingModel.findOne({
+          _id: req.params.bookingId
+        });
         if (!booking) {
           throw new HttpError(
             404,
@@ -393,7 +395,7 @@ export default router => {
 
     .put(
       handleAsyncErrors(async (req, res) => {
-        const booking = req.item as DocumentType<IBooking>;
+        const booking = req.item as DocumentType<Booking>;
 
         // TODO restrict for roles
 
@@ -428,13 +430,13 @@ export default router => {
           } else if (req.user.role === "manager") {
             booking.statusWas = booking.status;
             booking.status = BookingStatus.PENDING_REFUND;
-            await cardModel.updateMany(
+            await CardModel.updateMany(
               { rewardedFromBooking: booking, status: CardStatus.ACTIVATED },
               { status: CardStatus.PENDING }
             );
           } else {
             try {
-              await cardModel.updateMany(
+              await CardModel.updateMany(
                 {
                   rewardedFromBooking: booking,
                   status: { $in: [CardStatus.ACTIVATED, CardStatus.PENDING] }
@@ -470,7 +472,7 @@ export default router => {
         ) {
           // admin reject cancel booking
           // recover pending rewarded cards now
-          await cardModel.updateMany(
+          await CardModel.updateMany(
             { rewardedFromBooking: booking, status: CardStatus.PENDING },
             { status: CardStatus.ACTIVATED }
           );
@@ -504,13 +506,13 @@ export default router => {
           throw new HttpError(403);
         }
 
-        const booking = req.item as DocumentType<IBooking>;
+        const booking = req.item as DocumentType<Booking>;
 
         if (booking.payments.some(p => p.paid)) {
           throw new HttpError(403, "已有成功付款记录，无法删除");
         }
 
-        await Payment.deleteMany({
+        await PaymentModel.deleteMany({
           _id: { $in: booking.payments.map(p => p.id) }
         });
         await booking.remove();
@@ -520,7 +522,7 @@ export default router => {
 
   router.route("/booking-price").post(
     handleAsyncErrors(async (req, res) => {
-      const booking = new Booking(req.body as BookingPricePostBody);
+      const booking = new BookingModel(req.body as BookingPricePostBody);
 
       if (!booking.customer) {
         booking.customer = req.user;
@@ -532,7 +534,7 @@ export default router => {
       }
 
       if (!booking.store) {
-        booking.store = await Store.findOne();
+        booking.store = await StoreModel.findOne();
         // TODO booking default store should be disabled
       }
       await booking.populate("store").execPopulate();

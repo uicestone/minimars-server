@@ -16,7 +16,7 @@ import { Event } from "./Event";
 import { Gift } from "./Gift";
 import { Coupon } from "./Coupon";
 import { sendTemplateMessage } from "../utils/wechat";
-import cardTypeModel from "./CardType";
+import CardTypeModel from "./CardType";
 
 const { DEBUG } = process.env;
 
@@ -623,7 +623,7 @@ export class Booking {
       (this.card?.type !== "balance" && this.card?.rewardCardTypes);
 
     if (rewardCardTypesString) {
-      const rewardCardTypes = await cardTypeModel.find({
+      const rewardCardTypes = await CardTypeModel.find({
         slug: { $in: rewardCardTypesString.split(" ") }
       });
       await Promise.all(
@@ -713,7 +713,7 @@ export class Booking {
       limit = common;
     }
     if (limit !== null) {
-      const bookings = await bookingModel.find({
+      const bookings = await BookingModel.find({
         type: Scene.PLAY,
         store: this.store,
         date: this.date,
@@ -731,7 +731,7 @@ export class Booking {
   }
 }
 
-const bookingModel = getModelForClass(Booking, {
+const BookingModel = getModelForClass(Booking, {
   schemaOptions: {
     toJSON: {
       getters: true,
@@ -743,4 +743,4 @@ const bookingModel = getModelForClass(Booking, {
   }
 });
 
-export default bookingModel;
+export default BookingModel;

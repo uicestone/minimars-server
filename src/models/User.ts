@@ -162,7 +162,7 @@ export class User {
     const r = 1;
     if (save) {
       await this.updateOne({ $inc: { points: amount * r } }).exec();
-      const u = await userModel.findById(this._id);
+      const u = await UserModel.findById(this._id);
       this.points = u.points;
     } else {
       if (!this.points) this.points = 0;
@@ -171,7 +171,7 @@ export class User {
   }
 }
 
-const userModel = getModelForClass(User, {
+const UserModel = getModelForClass(User, {
   schemaOptions: {
     strict: false,
     toJSON: {
@@ -184,4 +184,4 @@ const userModel = getModelForClass(User, {
   }
 });
 
-export default userModel;
+export default UserModel;
