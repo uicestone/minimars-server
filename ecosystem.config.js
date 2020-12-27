@@ -16,7 +16,7 @@ module.exports = {
     testing: {
       user: "www-data",
       host: ["stirad.com"],
-      ref: "origin/door-test",
+      ref: "origin/testing",
       repo: "https://github.com/uicestone/minimars-server",
       path: "/var/www/minimars-server",
       "post-deploy":
