@@ -671,7 +671,7 @@ export class Booking {
       this.refundSuccess();
     }
 
-    console.log(`[BOK] Cancel this ${this._id}.`);
+    console.log(`[BOK] Cancel booking ${this._id}.`);
 
     if (save) {
       await this.save();
