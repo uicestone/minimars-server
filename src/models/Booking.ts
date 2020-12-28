@@ -2,7 +2,9 @@ import {
   prop,
   getModelForClass,
   plugin,
-  DocumentType
+  DocumentType,
+  modelOptions,
+  Severity
 } from "@typegoose/typegoose";
 import moment from "moment";
 import updateTimes from "./plugins/updateTimes";
@@ -65,9 +67,10 @@ export const validBookingStatus = [
 ])
 @plugin(updateTimes)
 // @index({ date: 1, checkInAt: 1, customer: 1 }, { unique: true })
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Booking {
-  @prop({ ref: "User", required: true, index: true })
-  customer: DocumentType<User>;
+  @prop({ ref: "User", index: true })
+  customer?: DocumentType<User>;
 
   @prop({ ref: "Store" })
   store: DocumentType<Store>;
@@ -135,6 +138,9 @@ export class Booking {
 
   @prop({ remarks: String })
   remarks?: string;
+
+  @prop({ type: Object })
+  providerData?: Record<string, any>;
 
   async calculatePrice(this: DocumentType<Booking>) {
     const booking = this;
@@ -493,7 +499,7 @@ export class Booking {
       }
     }
 
-    console.log(`[PAY] Booking payment success: ${this.id}.`);
+    console.log(`[BOK] Payment success: ${this.id}.`);
     // send user notification
   }
 

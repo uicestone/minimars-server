@@ -30,5 +30,12 @@ const initConfig: IConfig = {
   eventHint: "",
   playHint: "",
   offWeekdays: [],
-  onWeekends: []
+  onWeekends: [],
+  pospalPaymentMethodMap: {
+    payCode_103: "cash",
+    payCode_17: "wechatpay",
+    payCode_105: "shouqianba",
+    payCode_108: "pr",
+    payCode_111: "pos"
+  }
 };

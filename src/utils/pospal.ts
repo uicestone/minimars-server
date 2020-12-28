@@ -6,6 +6,51 @@ import moment from "moment";
 
 const { POSPAL_APPID: appId, POSPAL_APPKEY: appKey } = process.env;
 
+type Ticket = {
+  cashierUid: number;
+  cashier: {
+    jobNumber: string;
+    name: string;
+    uid: number;
+  };
+  customerUid: number;
+  uid: number;
+  sn: string;
+  datetime: string;
+  totalAmount: number;
+  totalProfit: number;
+  discount: number;
+  rounding: number;
+  ticketType: string;
+  invalid: number;
+  items: Item[];
+  payments: Payment[];
+};
+
+type Item = {
+  name: string;
+  buyPrice: number;
+  sellPrice: number;
+  customerPrice: number;
+  quantity: number;
+  discount: number;
+  customerDiscount: number;
+  totalAmount: number;
+  totalProfit: number;
+  isCustomerDiscount: number;
+  productUid: number;
+  productBarcode: string;
+  isWeighing: number;
+  ticketitemattributes: [];
+  discountDetails: [];
+  saleGuiderList: [];
+};
+
+type Payment = {
+  code: string;
+  amount: number;
+};
+
 const api = axios.create({
   baseURL: "https://area35-win.pospal.cn:443/pospal-api2/openapi/v1/",
   headers: { "time-stamp": Date.now() },
@@ -41,9 +86,9 @@ function handleError(data) {
 }
 
 async function post(path: string, data: any) {
-  console.log("post:", path, data);
+  console.log("[PSP] Request:", path, data);
   const res = await api.post(path, data);
-  console.log("res data:", res.data?.data);
+  // console.log("res data:", res.data?.data);
   return handleError(res.data);
 }
 
@@ -102,7 +147,7 @@ export async function incrementMemberBalancePoints(
   balanceIncrement = 0,
   pointIncrement = 0
 ) {
-  post("customerOpenApi/updateBalancePointByIncrement", {
+  await post("customerOpenApi/updateBalancePointByIncrement", {
     customerUid: user.pospalId,
     balanceIncrement,
     pointIncrement,
@@ -111,15 +156,38 @@ export async function incrementMemberBalancePoints(
 }
 
 export async function getMember(number: string) {
-  return post("customerOpenApi/queryByNumber", {
+  return await post("customerOpenApi/queryByNumber", {
     customerNum: number
   });
 }
 
-export async function queryTickets() {
-  return post("ticketOpenApi/queryTicketPages", {
+export async function queryAllPayMethod() {
+  return await post("ticketOpenApi/queryAllPayMethod", {});
+}
+
+export async function queryTickets(postBackParameter?: {
+  parameterType: string;
+  parameterValue: string;
+}): Promise<Ticket[]> {
+  const data: {
+    postBackParameter: {
+      parameterType: string;
+      parameterValue: string;
+    };
+    result: any[];
+    pageSize: number;
+  } = await post("ticketOpenApi/queryTicketPages", {
     startTime: moment().subtract(1, "day").format("YYYY-MM-DD HH:mm:ss"),
-    // startTime: moment().subtract(20, "minutes").format("YYYY-MM-DD HH:mm:ss"),
-    endTime: moment().format("YYYY-MM-DD HH:mm:ss")
+    endTime: moment().format("YYYY-MM-DD HH:mm:ss"),
+    postBackParameter
   });
+
+  let result = data.result;
+
+  if (data.result.length >= data.pageSize) {
+    const nextPageResult = await queryTickets(data.postBackParameter);
+    result = result.concat(nextPageResult);
+  }
+
+  return result;
 }
