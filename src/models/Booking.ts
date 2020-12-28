@@ -475,7 +475,7 @@ export class Booking {
       if (this.gift.quantity) {
         this.gift.quantity -= this.quantity;
         console.log(
-          `[BOK] Gift ${this.gift.id} quantity left ${this.event.kidsCountLeft}, ${this.quantity} occupied by booking ${this.id}.`
+          `[BOK] Gift ${this.gift.id} quantity left ${this.gift.quantity}, ${this.quantity} occupied by booking ${this.id}.`
         );
         await this.gift.save();
       }
