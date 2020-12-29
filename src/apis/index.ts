@@ -1,5 +1,7 @@
 import cors from "cors";
 import methodOverride from "method-override";
+import Agendash from "agendash2";
+import cookieSession from "cookie-session";
 import authenticate from "../middlewares/authenticate";
 import castEmbedded from "../middlewares/castEmbedded";
 import AuthRouter from "./AuthRouter";
@@ -18,8 +20,10 @@ import UserRouter from "./UserRouter";
 import WechatRouter from "./WechatRouter";
 import CardRouter from "./CardRouter";
 import detectUa from "../middlewares/detectUa";
+import agenda from "../utils/agenda";
+import { NextFunction, Request, Response, Router } from "express";
 
-export default (app, router) => {
+export default (app, router: Router) => {
   // register routes
   [
     AuthRouter,
@@ -58,5 +62,28 @@ export default (app, router) => {
     castEmbedded,
     detectUa,
     router
+  );
+
+  app.use(
+    "/agendash",
+    cookieSession({
+      name: "session",
+      keys: [process.env.APP_SECRET],
+
+      // Cookie Options
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }),
+    authenticate,
+    function (req: Request, res: Response, next: NextFunction) {
+      if (req.session) {
+        next();
+      } else if (req.user?.role === "admin") {
+        next();
+        req.session = { userId: req.user.id, userRole: req.user.role };
+      } else {
+        res.sendStatus(401);
+      }
+    },
+    Agendash(agenda)
   );
 };

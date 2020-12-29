@@ -8,6 +8,7 @@ declare module "express-serve-static-core" {
     ua: { isWechat?: boolean };
     pagination: { limit: number; skip: number };
     item?: Document;
+    session?: any;
   }
   interface Response {
     paginatify: (limit: number, skip: number, total: number) => Response;

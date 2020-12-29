@@ -13,20 +13,16 @@ import { saveContentImages } from "./helper";
 import importPrevData from "./importPrevData";
 import userModel, { User } from "../models/User";
 import configModel, { config, Config } from "../models/Config";
-import paymentModel, {
-  Payment,
-  PaymentGateway,
-  Scene
-} from "../models/Payment";
+import paymentModel, { PaymentGateway, Scene } from "../models/Payment";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
 import { queryAllPayMethod, queryTickets } from "./pospal";
-import cardTypeModel from "../models/CardType";
+import CardTypeModel from "../models/CardType";
 import { DocumentType } from "@typegoose/typegoose";
 import StoreModel from "../models/Store";
 import PaymentModel from "../models/Payment";
 import BookingModel from "../models/Booking";
 
-let agenda: Agenda;
+let agenda: Agenda = new Agenda();
 
 export const initAgenda = async () => {
   const client = new MongoClient(process.env.MONGODB_URL, {
@@ -36,7 +32,7 @@ export const initAgenda = async () => {
 
   await client.connect();
 
-  agenda = new Agenda({ mongo: client.db() });
+  agenda.mongo(client.db());
 
   agenda.define("cancel expired pending bookings", async (job, done) => {
     const bookings = await Booking.find({
@@ -176,12 +172,12 @@ export const initAgenda = async () => {
       if (!u) return;
       u.cards.push(c);
     });
-    const cardTypes = await cardTypeModel.find({
+    const cardTypes = await CardTypeModel.find({
       rewardCardTypes: { $exists: true },
       type: "balance"
     });
     for (const cardType of cardTypes) {
-      const rewardCardTypes = await cardTypeModel.find({
+      const rewardCardTypes = await CardTypeModel.find({
         slug: cardType.rewardCardTypes.split(" ")
       });
 
