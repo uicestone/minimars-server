@@ -1,8 +1,9 @@
 import { Socket } from "net";
 import { DocumentType } from "@typegoose/typegoose";
-import storeModel, { Store, storeGateControllers } from "../models/Store";
+import storeModel, { Store, storeDoors } from "../models/Store";
 import { JxCtl } from "jingxing-doors";
 import { parseRemoteServerData } from "jingxing-doors";
+import { sleep } from "../utils/helper";
 
 export default function handleSocketData(
   socket: Socket,
@@ -36,15 +37,14 @@ export default function handleSocketData(
         const timeout = +(process.env.DOOR_PING_INTERVAL || "") * (1 + 1 / 60);
         socket.setTimeout(timeout);
         console.log(
-          `[SOK] Identified store ${client.store.name}, socket timeout set to ${timeout}`
+          `[SOK] Identified store ${client.store.code}, socket timeout set to ${timeout}`
         );
         client.store.ip = socket.remoteAddress;
         client.store.save();
-        storeGateControllers[client.store.id] = new JxCtl(
-          socket,
-          client.store.doors[0].ip
-        );
-        storeGateControllers[client.store.id].init();
+        storeDoors[client.store.id] = client.store.doors.map(d => {
+          d.controller = new JxCtl(socket, d.ip);
+          return d;
+        });
       }
     } else {
       parseRemoteServerData(data);

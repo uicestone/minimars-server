@@ -379,6 +379,42 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("init store doors", async (job, done) => {
+    console.log(`[CRO] Init store doors...`);
+    const { code } = job.attrs.data;
+    const store = await StoreModel.findOne({ code });
+    if (!store) {
+      throw new Error("store_not_found");
+    }
+    store.initDoors();
+    console.log(`[CRO] Init store doors commands sent.`);
+    done();
+  });
+
+  agenda.define("auth store doors", async (job, done) => {
+    console.log(`[CRO] Auth store doors...`);
+    const { code, no } = job.attrs.data;
+    const store = await StoreModel.findOne({ code });
+    if (!store) {
+      throw new Error("store_not_found");
+    }
+    store.authDoors(no);
+    console.log(`[CRO] Auth store doors commands sent.`);
+    done();
+  });
+
+  agenda.define("open store doors", async (job, done) => {
+    console.log(`[CRO] Open store doors...`);
+    const { code, name } = job.attrs.data;
+    const store = await StoreModel.findOne({ code });
+    if (!store) {
+      throw new Error("store_not_found");
+    }
+    store.openDoor(name);
+    console.log(`[CRO] Open store doors commands sent.`);
+    done();
+  });
+
   agenda.start();
 
   agenda.on("ready", () => {
