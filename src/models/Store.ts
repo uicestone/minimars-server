@@ -42,6 +42,9 @@ export class Store {
   @prop({ unique: true })
   name: string;
 
+  @prop({ unique: true })
+  code: string;
+
   @prop()
   address: string;
 
