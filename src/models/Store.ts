@@ -89,8 +89,8 @@ export class Store {
   ip: string;
 
   async authDoors(this: DocumentType<Store>, no: number) {
-    if (no >= (2 ^ 32) || no <= 0) {
-      console.error(`[STR] Auth number outof range: "${no}"`);
+    if (no >= Math.pow(2, 32) || no <= 0) {
+      console.error(`[STR] Auth number out of range: "${no}"`);
       return;
     }
     const doors = storeDoors[this.id];
