@@ -23,8 +23,21 @@ export default function handleSocketData(
 
       // store identity message
       if (matchStore && matchStore[1]) {
-        client.store = await storeModel.findById(matchStore[1]);
-        console.log(`[SOK] Identified store ${client.store.name}.`);
+        try {
+          client.store = await storeModel.findById(matchStore[1]);
+        } catch (e) {
+          socket.destroy(new Error("CANNOT FIND STORE"));
+          return;
+        }
+        if (!client.store) {
+          socket.destroy(new Error("INVALID STORE"));
+          return;
+        }
+        const timeout = +(process.env.DOOR_PING_INTERVAL || "") * (1 + 1 / 60);
+        socket.setTimeout(timeout);
+        console.log(
+          `[SOK] Identified store ${client.store.name}, socket timeout set to ${timeout}`
+        );
         client.store.ip = socket.remoteAddress;
         client.store.save();
         storeGateControllers[client.store.id] = new JxCtl(
