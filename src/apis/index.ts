@@ -75,7 +75,7 @@ export default (app, router: Router) => {
     }),
     authenticate,
     function (req: Request, res: Response, next: NextFunction) {
-      if (req.session) {
+      if (req.session?.userRole === "admin") {
         next();
       } else if (req.user?.role === "admin") {
         next();
