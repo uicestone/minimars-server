@@ -72,6 +72,7 @@ export default (router: Router) => {
     handleAsyncErrors(async (req: Request, res: Response) => {
       const totalTimesCardByStore: {
         _id: string[];
+        customersCount: number;
         times: number;
         priceLeft: number;
       }[] = await CardModel.aggregate([
@@ -85,12 +86,20 @@ export default (router: Router) => {
         {
           $group: {
             _id: "$stores",
+            customers: { $addToSet: "$customer" },
             times: { $sum: "$timesLeft" },
             priceLeft: {
               $sum: {
                 $multiply: [{ $divide: ["$timesLeft", "$times"] }, "$price"]
               }
             }
+          }
+        },
+        {
+          $project: {
+            customersCount: { $size: "$customers" },
+            times: 1,
+            priceLeft: 1
           }
         }
       ]);
@@ -109,6 +118,7 @@ export default (router: Router) => {
               .join("，") || "通用";
           return {
             storeNames,
+            customersCount: storeGroup.customersCount,
             times: storeGroup.times,
             priceLeft: storeGroup.priceLeft
           };
