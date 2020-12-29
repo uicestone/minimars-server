@@ -114,7 +114,7 @@ export default (router: Router) => {
           const storeNames =
             stores
               .filter(s => storeGroup._id.map(i => i.toString()).includes(s.id))
-              .map(s => s.name)
+              .map(s => s.name.substr(0, 2))
               .join("，") || "通用";
           return {
             storeNames,
