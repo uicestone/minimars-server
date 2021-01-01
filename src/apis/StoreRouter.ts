@@ -101,3 +101,12 @@ export default (router: Router) => {
 
   return router;
 };
+
+// setTimeout(async () => {
+//   const store = await StoreModel.findOne({ code: "BY" });
+//   try {
+//     await store.syncPospalTickets(60 * 24);
+//   } catch (e) {
+//     console.error(e);
+//   }
+// }, 1000);

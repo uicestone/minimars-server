@@ -12,15 +12,16 @@ import Store from "../models/Store";
 import { saveContentImages } from "./helper";
 import importPrevData from "./importPrevData";
 import userModel, { User } from "../models/User";
-import configModel, { config, Config } from "../models/Config";
-import paymentModel, { PaymentGateway, Scene } from "../models/Payment";
+import configModel, { Config } from "../models/Config";
+import paymentModel, { PaymentGateway } from "../models/Payment";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
-import { queryAllPayMethod, queryTickets } from "./pospal";
 import CardTypeModel from "../models/CardType";
 import { DocumentType } from "@typegoose/typegoose";
 import StoreModel from "../models/Store";
-import PaymentModel from "../models/Payment";
-import BookingModel from "../models/Booking";
+
+const pospalTicketsSyncInterval = +(
+  process.env.POSPAL_TICKETS_SYNC_INTERVAL || 10
+);
 
 let agenda: Agenda = new Agenda();
 
@@ -323,55 +324,26 @@ export const initAgenda = async () => {
     done();
   });
 
-  agenda.define("query pospal tickets", async (job, done) => {
-    console.log(`[CRO] Query pospal tickets...`);
-    await BookingModel.deleteMany({ "providerData.provider": "pospal" });
-    const store = await StoreModel.findOne({ name: "浦东金桥店" });
-    const result = await queryTickets();
-    result.forEach(ticket => {
-      const [date, checkInAt] = ticket.datetime.split(" ");
-      const booking = new BookingModel({
-        type: Scene.FOOD,
-        date,
-        checkInAt,
-        price: ticket.totalAmount,
-        store, // TODO conditional store
-        // TODO booking card
-        // TODO booking customer
-        providerData: { provider: "pospal", ...ticket, payments: undefined },
-        createdAt: new Date(ticket.datetime)
-      });
-      ticket.payments.map(p => {
-        const payment = new PaymentModel({
-          scene: Scene.FOOD,
-          paid: true,
-          title: "餐饮消费",
-          // TODO customer,
-          store, // TODO conditional store
-          amount: p.amount,
-          attach: `booking ${booking.id}`,
-          gateway: config.pospalPaymentMethodMap[p.code],
-          createdAt: new Date(ticket.datetime)
-        });
-        booking.payments.push(payment);
-        payment.save();
-      });
-      booking.save();
-    });
+  agenda.define("sync history pospal tickets", async (job, done) => {
+    console.log(`[CRO] Sync history pospal tickets...`);
+    const { code, dateStart, dateEnd } = job.attrs.data;
+    const store = await StoreModel.findOne({ code });
+    await store.syncPospalTickets(dateStart, dateEnd);
+    console.log(`[CRO] Finished sync history pospal tickets.`);
+    done();
+  });
 
-    // const methods = await queryAllPayMethod();
-    // console.log(
-    //   methods.filter(m =>
-    //     [
-    //       "payCode_105",
-    //       "payCode_17",
-    //       "payCode_108",
-    //       "payCode_103",
-    //       "payCode_111"
-    //     ].includes(m.code)
-    //   )
-    // );
-    console.log(`[CRO] Finished query pospal tickets.`);
+  agenda.define("sync pospal tickets", async (job, done) => {
+    console.log(`[CRO] Sync pospal tickets...`);
+    const stores = await StoreModel.find();
+    for (const store of stores) {
+      try {
+        await store.syncPospalTickets(pospalTicketsSyncInterval * 2);
+      } catch (e) {
+        continue;
+      }
+    }
+    console.log(`[CRO] Finished sync pospal tickets.`);
     done();
   });
 
@@ -421,7 +393,10 @@ export const initAgenda = async () => {
     agenda.every("0 0 * * *", "set expired cards"); // run everyday at 0am
     agenda.every("1 day", "get wechat mp users");
     agenda.every("0 20 * * *", "check balance reward cards"); // run everyday at 8pm
-    // agenda.now("query pospal tickets");
+    agenda.every(
+      `*/${pospalTicketsSyncInterval} 10-23 * * *`,
+      "sync pospal tickets"
+    );
   });
 
   agenda.on("error", err => {

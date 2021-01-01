@@ -39,6 +39,10 @@ export enum Scene {
     return next();
   }
 
+  if (payment.gatewayData?.provider) {
+    return next();
+  }
+
   // console.log(`[PAY] Payment pre save ${payment._id}.`);
 
   if (payment.paid) {
@@ -94,52 +98,24 @@ export enum Scene {
       }
       break;
     case PaymentGateway.Balance:
-      if (customer.balance < payment.amount) {
-        throw new Error("insufficient_balance");
-      }
-
-      console.log(
-        `[PAY] D:R was ${customer.balanceDeposit}:${customer.balanceReward}.`
+      const {
+        depositPaymentAmount,
+        rewardPaymentAmount
+      } = await customer.writeOffBalance(
+        payment.amount,
+        payment.amountForceDeposit,
+        payment.amountDeposit
       );
-
-      if (!payment.amountForceDeposit) {
-        payment.amountForceDeposit = 0;
-      }
-
-      const depositPaymentAmount =
-        payment.amountDeposit ||
-        Math.max(
-          +(
-            payment.amountForceDeposit +
-            ((payment.amount - payment.amountForceDeposit) *
-              customer.balanceDeposit) /
-              customer.balance
-          ).toFixed(2),
-          0.01
-        );
-
-      const rewardPaymentAmount = +(
-        payment.amount - depositPaymentAmount
-      ).toFixed(2);
 
       console.log(
         `[PAY] Payment amount D:R is ${depositPaymentAmount}:${rewardPaymentAmount}.`
       );
 
-      customer.balanceDeposit -= depositPaymentAmount;
-      customer.balanceReward -= rewardPaymentAmount;
       payment.amountDeposit = depositPaymentAmount;
-
-      console.log(
-        `[DEBUG] Balance payment saved, customer balance is now ${customer.balance}`
-      );
-
       payment.paid = true;
-      // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
         await payment.customer.addPoints(payment.amount);
       }
-      await customer.save();
       break;
     case PaymentGateway.Card:
       if (
@@ -312,11 +288,15 @@ export class Payment {
         if (payment.amount >= 0) {
           // TODO: no, single payment success is not booking payment success
           // so right now we don't trigger paidSuccess for balance/card/coupon payment
+          console.log(
+            `[PAY] Booking payment success ${this.id}, booking: ${booking._id}.`
+          );
           await booking.paymentSuccess();
-          console.log(`[PAY] Booking payment success, id: ${booking._id}.`);
         } else {
+          console.log(
+            `[PAY] Booking refund success ${this.id}, booking: ${booking._id}.`
+          );
           await booking.refundSuccess();
-          console.log(`[PAY] Booking refund success, id: ${booking._id}.`);
         }
         await booking.save();
         break;

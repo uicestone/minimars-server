@@ -452,7 +452,7 @@ export class Booking {
       this.status = BookingStatus.BOOKED;
     }
 
-    console.log(`[BOK] Auto set booking status ${this.status} for ${this.id}.`);
+    console.log(`[BOK] Payment success: ${this.id}, status is ${this.status}.`);
 
     if (this.type === Scene.EVENT) {
       if (!this.populated("event")) {
@@ -499,7 +499,6 @@ export class Booking {
       }
     }
 
-    console.log(`[BOK] Payment success: ${this.id}.`);
     // send user notification
   }
 

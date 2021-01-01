@@ -169,6 +169,50 @@ export class User {
       this.points += r * amount;
     }
   }
+
+  async writeOffBalance(
+    this: DocumentType<User>,
+    amount: number,
+    amountForceDeposit = 0,
+    amountDeposit?: number,
+    save = true
+  ) {
+    if (this.balance < amount) {
+      throw new Error("insufficient_balance");
+    }
+
+    console.log(`[USR] D:R was ${this.balanceDeposit}:${this.balanceReward}.`);
+
+    if (!amountForceDeposit) {
+      amountForceDeposit = 0;
+    }
+
+    const depositPaymentAmount =
+      amountDeposit ||
+      Math.max(
+        +(
+          amountForceDeposit +
+          ((amount - amountForceDeposit) * this.balanceDeposit) / this.balance
+        ).toFixed(2),
+        0.01
+      );
+
+    const rewardPaymentAmount = +(amount - depositPaymentAmount).toFixed(2);
+
+    this.balanceDeposit -= depositPaymentAmount;
+    this.balanceReward -= rewardPaymentAmount;
+
+    await this.save();
+
+    console.log(
+      `[USR] Balance saved, customer balance is now ${this.balance} (${this.balanceDeposit} + ${this.balanceReward}).`
+    );
+
+    return {
+      depositPaymentAmount,
+      rewardPaymentAmount
+    };
+  }
 }
 
 const UserModel = getModelForClass(User, {
