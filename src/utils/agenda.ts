@@ -1,23 +1,24 @@
 import Agenda from "agenda";
 import moment from "moment";
 import axios from "axios";
-import Booking, { BookingStatus } from "../models/Booking";
 import { MongoClient } from "mongodb";
-import cardModel, { Card, CardStatus } from "../models/Card";
+import { DocumentType } from "@typegoose/typegoose";
+import Booking, { BookingStatus } from "../models/Booking";
+import CardModel, { Card, CardStatus } from "../models/Card";
 import Gift from "../models/Gift";
 import CardType from "../models/CardType";
 import Event from "../models/Event";
 import Post from "../models/Post";
 import Store from "../models/Store";
+import UserModel, { User } from "../models/User";
+import configModel, { Config } from "../models/Config";
+import CardTypeModel from "../models/CardType";
+import StoreModel from "../models/Store";
+import paymentModel, { PaymentGateway } from "../models/Payment";
 import { saveContentImages } from "./helper";
 import importPrevData from "./importPrevData";
-import userModel, { User } from "../models/User";
-import configModel, { Config } from "../models/Config";
-import paymentModel, { PaymentGateway } from "../models/Payment";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
-import CardTypeModel from "../models/CardType";
-import { DocumentType } from "@typegoose/typegoose";
-import StoreModel from "../models/Store";
+import Pospal from "./pospal";
 
 const pospalTicketsSyncInterval = +(
   process.env.POSPAL_TICKETS_SYNC_INTERVAL || 10
@@ -93,7 +94,7 @@ export const initAgenda = async () => {
   });
 
   agenda.define("cancel expired pending cards", async (job, done) => {
-    const cards = await cardModel.find({
+    const cards = await CardModel.find({
       status: CardStatus.PENDING,
       createdAt: {
         $lt: moment().subtract(2, "hours").toDate()
@@ -119,13 +120,13 @@ export const initAgenda = async () => {
   });
 
   agenda.define("create indexes", async (job, done) => {
-    userModel.createIndexes();
+    UserModel.createIndexes();
     console.log("[CRO] Index created.");
     done();
   });
 
   agenda.define("save image from content", async (job, done) => {
-    console.log(`[CRO] Save image from content...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const cardTypes = await CardType.find();
     const events = await Event.find();
     const gifts = await Gift.find();
@@ -139,26 +140,26 @@ export const initAgenda = async () => {
         document.save();
       }
     }
-    console.log(`[CRO] Saved image from content.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("set expired cards", async (job, done) => {
-    console.log(`[CRO] Set expired cards...`);
-    await cardModel.updateMany(
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    await CardModel.updateMany(
       { type: { $in: ["coupon", "period"] }, expiresAt: { $lt: new Date() } },
       { $set: { status: CardStatus.EXPIRED } }
     );
-    console.log(`[CRO] Finished setting expired cards.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("check balance reward cards", async (job, done) => {
-    console.log(`[CRO] Check balance reward cards...`);
-    const cards = await cardModel.find({
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    const cards = await CardModel.find({
       status: { $in: [CardStatus.ACTIVATED, CardStatus.VALID] }
     });
-    const users = await userModel.find({
+    const users = await UserModel.find({
       _id: { $in: cards.map(c => c.customer) }
     });
     const userMap: Map<
@@ -205,12 +206,12 @@ export const initAgenda = async () => {
         }
       }
     }
-    console.log(`[CRO] Finished check balance reward cards.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("update holidays", async (job, done) => {
-    console.log(`[CRO] Update holidays...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const year = new Date().getFullYear();
     const [res1, res2] = await Promise.all([
       axios.get(`${process.env.NATIONAL_HOLIDAY_BASE}/${year}.json`),
@@ -242,14 +243,14 @@ export const initAgenda = async () => {
       configItemOnWeekends.save(),
       configItemOffWeekdays.save()
     ]);
-    console.log(`[CRO] Finished update holidays.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("verify user balance", async (job, done) => {
-    console.log(`[CRO] Verify user balance...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const userBalanceMap: Record<string, number> = {};
-    const balanceCards = await cardModel.find({
+    const balanceCards = await CardModel.find({
       type: "balance",
       status: CardStatus.ACTIVATED
     });
@@ -266,7 +267,7 @@ export const initAgenda = async () => {
       userBalanceMap[p.customer.id] =
         (userBalanceMap[p.customer.id] || 0) - p.amount;
     });
-    const users = await userModel.find({
+    const users = await UserModel.find({
       _id: { $in: Object.keys(userBalanceMap) }
     });
     users.forEach(u => {
@@ -279,27 +280,27 @@ export const initAgenda = async () => {
         );
       }
     });
-    console.log(`[CRO] Finished verify user balance.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("generate wechat qrcode", async (job, done) => {
-    console.log(`[CRO] Generate wechat qrcode...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { path } = job.attrs.data;
     getQrcode(path);
-    console.log(`[CRO] Finished generate wechat qrcode.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("get wechat mp users", async (job, done) => {
-    console.log(`[CRO] Get wechat mp users...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const openids = await getMpUserOpenids();
     let start = 0;
     while (start < openids.length) {
       const chunk = openids.slice(start, start + 100);
       const usersInfo = await getUsersInfo(chunk);
       console.log(`[CRO] Got users info ${start} +100.`);
-      const usersExists = await userModel.find({
+      const usersExists = await UserModel.find({
         openidMp: null,
         unionid: { $in: usersInfo.filter(u => u.unionid).map(u => u.unionid) }
       });
@@ -310,7 +311,7 @@ export const initAgenda = async () => {
       }
       for (const user of usersExists) {
         const userInfo = usersInfo.find(u => u.unionid === user.unionid);
-        await userModel.updateOne(
+        await UserModel.updateOne(
           { _id: user.id },
           { openidMp: userInfo.openid }
         );
@@ -320,21 +321,21 @@ export const initAgenda = async () => {
       }
       start += 100;
     }
-    console.log(`[CRO] Finished get wechat mp users.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("sync history pospal tickets", async (job, done) => {
-    console.log(`[CRO] Sync history pospal tickets...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { code, dateStart, dateEnd } = job.attrs.data;
     const store = await StoreModel.findOne({ code });
     await store.syncPospalTickets(dateStart, dateEnd);
-    console.log(`[CRO] Finished sync history pospal tickets.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("sync pospal tickets", async (job, done) => {
-    console.log(`[CRO] Sync pospal tickets...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const stores = await StoreModel.find();
     for (const store of stores) {
       try {
@@ -343,43 +344,61 @@ export const initAgenda = async () => {
         continue;
       }
     }
-    console.log(`[CRO] Finished sync pospal tickets.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    done();
+  });
+
+  agenda.define("sync pospal customers", async (job, done) => {
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    const pospal = new Pospal();
+    const customers = await pospal.queryAllCustomers();
+    for (const customer of customers) {
+      if (customer.phone) {
+        const user = await UserModel.findOne({ mobile: customer.phone });
+        if (!user || customer.customerUid.toString() === user.pospalId)
+          continue;
+        user.pospalId = customer.customerUid.toString();
+        console.log(`User ${user.mobile} pospal id set to ${user.pospalId}`);
+        await user.save();
+      }
+    }
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("init store doors", async (job, done) => {
-    console.log(`[CRO] Init store doors...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { code } = job.attrs.data;
     const store = await StoreModel.findOne({ code });
     if (!store) {
       throw new Error("store_not_found");
     }
     store.initDoors();
-    console.log(`[CRO] Init store doors commands sent.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("auth store doors", async (job, done) => {
-    console.log(`[CRO] Auth store doors...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { code, no } = job.attrs.data;
     const store = await StoreModel.findOne({ code });
     if (!store) {
       throw new Error("store_not_found");
     }
     store.authDoors(no);
-    console.log(`[CRO] Auth store doors commands sent.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
   agenda.define("open store doors", async (job, done) => {
-    console.log(`[CRO] Open store doors...`);
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { code, name } = job.attrs.data;
     const store = await StoreModel.findOne({ code });
     if (!store) {
       throw new Error("store_not_found");
     }
     store.openDoor(name);
-    console.log(`[CRO] Open store doors commands sent.`);
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
