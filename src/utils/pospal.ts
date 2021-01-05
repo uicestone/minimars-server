@@ -133,6 +133,12 @@ export default class Pospal {
       const customer =
         this.customers?.find(c => c.customerUid.toString() === user.pospalId) ||
         (await this.getMember(user.pospalId));
+      if (!customer) {
+        console.error(
+          `[PSP] Customer not found for ${user.pospalId} ${user.mobile}.`
+        );
+        return;
+      }
       if (customer.balance !== user.balance || customer.point !== user.points) {
         await this.incrementMemberBalancePoints(
           user,
