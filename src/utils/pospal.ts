@@ -1,11 +1,12 @@
 import md5 from "md5";
-import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
-import userModel, { User } from "../models/User";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { DocumentType } from "@typegoose/typegoose";
 import moment from "moment";
+import JSONBigInt from "json-bigint";
+import userModel, { User } from "../models/User";
 
 export type Ticket = {
-  cashierUid: number;
+  cashierUid: string;
   cashier: {
     jobNumber: string;
     name: string;
@@ -50,7 +51,7 @@ type Payment = {
 };
 
 type Member = {
-  customerUid: number;
+  customerUid: number | string;
   categoryName: string;
   number: string;
   name: string;
@@ -109,7 +110,7 @@ export default class Pospal {
   handleError(data) {
     if (data.status === "error") {
       console.error(`[PSP] ${data.messages.join("；")}`);
-      return;
+      throw new Error("pospal_request_error");
     } else {
       return data.data;
     }
@@ -117,55 +118,45 @@ export default class Pospal {
 
   async post(path: string, data: any) {
     // console.log("[PSP] Request:", path, data);
-    const res = await this.api.post(path, data);
+    const res = await this.api.post(path, data, {
+      transformResponse: data => {
+        return JSONBigInt({ storeAsString: true }).parse(data);
+      }
+    });
     // console.log("res data:", res.data?.data);
     return this.handleError(res.data);
   }
 
   async addMember(user: DocumentType<User>) {
-    const existing = await this.getMember(user.id);
-    if (existing) {
-      if (!user.pospalId) {
-        user.pospalId = existing.customerUid;
-        await user.save();
+    const customerInfo: Member = await this.post("customerOpenApi/add", {
+      customerInfo: {
+        number: user.id,
+        name: user.name,
+        phone: user.mobile,
+        balance: user.balance,
+        point: user.points
       }
-      if (existing.balance !== user.balance || existing.point !== user.points) {
-        await this.incrementMemberBalancePoints(
-          user,
-          +(user.balance - existing.balance).toFixed(2),
-          +(user.points - existing.point).toFixed(2)
-        );
-        console.log(
-          `[PSP] Found user ${
-            user.mobile
-          } with points/balance offset, fixed (${+(
-            user.balance - existing.balance
-          ).toFixed(2)}, ${+(user.points - existing.point).toFixed(2)}).`
-        );
-      } else {
-        console.log(
-          `[PSP] Found user ${user.mobile} with points/balance exact match.`
-        );
-      }
-    } else {
-      const customerInfo = await this.post("customerOpenApi/add", {
-        customerInfo: {
-          number: user.id,
-          name: user.name,
-          phone: user.mobile,
-          balance: user.balance,
-          point: user.points
-        }
-      });
-      await userModel.updateOne(
-        { _id: user.id },
-        { pospalId: customerInfo.customerUid }
-      );
-      console.log(`[PSP] New Pospal member created.`);
-    }
+    });
+    await userModel.updateOne(
+      { _id: user.id },
+      { pospalId: customerInfo.customerUid }
+    );
+    console.log(`[PSP] New Pospal customer created.`);
   }
 
-  async updateMemberBaseInfo(customerUid: number, set: Partial<Member>) {
+  async getMemberByNumber(number: string): Promise<Member> {
+    return await this.post("customerOpenApi/queryByNumber", {
+      customerNum: number
+    });
+  }
+
+  async getMember(uid: string): Promise<Member> {
+    return await this.post("customerOpenApi/queryByUid", {
+      customerUid: uid
+    });
+  }
+
+  async updateMemberBaseInfo(customerUid: string, set: Partial<Member>) {
     console.log(`[PSP] Update ${customerUid} set ${JSON.stringify(set)}`);
     await this.post("customerOpenApi/updateBaseInfo", {
       customerInfo: {
@@ -188,12 +179,6 @@ export default class Pospal {
     });
   }
 
-  async getMember(number: string) {
-    return await this.post("customerOpenApi/queryByNumber", {
-      customerNum: number
-    });
-  }
-
   async queryAllCustomers(postBackParameter?: {
     parameterType: string;
     parameterValue: string;
@@ -209,14 +194,19 @@ export default class Pospal {
     } = await this.post("customerOpenApi/queryCustomerPages", {
       postBackParameter
     });
-    let members = data.result;
+    data.result.forEach(item => {
+      if (item.customerUid && typeof item.customerUid === "number") {
+        item.customerUid = item.customerUid.toString();
+      }
+    });
+    let customers = data.result;
     if (data.result.length >= data.pageSize) {
       const nextPageResult = await this.queryAllCustomers(
         data.postBackParameter
       );
-      members = members.concat(nextPageResult);
+      customers = customers.concat(nextPageResult);
     }
-    return members;
+    return customers;
   }
 
   async queryAllPayMethod() {
