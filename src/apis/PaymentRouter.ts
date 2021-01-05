@@ -114,7 +114,6 @@ export default (router: Router) => {
             .split(/[\/\s、，]+/)
             .filter(a => a)
             .map(a => +a);
-          console.log(amounts);
           query.find({ amount: { $in: amounts } });
         }
 
