@@ -24,7 +24,7 @@ const pospalTicketsSyncInterval = +(
   process.env.POSPAL_TICKETS_SYNC_INTERVAL || 10
 );
 
-let agenda: Agenda = new Agenda();
+const agenda: Agenda = new Agenda();
 
 export const initAgenda = async () => {
   const client = new MongoClient(process.env.MONGODB_URL, {
@@ -349,11 +349,13 @@ export const initAgenda = async () => {
   });
 
   agenda.define("sync pospal customers", async (job, done) => {
-    console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const pospal = new Pospal();
-    const customers = await pospal.queryAllCustomers();
-    for (const customer of customers) {
-      if (customer.phone) {
+    try {
+      console.log(`[CRO] Running '${job.attrs.name}'...`);
+      const pospal = new Pospal();
+      // download pospal customers
+      const customers = await pospal.queryAllCustomers();
+      for (const customer of customers) {
+        if (!customer.phone || customer.enable !== 1) continue;
         const user = await UserModel.findOne({ mobile: customer.phone });
         if (!user || customer.customerUid.toString() === user.pospalId)
           continue;
@@ -361,9 +363,18 @@ export const initAgenda = async () => {
         console.log(`User ${user.mobile} pospal id set to ${user.pospalId}`);
         await user.save();
       }
+      // upload balance customers to customer
+      const users = await UserModel.find({
+        $or: [{ balanceDeposit: { $gt: 0 } }, { balanceReward: { $gt: 0 } }]
+      });
+      for (const user of users) {
+        await pospal.addMember(user);
+      }
+      console.log(`[CRO] Finished '${job.attrs.name}'.`);
+      done();
+    } catch (e) {
+      console.error(e);
     }
-    console.log(`[CRO] Finished '${job.attrs.name}'.`);
-    done();
   });
 
   agenda.define("init store doors", async (job, done) => {

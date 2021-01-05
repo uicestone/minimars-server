@@ -73,6 +73,7 @@ export default class Pospal {
   api: AxiosInstance;
   appId: string;
   appKey: string;
+  customers?: Member[];
   constructor(storeCode?: string) {
     this.appId =
       process.env[
@@ -127,11 +128,34 @@ export default class Pospal {
     return this.handleError(res.data);
   }
 
-  async addMember(user: DocumentType<User>) {
+  async addMember(user: DocumentType<User>): Promise<void> {
+    if (user.pospalId) {
+      const customer =
+        this.customers?.find(c => c.customerUid.toString() === user.pospalId) ||
+        (await this.getMember(user.pospalId));
+      if (customer.balance !== user.balance || customer.point !== user.points) {
+        await this.incrementMemberBalancePoints(
+          user,
+          +(user.balance - customer.balance).toFixed(2),
+          +(user.points - customer.point).toFixed(2)
+        );
+        // console.log(user.mobile, user.balance, customer.balance);
+        // console.log(user.mobile, user.points, customer.point);
+        console.log(
+          `[PSP] Found user ${
+            user.mobile
+          } with points/balance offset, fixed (${+(
+            user.balance - customer.balance
+          ).toFixed(2)}, ${+(user.points - customer.point).toFixed(2)}).`
+        );
+      }
+      return;
+    }
+
     const customerInfo: Member = await this.post("customerOpenApi/add", {
       customerInfo: {
         number: user.id,
-        name: user.name,
+        name: user.name?.replace(/[\u{10000}-\u{10FFFF}]/gu, "") || "",
         phone: user.mobile,
         balance: user.balance,
         point: user.points
@@ -141,7 +165,9 @@ export default class Pospal {
       { _id: user.id },
       { pospalId: customerInfo.customerUid }
     );
-    console.log(`[PSP] New Pospal customer created.`);
+    console.log(
+      `[PSP] New Pospal customer created ${customerInfo.customerUid} ${user.mobile}.`
+    );
   }
 
   async getMemberByNumber(number: string): Promise<Member> {
@@ -206,6 +232,7 @@ export default class Pospal {
       );
       customers = customers.concat(nextPageResult);
     }
+    this.customers = customers;
     return customers;
   }
 
