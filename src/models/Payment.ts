@@ -327,6 +327,7 @@ export enum PaymentGateway {
   Dianping = "dianping",
   WechatPay = "wechatpay",
   Pr = "pr",
+  Internal = "internal",
   Alipay = "alipay",
   UnionPay = "unionpay"
 }
@@ -342,6 +343,8 @@ export const gatewayNames = {
   [PaymentGateway.Shouqianba]: "收钱吧",
   [PaymentGateway.Dianping]: "点评POS",
   [PaymentGateway.WechatPay]: "微信小程序",
+  [PaymentGateway.Pr]: "市场公关",
+  [PaymentGateway.Internal]: "内部消费",
   [PaymentGateway.Alipay]: "支付宝",
   [PaymentGateway.UnionPay]: "银联"
 };

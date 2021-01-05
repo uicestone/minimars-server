@@ -163,6 +163,7 @@ export class Store {
       });
     });
     console.log(`[STR] Fetched ${result.length} Pospal tickets.`);
+    let insertBookings = 0;
     for (const ticket of result) {
       if (ticket.invalid) {
         continue;
@@ -182,38 +183,36 @@ export class Store {
           createdAt: new Date(ticket.datetime)
         });
 
-        const payments = ticket.payments.map(p => {
-          const payment = new PaymentModel({
-            scene: Scene.FOOD,
-            paid: true,
-            title: "餐饮消费",
-            // TODO customer,
-            store: this, // TODO conditional store
-            amount: p.amount,
-            attach: `booking ${booking.id}`,
-            gateway: config.pospalPaymentMethodMap[p.code],
-            gatewayData: { provider: "pospal" },
-            createdAt: new Date(ticket.datetime)
-          });
-          return payment;
-        });
+        const payments = ticket.payments
+          .map(p => {
+            const payment = new PaymentModel({
+              scene: Scene.FOOD,
+              paid: true,
+              title: "餐饮消费",
+              // TODO customer,
+              store: this, // TODO conditional store
+              amount: p.amount,
+              attach: `booking ${booking.id}`,
+              gateway: config.pospalPaymentMethodMap[p.code],
+              gatewayData: { provider: "pospal" },
+              createdAt: new Date(ticket.datetime)
+            });
+            return payment;
+          })
+          // drop balance payment without customer
+          .filter(p => p.customer || p.gateway !== "balance");
 
         booking.payments = payments;
 
         await booking.save();
+        insertBookings++;
         await Promise.all(
           payments.map(async p => {
             if (p.gateway === PaymentGateway.Balance) {
-              if (p.customer) {
-                const {
-                  depositPaymentAmount
-                } = await p.customer.writeOffBalance(p.amount);
-                p.amountDeposit = depositPaymentAmount;
-              } else {
-                console.error(
-                  `[STR] Empty customer in balance payment from Pospal, payment: ${p.id}.`
-                );
-              }
+              const { depositPaymentAmount } = await p.customer.writeOffBalance(
+                p.amount
+              );
+              p.amountDeposit = depositPaymentAmount;
             }
             await p.save();
           })
@@ -226,6 +225,7 @@ export class Store {
         continue;
       }
     }
+    console.log(`[STR] Created ${insertBookings} food bookings.`);
   }
 }
 

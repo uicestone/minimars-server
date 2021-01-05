@@ -49,6 +49,25 @@ type Payment = {
   amount: number;
 };
 
+type Member = {
+  customerUid: number;
+  categoryName: string;
+  number: string;
+  name: string;
+  point: number;
+  discount: number;
+  balance: number;
+  phone: string;
+  birthday: string;
+  qq: string;
+  email: string;
+  address: string;
+  createdDate: string;
+  password: string;
+  onAccount: number;
+  enable: number;
+};
+
 export default class Pospal {
   api: AxiosInstance;
   appId: string;
@@ -138,21 +157,22 @@ export default class Pospal {
           point: user.points
         }
       });
-      if (!customerInfo) {
-        await this.post("customerOpenApi/updateBaseInfo", {
-          customerInfo: {
-            customerUid: "85961344667500269",
-            enable: 1
-          }
-        });
-        return;
-      }
       await userModel.updateOne(
         { _id: user.id },
         { pospalId: customerInfo.customerUid }
       );
       console.log(`[PSP] New Pospal member created.`);
     }
+  }
+
+  async updateMemberBaseInfo(customerUid: number, set: Partial<Member>) {
+    console.log(`[PSP] Update ${customerUid} set ${JSON.stringify(set)}`);
+    await this.post("customerOpenApi/updateBaseInfo", {
+      customerInfo: {
+        customerUid,
+        ...set
+      }
+    });
   }
 
   async incrementMemberBalancePoints(
@@ -174,6 +194,31 @@ export default class Pospal {
     });
   }
 
+  async queryAllCustomers(postBackParameter?: {
+    parameterType: string;
+    parameterValue: string;
+  }): Promise<Member[]> {
+    console.log(`[PSP] Query all customers.`);
+    const data: {
+      postBackParameter: {
+        parameterType: string;
+        parameterValue: string;
+      };
+      result: Member[];
+      pageSize: number;
+    } = await this.post("customerOpenApi/queryCustomerPages", {
+      postBackParameter
+    });
+    let members = data.result;
+    if (data.result.length >= data.pageSize) {
+      const nextPageResult = await this.queryAllCustomers(
+        data.postBackParameter
+      );
+      members = members.concat(nextPageResult);
+    }
+    return members;
+  }
+
   async queryAllPayMethod() {
     return await this.post("ticketOpenApi/queryAllPayMethod", {});
   }
@@ -186,6 +231,7 @@ export default class Pospal {
     }
   ): Promise<Ticket[]> {
     const d = dateOrPastMinutes || moment().format("YYYY-MM-DD");
+    console.log(`[PSP] Query tickets for ${d}`);
     const start =
       typeof d === "number"
         ? moment().subtract(d, "minutes")
@@ -196,7 +242,7 @@ export default class Pospal {
         parameterType: string;
         parameterValue: string;
       };
-      result: any[];
+      result: Ticket[];
       pageSize: number;
     } = await this.post("ticketOpenApi/queryTicketPages", {
       startTime: start.format("YYYY-MM-DD HH:mm:ss"),
@@ -242,5 +288,5 @@ export default class Pospal {
 
 // setTimeout(() => {
 //   const pospal = new Pospal("BY");
-//   // pospal.sync
+//   // pospal.queryAllCustomers();
 // }, 1000);

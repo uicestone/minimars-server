@@ -5,6 +5,8 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import StoreModel from "../models/Store";
 import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
+import Pospal from "../utils/pospal";
+import UserModel from "../models/User";
 
 export default (router: Router) => {
   // Store CURD
