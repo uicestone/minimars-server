@@ -285,8 +285,3 @@ export default class Pospal {
     console.log(result);
   }
 }
-
-// setTimeout(() => {
-//   const pospal = new Pospal("BY");
-//   // pospal.queryAllCustomers();
-// }, 1000);

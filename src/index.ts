@@ -17,6 +17,7 @@ import { initAgenda } from "./utils/agenda";
 import { config } from "./models/Config";
 import initConfig from "./utils/initConfig";
 import { initMongoose } from "./utils/mongoose";
+import playground from "./utils/playground";
 
 const app = express();
 const router = express.Router();
@@ -50,4 +51,8 @@ if (portSocket) {
   socketServer.listen(portSocket, () => {
     console.log(`[SYS] Socket server listening port: ${portSocket}.`);
   });
+}
+
+if (process.env.PLAYGROUND) {
+  setTimeout(playground, 1e3);
 }

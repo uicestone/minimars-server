@@ -5,8 +5,6 @@ import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import StoreModel from "../models/Store";
 import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
-import Pospal from "../utils/pospal";
-import UserModel from "../models/User";
 
 export default (router: Router) => {
   // Store CURD
@@ -103,12 +101,3 @@ export default (router: Router) => {
 
   return router;
 };
-
-// setTimeout(async () => {
-//   const store = await StoreModel.findOne({ code: "BY" });
-//   try {
-//     await store.syncPospalTickets(60 * 24);
-//   } catch (e) {
-//     console.error(e);
-//   }
-// }, 1000);
