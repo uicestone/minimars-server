@@ -55,11 +55,9 @@ export default (router: Router) => {
           });
         }
 
-        ["store"].forEach(field => {
-          if (queryParams[field]) {
-            query.find({ [field]: queryParams[field] });
-          }
-        });
+        if (queryParams.store) {
+          query.where({ $or: [{ store: queryParams.store }, { store: null }] });
+        }
 
         if (queryParams.tag) {
           query.find({ tags: queryParams.tag });
