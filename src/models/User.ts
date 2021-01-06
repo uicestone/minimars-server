@@ -10,6 +10,7 @@ import moment from "moment";
 import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
+import Pospal from "../utils/pospal";
 
 @pre("validate", function (next) {
   const user = this as DocumentType<User>;
@@ -203,7 +204,11 @@ export class User {
     this.balanceDeposit -= depositPaymentAmount;
     this.balanceReward -= rewardPaymentAmount;
 
-    await this.save();
+    if (save) {
+      await this.save();
+    }
+
+    await new Pospal().addMember(this);
 
     console.log(
       `[USR] Balance saved, customer balance is now ${this.balance} (${this.balanceDeposit} + ${this.balanceReward}).`
