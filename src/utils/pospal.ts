@@ -150,7 +150,7 @@ export default class Pospal {
         console.log(
           `[PSP] Found user ${
             user.mobile
-          } with points/balance offset, fixed (${+(
+          } with balance/points offset, fixed (${+(
             user.balance - customer.balance
           ).toFixed(2)}, ${+(user.points - customer.point).toFixed(2)}).`
         );

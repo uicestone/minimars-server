@@ -64,9 +64,7 @@ export const userVisibleCardStatus = [
       await this.populate("customer").execPopulate();
     }
     const customer = this.customer as DocumentType<User>;
-    customer.balanceDeposit += this.price;
-    customer.balanceReward += this.balance - this.price;
-    await customer.save();
+    await customer.depositBalance(this.balance, this.price);
     console.log(
       `[CRD] Balance card ${this.id} deposit user ${customer.id} by ${
         this.balance - this.price
@@ -281,9 +279,7 @@ export class Card {
       ) {
         throw new HttpError(400, "用户余额已不足以退款本储值卡");
       }
-      customer.balanceDeposit -= this.price;
-      customer.balanceReward -= this.balanceReward;
-      await customer.save();
+      await customer.depositBalance(-this.balance, -this.price);
     }
 
     if (this.payments.filter(p => p.paid).length) {

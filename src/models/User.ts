@@ -172,6 +172,33 @@ export class User {
     }
   }
 
+  async depositBalance(
+    this: DocumentType<User>,
+    balance: number,
+    amountDeposit: number,
+    save = true
+  ) {
+    const balanceDepositWas = this.balanceDeposit,
+      balanceRewardWas = this.balanceReward;
+
+    this.balanceDeposit = +(this.balanceDeposit + amountDeposit).toFixed(2);
+    this.balanceReward = +(
+      this.balanceReward +
+      balance -
+      amountDeposit
+    ).toFixed(2);
+
+    if (save) {
+      await this.save();
+    }
+
+    await new Pospal().addMember(this);
+
+    console.log(
+      `[USR] Deposit balance of ${this.id} to ${this.balanceDeposit}:${this.balanceReward}, was ${balanceDepositWas}:${balanceRewardWas}`
+    );
+  }
+
   async writeOffBalance(
     this: DocumentType<User>,
     amount: number,
@@ -183,11 +210,8 @@ export class User {
       throw new Error("insufficient_balance");
     }
 
-    console.log(`[USR] D:R was ${this.balanceDeposit}:${this.balanceReward}.`);
-
-    if (!amountForceDeposit) {
-      amountForceDeposit = 0;
-    }
+    const balanceDepositWas = this.balanceDeposit,
+      balanceRewardWas = this.balanceReward;
 
     const depositPaymentAmount =
       amountDeposit ||
@@ -200,7 +224,6 @@ export class User {
       );
 
     const rewardPaymentAmount = +(amount - depositPaymentAmount).toFixed(2);
-
     this.balanceDeposit -= depositPaymentAmount;
     this.balanceReward -= rewardPaymentAmount;
 
@@ -211,7 +234,7 @@ export class User {
     await new Pospal().addMember(this);
 
     console.log(
-      `[USR] Balance saved, customer balance is now ${this.balance} (${this.balanceDeposit} + ${this.balanceReward}).`
+      `[USR] Write off balance of ${this.id} to ${this.balanceDeposit}:${this.balanceReward}, was ${balanceDepositWas}:${balanceRewardWas}`
     );
 
     return {

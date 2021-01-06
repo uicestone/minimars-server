@@ -295,9 +295,7 @@ export default (router: Router) => {
           ) {
             throw new HttpError(400, "用户余额已不足以删除本储值卡");
           }
-          customer.balanceDeposit -= card.price;
-          customer.balanceReward -= card.balanceReward;
-          await customer.save();
+          await customer.depositBalance(-card.balance, -card.price);
         }
         await Payment.deleteMany({
           _id: { $in: card.payments.map(p => p.id) }
