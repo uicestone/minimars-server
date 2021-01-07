@@ -9,7 +9,8 @@ import PaymentModel, {
   gatewayNames,
   Payment,
   PaymentGateway,
-  receptionGateways
+  receptionGateways,
+  SceneLabel
 } from "../models/Payment";
 import StoreModel from "../models/Store";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
@@ -117,6 +118,10 @@ export default (router: Router) => {
           query.find({ amount: { $in: amounts } });
         }
 
+        if (queryParams.scene) {
+          query.find({ scene: { $in: queryParams.scene.split(",") } });
+        }
+
         let total = await query.countDocuments();
         const [
           { totalAmount } = { totalAmount: 0 }
@@ -163,10 +168,12 @@ export default (router: Router) => {
       }
 
       if (queryParams.date) {
-        const start = moment(queryParams.date).startOf("day");
-        const end = moment(queryParams.dateEnd || queryParams.date).endOf(
-          "day"
-        );
+        if (queryParams.dateEnd === "null") delete queryParams.dateEnd;
+        const start = moment(queryParams.date, "YYYY-MM-DD").startOf("day");
+        const end = moment(
+          queryParams.dateEnd || queryParams.date,
+          "YYYY-MM-DD"
+        ).endOf("day");
         query.find({ createdAt: { $gte: start, $lte: end } });
       }
 
@@ -213,11 +220,23 @@ export default (router: Router) => {
         });
       }
 
-      ["store", "customer", "amount"].forEach(field => {
+      ["store", "customer"].forEach(field => {
         if (queryParams[field]) {
           query.find({ [field]: queryParams[field] });
         }
       });
+
+      if (queryParams.amount) {
+        const amounts = queryParams.amount
+          .split(/[\/\s、，]+/)
+          .filter(a => a)
+          .map(a => +a);
+        query.find({ amount: { $in: amounts } });
+      }
+
+      if (queryParams.scene) {
+        query.find({ scene: { $in: queryParams.scene.split(",") } });
+      }
 
       const payments = await query.find().limit(5e3).exec();
 
@@ -231,6 +250,7 @@ export default (router: Router) => {
           "金额",
           "余额面额",
           "门店",
+          "业务场景",
           "明细",
           "支付方式",
           "时间"
@@ -250,6 +270,7 @@ export default (router: Router) => {
               name: "-"
             }
           ).name,
+          SceneLabel[payment.scene],
           payment.title,
           gatewayNames[payment.gateway],
           moment((payment as any).createdAt).format("YYYY-MM-DD HH:mm")

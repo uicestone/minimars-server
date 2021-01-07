@@ -32,6 +32,15 @@ export enum Scene {
   CARD = "card"
 }
 
+export const SceneLabel = {
+  play: "门票",
+  party: "派对",
+  event: "活动",
+  gift: "礼品",
+  food: "餐饮",
+  card: "购卡"
+};
+
 @pre("save", async function (next) {
   const payment = this as DocumentType<Payment>;
 
