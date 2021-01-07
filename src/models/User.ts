@@ -228,12 +228,18 @@ export class User {
     this.balanceDeposit -= depositPaymentAmount;
     this.balanceReward -= rewardPaymentAmount;
 
-    if (save) {
-      await this.save();
+    if (syncToPospal) {
+      try {
+        await new Pospal().addMember(this);
+      } catch (e) {
+        console.error(
+          `[USR] Sync ${this.id} ${this.mobile} to pospal failed: ${e.message}.`
+        );
+      }
     }
 
-    if (syncToPospal) {
-      await new Pospal().addMember(this);
+    if (save) {
+      await this.save();
     }
 
     console.log(
