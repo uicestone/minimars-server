@@ -368,7 +368,13 @@ export const initAgenda = async () => {
         $or: [{ balanceDeposit: { $gt: 0 } }, { balanceReward: { $gt: 0 } }]
       });
       for (const user of users) {
-        await pospal.addMember(user);
+        try {
+          await pospal.addMember(user);
+        } catch (e) {
+          console.error(
+            `[CRO] Sync user ${user.id} ${user.mobile} to Pospal failed: ${e.message}`
+          );
+        }
       }
       console.log(`[CRO] Finished '${job.attrs.name}'.`);
       done();
