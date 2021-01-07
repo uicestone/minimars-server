@@ -151,7 +151,7 @@ export class Store {
       t.payments.forEach(p => {
         if (!config.pospalPaymentMethodMap[p.code]) {
           pospal.queryAllPayMethod().then(methods => {
-            const method = methods.find(m => m.code === "payCode_107");
+            const method = methods.find(m => m.code === p.code);
             console.error(
               `[STR] Need code ${p.code} (${JSON.stringify(
                 method
@@ -210,7 +210,11 @@ export class Store {
           payments.map(async p => {
             if (p.gateway === PaymentGateway.Balance) {
               const { depositPaymentAmount } = await p.customer.writeOffBalance(
-                p.amount
+                p.amount,
+                0,
+                0,
+                true,
+                false
               );
               p.amountDeposit = depositPaymentAmount;
             }

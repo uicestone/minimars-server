@@ -204,7 +204,8 @@ export class User {
     amount: number,
     amountForceDeposit = 0,
     amountDeposit?: number,
-    save = true
+    save = true,
+    syncToPospal = true
   ) {
     if (this.balance < amount) {
       throw new Error("insufficient_balance");
@@ -231,7 +232,9 @@ export class User {
       await this.save();
     }
 
-    await new Pospal().addMember(this);
+    if (syncToPospal) {
+      await new Pospal().addMember(this);
+    }
 
     console.log(
       `[USR] Write off balance of ${this.id} to ${this.balanceDeposit}:${this.balanceReward}, was ${balanceDepositWas}:${balanceRewardWas}`
