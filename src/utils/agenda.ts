@@ -372,7 +372,7 @@ export const initAgenda = async () => {
           await pospal.addMember(user);
         } catch (e) {
           console.error(
-            `[CRO] Sync user ${user.id} ${user.mobile} to Pospal failed: ${e.message}`
+            `[CRO] Sync user ${user.id} ${user.mobile} to Pospal failed.`
           );
         }
       }

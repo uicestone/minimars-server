@@ -111,7 +111,7 @@ export default class Pospal {
   handleError(data) {
     if (data.status === "error") {
       console.error(`[PSP] ${data.messages.join("；")}`);
-      throw new Error(`Pospal error: ${data.messages.join("；")}`);
+      throw new Error(`pospal_request_error`);
     } else {
       return data.data;
     }
