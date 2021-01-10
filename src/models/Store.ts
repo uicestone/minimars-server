@@ -203,9 +203,7 @@ export class Store {
             const payment = new PaymentModel({
               scene: Scene.FOOD,
               paid: true,
-              title: `餐饮消费：${ticket.items
-                .map(i => `${i.name}×${i.quantity}`)
-                .join(" ")}`,
+              title: "餐饮消费",
               customer: booking.customer,
               store: this,
               amount: p.amount,
@@ -221,7 +219,7 @@ export class Store {
 
         booking.payments = payments;
 
-        await booking.save();
+        await booking.save(); // may throw duplicate error so skip payment saving below
         insertBookings++;
         await Promise.all(
           payments.map(async p => {
