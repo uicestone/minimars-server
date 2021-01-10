@@ -208,6 +208,9 @@ export class User {
     syncToPospal = true
   ) {
     if (this.balance < amount) {
+      console.log(
+        `[USR] Insufficient balance ${this.balance}, trying to write-off ${amount}.`
+      );
       throw new Error("insufficient_balance");
     }
 

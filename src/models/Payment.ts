@@ -351,7 +351,7 @@ export const gatewayNames = {
   [PaymentGateway.Cash]: "现金",
   [PaymentGateway.Shouqianba]: "收钱吧",
   [PaymentGateway.Dianping]: "点评POS",
-  [PaymentGateway.WechatPay]: "微信小程序",
+  [PaymentGateway.WechatPay]: "微信支付",
   [PaymentGateway.Pr]: "市场公关",
   [PaymentGateway.Internal]: "内部消费",
   [PaymentGateway.Alipay]: "支付宝",

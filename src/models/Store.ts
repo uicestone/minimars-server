@@ -19,6 +19,7 @@ import BookingModel, { BookingStatus } from "./Booking";
 import Pospal, { Ticket } from "../utils/pospal";
 import PaymentModel, { PaymentGateway, Scene } from "./Payment";
 import { config } from "./Config";
+import UserModel from "./User";
 
 export const storeDoors: { [storeId: string]: Door[] } = {};
 export const storeServerSockets: { [storeId: string]: Socket } = {};
@@ -180,17 +181,33 @@ export class Store {
           // TODO booking card
           // TODO booking customer
           providerData: { provider: "pospal", ...ticket, payments: undefined },
-          createdAt: new Date(ticket.datetime)
+          createdAt: new Date(ticket.datetime),
+          remarks: ticket.items.map(i => `${i.name}×${i.quantity}`).join("\n")
         });
+
+        if (ticket.customerUid) {
+          const customer = await UserModel.findOne({
+            pospalId: ticket.customerUid.toString()
+          });
+          if (customer) {
+            booking.customer = customer;
+          } else {
+            console.error(
+              `[STR] Failed to find customer when sync booking from Pospal, booking ${booking.id} customerUid ${ticket.customerUid}.`
+            );
+          }
+        }
 
         const payments = ticket.payments
           .map(p => {
             const payment = new PaymentModel({
               scene: Scene.FOOD,
               paid: true,
-              title: "餐饮消费",
-              // TODO customer,
-              store: this, // TODO conditional store
+              title: `餐饮消费：${ticket.items
+                .map(i => `${i.name}×${i.quantity}`)
+                .join(" ")}`,
+              customer: booking.customer,
+              store: this,
               amount: p.amount,
               attach: `booking ${booking.id}`,
               gateway: config.pospalPaymentMethodMap[p.code],
@@ -199,8 +216,8 @@ export class Store {
             });
             return payment;
           })
-          // drop balance payment without customer
-          .filter(p => p.customer || p.gateway !== "balance");
+          // drop internal payment
+          .filter(p => p.gateway !== PaymentGateway.Internal);
 
         booking.payments = payments;
 
@@ -223,6 +240,7 @@ export class Store {
         );
       } catch (e) {
         if (e.code === 11000) {
+        } else if (e.message === "insufficient_balance") {
         } else {
           console.error(e);
         }
