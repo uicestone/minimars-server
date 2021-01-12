@@ -18,7 +18,6 @@ import { sleep } from "../utils/helper";
 import BookingModel, { BookingStatus } from "./Booking";
 import Pospal, { Ticket } from "../utils/pospal";
 import PaymentModel, { PaymentGateway, Scene } from "./Payment";
-import { config } from "./Config";
 import UserModel from "./User";
 
 export const storeDoors: { [storeId: string]: Door[] } = {};
@@ -93,6 +92,9 @@ export class Store {
   @prop()
   ip: string;
 
+  @prop({ type: Object })
+  pospalPaymentMethodMap?: Record<string, PaymentGateway>;
+
   async authDoors(this: DocumentType<Store>, no: number) {
     if (no >= Math.pow(2, 32) || no <= 0) {
       console.error(`[STR] Auth number out of range: "${no}"`);
@@ -150,17 +152,18 @@ export class Store {
 
     result.forEach(t => {
       t.payments.forEach(p => {
-        if (!config.pospalPaymentMethodMap[p.code]) {
-          pospal.queryAllPayMethod().then(methods => {
-            const method = methods.find(m => m.code === p.code);
-            console.error(
-              `[STR] Need code ${p.code} (${JSON.stringify(
-                method
-              )}) to be configured.`
-            );
-          });
-          throw new Error("invalid_payment_code");
+        if (this.pospalPaymentMethodMap?.[p.code]) {
+          return;
         }
+        pospal.queryAllPayMethod().then(methods => {
+          const method = methods.find(m => m.code === p.code);
+          console.error(
+            `[STR] Need code ${p.code} (${JSON.stringify(
+              method
+            )}) to be configured.`
+          );
+        });
+        throw new Error("invalid_payment_code");
       });
     });
     console.log(`[STR] Fetched ${result.length} Pospal tickets.`);
@@ -208,7 +211,7 @@ export class Store {
               store: this,
               amount: p.amount,
               attach: `booking ${booking.id}`,
-              gateway: config.pospalPaymentMethodMap[p.code],
+              gateway: this.pospalPaymentMethodMap[p.code],
               gatewayData: { provider: "pospal" },
               createdAt: new Date(ticket.datetime)
             });

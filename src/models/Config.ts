@@ -48,7 +48,6 @@ export class Config {
   playHint?: string;
   offWeekdays?: string[];
   onWeekends?: string[];
-  pospalPaymentMethodMap?: Record<string, string>;
 }
 
 export const config: Config = {};

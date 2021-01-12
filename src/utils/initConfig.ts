@@ -1,6 +1,5 @@
 import Config, { Config as IConfig } from "../models/Config";
 import reduceConfig from "./reduceConfig";
-import moment from "moment";
 
 const { DEBUG } = process.env;
 
@@ -30,12 +29,5 @@ const initConfig: IConfig = {
   eventHint: "",
   playHint: "",
   offWeekdays: [],
-  onWeekends: [],
-  pospalPaymentMethodMap: {
-    payCode_103: "cash",
-    payCode_17: "wechatpay",
-    payCode_105: "shouqianba",
-    payCode_108: "pr",
-    payCode_111: "pos"
-  }
+  onWeekends: []
 };
