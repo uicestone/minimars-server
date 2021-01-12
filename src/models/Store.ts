@@ -5,7 +5,9 @@ import {
   prop,
   getModelForClass,
   plugin,
-  DocumentType
+  DocumentType,
+  modelOptions,
+  Severity
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import {
@@ -52,6 +54,7 @@ class Door {
 }
 
 @plugin(updateTimes)
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Store {
   @prop({ unique: true })
   name: string;
