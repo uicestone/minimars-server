@@ -254,7 +254,9 @@ export default class Pospal {
     }
   ): Promise<Ticket[]> {
     const d = dateOrPastMinutes || moment().format("YYYY-MM-DD");
-    console.log(`[PSP] Query tickets for ${d}`);
+    if (typeof d !== "number") {
+      console.log(`[PSP] Query tickets for ${d}`);
+    }
     const start =
       typeof d === "number"
         ? moment().subtract(d, "minutes")

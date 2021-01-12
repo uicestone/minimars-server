@@ -335,7 +335,7 @@ export const initAgenda = async () => {
   });
 
   agenda.define("sync pospal tickets", async (job, done) => {
-    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    // console.log(`[CRO] Running '${job.attrs.name}'...`);
     const stores = await StoreModel.find();
     for (const store of stores) {
       try {
@@ -344,7 +344,7 @@ export const initAgenda = async () => {
         continue;
       }
     }
-    console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    // console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
 
