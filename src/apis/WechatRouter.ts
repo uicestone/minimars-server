@@ -43,9 +43,11 @@ export default (router: Router) => {
     handleAsyncErrors(async (req: Request, res: Response) => {
       const { session_key, encryptedData, iv } = req.body;
       if (!session_key || !encryptedData || !iv) {
-        console.error(
-          `[WEC] Wechat signup failed, ${JSON.stringify(req.body)}`
-        );
+        if (encryptedData && iv) {
+          console.error(
+            `[WEC] Wechat signup failed, ${JSON.stringify(req.body)}`
+          );
+        }
         throw new HttpError(400, "微信登录失败，请后台关闭小程序重新尝试");
       }
 
@@ -93,9 +95,11 @@ export default (router: Router) => {
     handleAsyncErrors(async (req: Request, res: Response) => {
       const { encryptedData, session_key, iv, openid } = req.body;
       if (!session_key || !encryptedData || !iv || !openid) {
-        console.error(
-          `[WEC] Update mobile failed, ${JSON.stringify(req.body)}`
-        );
+        if (iv && encryptedData) {
+          console.error(
+            `[WEC] Update mobile failed, ${JSON.stringify(req.body)}`
+          );
+        }
         throw new HttpError(
           400,
           "微信获取手机号失败，请后台关闭小程序重新尝试"
