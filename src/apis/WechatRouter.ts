@@ -8,15 +8,18 @@ import { oAuth, pay } from "../utils/wechat";
 import HttpError from "../utils/HttpError";
 import { utils } from "@sigodenjs/wechatpay";
 import { signToken } from "../utils/helper";
+import { generate } from "randomstring";
 
 export default (router: Router) => {
   router.route("/wechat/login").post(
     handleAsyncErrors(async (req: Request, res: Response) => {
       const { code } = req.body;
       if (!code) throw new HttpError(400, "OAuth code missing.");
-      console.time("Wechat login");
+
+      const timeId = generate();
+      console.time(`Wechat login ${timeId}`);
       const userData = await oAuth.getUser(code);
-      console.timeEnd("Wechat login");
+      console.timeEnd(`Wechat login ${timeId}`);
       console.log("[WEC] Wechat login user data:", JSON.stringify(userData));
 
       const { openid, session_key, unionid } = userData;
