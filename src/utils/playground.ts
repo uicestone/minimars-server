@@ -7,14 +7,14 @@ export default async function playground() {
   console.log("Run playground...");
   try {
     // const user = await UserModel.findOne({ mobile: "13601881283" });
-    const pospal = new Pospal("HX");
+    // const pospal = new Pospal("TS");
     // pospal.addMember(user);
     // console.log(user.pospalId);
     // const customer = await pospal.getMember(user.pospalId);
     // await pospal.updateMemberBaseInfo(user.pospalId, { enable: 1 });
     // console.log(customer);
-    // const store = await StoreModel.findOne({ code: "HX" });
-    // await store.syncPospalTickets("2020-12-20", "2020-12-31");
+    // const store = await StoreModel.findOne({ code: "TS" });
+    // await store.syncPospalTickets("2021-01-14", "2021-01-19");
     // const am = await pospal.queryAllPayMethod();
     // const em = [
     //   "payCode_103",

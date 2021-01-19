@@ -153,22 +153,30 @@ export class Store {
         ? await pospal.queryTickets(from)
         : await pospal.queryMultiDateTickets(from, to);
 
+    let invalidPaymentMethodCodes: string[] = [];
     result.forEach(t => {
       t.payments.forEach(p => {
-        if (this.pospalPaymentMethodMap?.[p.code]) {
-          return;
+        if (
+          !this.pospalPaymentMethodMap?.[p.code] &&
+          !invalidPaymentMethodCodes.includes(p.code)
+        ) {
+          invalidPaymentMethodCodes.push(p.code);
         }
-        pospal.queryAllPayMethod().then(methods => {
-          const method = methods.find(m => m.code === p.code);
-          console.error(
-            `[STR] Need code ${p.code} (${JSON.stringify(
-              method
-            )}) to be configured.`
-          );
-        });
-        throw new Error("invalid_payment_code");
       });
     });
+    if (invalidPaymentMethodCodes.length) {
+      pospal.queryAllPayMethod().then(methods => {
+        const methodsUndefined = methods.filter(m =>
+          invalidPaymentMethodCodes.includes(m.code)
+        );
+        for (const method of methodsUndefined) {
+          console.error(
+            `[STR] Need method ${JSON.stringify(method)} to be configured.`
+          );
+        }
+      });
+      throw new Error("invalid_payment_code");
+    }
     if (typeof from !== "number" || result.length) {
       console.log(`[STR] Fetched ${result.length} Pospal tickets.`);
     }
