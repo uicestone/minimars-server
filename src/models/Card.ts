@@ -271,6 +271,18 @@ export class Card {
     if (this.status === CardStatus.CANCELED) {
       return;
     }
+
+    if (this.payments.filter(p => p.paid).length) {
+      console.log(`[CRD] Refund card ${this._id}.`);
+      // we don't directly change status to canceled, will auto change on refund fullfil
+      await this.createRefundPayment();
+      if (!this.payments.filter(p => p.amount < 0).some(p => !p.paid)) {
+        this.refundSuccess();
+      }
+    } else {
+      this.refundSuccess();
+    }
+
     if (this.type === "balance" && this.status === CardStatus.ACTIVATED) {
       const customer = await UserModel.findById(this.customer);
       if (
@@ -280,17 +292,6 @@ export class Card {
         throw new HttpError(400, "用户余额已不足以退款本储值卡");
       }
       await customer.depositBalance(-this.balance, -this.price);
-    }
-
-    if (this.payments.filter(p => p.paid).length) {
-      console.log(`[CRD] Refund this ${this._id}.`);
-      // we don't directly change status to canceled, will auto change on refund fullfil
-      await this.createRefundPayment();
-      if (!this.payments.filter(p => p.amount < 0).some(p => !p.paid)) {
-        this.refundSuccess();
-      }
-    } else {
-      this.refundSuccess();
     }
 
     console.log(`[CRD] Refund card ${this.id}.`);
