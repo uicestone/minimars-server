@@ -171,7 +171,9 @@ export class Store {
         );
         for (const method of methodsUndefined) {
           console.error(
-            `[STR] Need method ${JSON.stringify(method)} to be configured.`
+            `[STR] Need method ${JSON.stringify(method)} to be configured at ${
+              this.code
+            }.`
           );
         }
       });
