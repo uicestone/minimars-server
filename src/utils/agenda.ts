@@ -250,6 +250,7 @@ export const initAgenda = async () => {
   agenda.define("verify user balance", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const userBalanceMap: Record<string, number> = {};
+    const userBalanceDepositMap: Record<string, number> = {};
     const balanceCards = await CardModel.find({
       type: "balance",
       status: CardStatus.ACTIVATED
@@ -257,6 +258,8 @@ export const initAgenda = async () => {
     balanceCards.forEach(c => {
       userBalanceMap[c.customer.toString()] =
         c.balance + (userBalanceMap[c.customer.toString()] || 0);
+      userBalanceDepositMap[c.customer.toString()] =
+        c.price + (userBalanceDepositMap[c.customer.toString()] || 0);
     });
     console.log(`[CRO] Balance card added.`);
     const balancePayments = await paymentModel.find({
@@ -266,17 +269,20 @@ export const initAgenda = async () => {
     balancePayments.forEach(p => {
       userBalanceMap[p.customer.id] =
         (userBalanceMap[p.customer.id] || 0) - p.amount;
+      userBalanceDepositMap[p.customer.id] =
+        (userBalanceDepositMap[p.customer.id] || 0) - p.amountDeposit;
     });
     const users = await UserModel.find({
       _id: { $in: Object.keys(userBalanceMap) }
     });
     users.forEach(u => {
       userBalanceMap[u.id] = +userBalanceMap[u.id].toFixed(2);
+      userBalanceDepositMap[u.id] = +userBalanceDepositMap[u.id].toFixed(2);
       if (u.balance !== userBalanceMap[u.id]) {
         console.error(
           `[CRO] User balance mismatch: ${u.id} ${u.name} ${u.mobile} calc ${
-            userBalanceMap[u.id]
-          }, stored ${u.balance}`
+            userBalanceDepositMap[u.id]
+          }/${userBalanceMap[u.id]}, stored ${u.balanceDeposit}/${u.balance}`
         );
       }
     });
