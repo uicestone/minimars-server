@@ -6,6 +6,7 @@ import HttpError from "../utils/HttpError";
 import CardTypeModel, { CardType } from "../models/CardType";
 import { CardTypeQuery, CardTypePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
+import { isValidHexObjectId } from "../utils/helper";
 
 export default (router: Router) => {
   // CardType CURD
@@ -51,6 +52,9 @@ export default (router: Router) => {
         }
 
         if (req.ua && req.ua.isWechat) {
+          if (queryParams.include && !isValidHexObjectId(queryParams.include)) {
+            throw new HttpError(400, "无效的卡券类型ID");
+          }
           query.where({
             $or: [{ openForClient: true }, { _id: queryParams.include }]
           });
