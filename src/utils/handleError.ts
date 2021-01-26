@@ -1,21 +1,25 @@
-import { MongoError } from "mongodb";
 import HttpError from "./HttpError";
 
 export default (err: Error, req, res, next) => {
   if (err instanceof HttpError) {
     res.status(err.status).json({ message: err.message });
-  } else if (err instanceof MongoError && err.code === 11000) {
+  } else if (
+    err.name === "MongoError" &&
+    err.message.match(
+      /collection: .*?\.(.*?) index: (.*?) dup key: { (.*?): (.*?) }$/
+    )
+  ) {
     const match = err.message.match(
       /collection: .*?\.(.*?) index: (.*?) dup key: { (.*?): (.*?) }$/
     );
     let message = "";
     if (match) {
-      message = `Duplicated "${match[1]}" "${match[2].replace(
+      message = `字段重复："${match[1]}" "${match[2].replace(
         /_\d+_?/g,
         ", "
       )}": ${match[4]}`;
     } else {
-      message = `Duplicated key.`;
+      message = `字段重复`;
     }
     res.status(409).json({ message });
   } else if (err.name === "ValidationError") {
