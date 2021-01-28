@@ -631,9 +631,15 @@ export class Booking {
     if (save) {
       await booking.save();
     }
+
     console.log(`[BOK] Booking ${booking.id} checked in.`);
-    if (!booking.populated("card")) {
+
+    if (booking.card && !booking.populated("card")) {
       await booking.populate("card").execPopulate();
+    }
+
+    if (booking.coupon && !booking.populated("coupon")) {
+      await booking.populate("coupon").execPopulate();
     }
 
     const rewardCardTypesString =
@@ -645,7 +651,7 @@ export class Booking {
         slug: { $in: rewardCardTypesString.split(" ") }
       });
 
-      for (let n = 0; n < this.kidsCount; n++) {
+      for (let n = 0; n < this.kidsCount / (this.coupon?.kidsCount || 1); n++) {
         for (const cardType of rewardCardTypes) {
           const card = cardType.issue(this.customer);
 
