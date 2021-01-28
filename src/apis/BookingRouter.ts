@@ -274,6 +274,8 @@ export default (router: Router) => {
               throw new HttpError(400, "未选择支付方式");
             case "points_gateway_not_supported":
               throw new HttpError(400, "不支持积分购买");
+            case "coupon_kids_count_not_match":
+              throw new HttpError(400, "孩子数量不是优惠孩子数量的整数倍");
             default:
               throw err;
           }

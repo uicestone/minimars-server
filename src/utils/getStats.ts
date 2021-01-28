@@ -107,6 +107,7 @@ export default async (
     slug: string;
     name: string;
     count: number;
+    kidsPerCoupon: number;
     amount: number;
   }[] = bookingsPaid
     .filter(b => b.coupon)
@@ -119,7 +120,8 @@ export default async (
           price: coupon.priceThirdParty,
           kidsCount: 0,
           adultsCount: 0,
-          amount: 0
+          amount: 0,
+          kidsPerCoupon: coupon.kidsCount
         };
         acc.push(item);
       }
@@ -128,7 +130,7 @@ export default async (
       return acc;
     }, [])
     .map(item => {
-      item.amount = item.price * item.kidsCount;
+      item.amount = (item.price * item.kidsCount) / item.kidsPerCoupon;
       return item;
     });
 

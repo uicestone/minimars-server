@@ -328,12 +328,17 @@ export class Booking {
     }
 
     if (booking.coupon) {
+      if (booking.kidsCount % booking.coupon.kidsCount) {
+        throw new Error("coupon_kids_count_not_match");
+      }
       title = booking.coupon.title + " " + title;
       const couponPayment = new PaymentModel({
         scene: booking.type,
         customer: booking.customer,
         store: booking.store,
-        amount: booking.coupon.priceThirdParty * booking.kidsCount,
+        amount:
+          (booking.coupon.priceThirdParty * booking.kidsCount) /
+          booking.coupon.kidsCount,
         title,
         attach,
         gateway: PaymentGateway.Coupon,
