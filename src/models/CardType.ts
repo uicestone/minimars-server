@@ -84,6 +84,9 @@ export class CardType {
   @prop({ type: Number })
   maxKids: number;
 
+  @prop({ type: Number, default: 1 })
+  minKids = 1;
+
   @prop({ type: Number, default: 2 })
   freeParentsPerKid: number;
 

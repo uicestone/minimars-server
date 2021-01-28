@@ -125,6 +125,14 @@ export default (router: Router) => {
             ) {
               throw new HttpError(400, "客户会员卡当日预约已到达最大孩子数量");
             }
+
+            if (booking.kidsCount < booking.card.minKids) {
+              throw new HttpError(
+                400,
+                `该会员卡数量至少预约${booking.card.minKids}个孩子`
+              );
+            }
+
             if (
               booking.card.dayType === "onDaysOnly" &&
               isOffDay(booking.date)
