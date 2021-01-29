@@ -129,7 +129,7 @@ export default (router: Router) => {
             if (booking.kidsCount < booking.card.minKids) {
               throw new HttpError(
                 400,
-                `该会员卡数量至少预约${booking.card.minKids}个孩子`
+                `该会员卡须至少预约${booking.card.minKids}个孩子`
               );
             }
 
