@@ -155,6 +155,7 @@ export const initAgenda = async () => {
   });
 
   agenda.define("check balance reward cards", async (job, done) => {
+    // TODO: this is memory killer and has been disabled for now
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const cards = await CardModel.find({
       status: { $in: [CardStatus.ACTIVATED, CardStatus.VALID] }
@@ -437,7 +438,7 @@ export const initAgenda = async () => {
     agenda.every("1 day", "update holidays");
     agenda.every("0 0 * * *", "set expired cards"); // run everyday at 0am
     agenda.every("1 day", "get wechat mp users");
-    agenda.every("0 20 * * *", "check balance reward cards"); // run everyday at 8pm
+    // agenda.every("0 20 * * *", "check balance reward cards"); // run everyday at 8pm
     agenda.every(
       `*/${pospalTicketsSyncInterval} 10-21 * * *`,
       "sync pospal tickets"
