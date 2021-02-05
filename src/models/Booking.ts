@@ -17,7 +17,7 @@ import { Card } from "./Card";
 import { Event } from "./Event";
 import { Gift } from "./Gift";
 import { Coupon } from "./Coupon";
-import { sendTemplateMessage } from "../utils/wechat";
+import { sendTemplateMessage, TemplateMessageType } from "../utils/wechat";
 import CardTypeModel from "./CardType";
 
 const { DEBUG } = process.env;
@@ -667,7 +667,7 @@ export class Booking {
     }
 
     if (booking.card?.type === "times") {
-      sendTemplateMessage(booking.customer, "writeoff", [
+      sendTemplateMessage(booking.customer, TemplateMessageType.WRITEOFF, [
         "您的次卡已成功核销",
         booking.customer.name,
         `${booking.store.name} ${booking.adultsCount}大${booking.kidsCount}小`,
@@ -702,7 +702,7 @@ export class Booking {
     }
 
     if (this.type === Scene.PLAY && this.store) {
-      sendTemplateMessage(this.customer, "cancel", [
+      sendTemplateMessage(this.customer, TemplateMessageType.CANCEL, [
         "您的预约已被取消",
         `${this.store.name} ${this.adultsCount}大${this.kidsCount}小`,
         `${this.date}`,
