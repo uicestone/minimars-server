@@ -154,7 +154,7 @@ export async function sendTemplateMessage(
   }
   const templates = Object.values(TemplateMessageType).reduce(
     (templates, type) => {
-      templates[type] = process.env[type];
+      templates[type] = process.env["WEIXIN_TEMPLATE_ID_" + type];
       return templates;
     },
     {} as Record<TemplateMessageType, string>
