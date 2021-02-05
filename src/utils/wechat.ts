@@ -129,9 +129,15 @@ export async function getUsersInfo(openids: string[]) {
   return usersInfo;
 }
 
+export enum TemplateMessageType {
+  WRITEOFF = "WRITEOFF",
+  CANCEL = "CANCEL",
+  GIFT_CARD_RECEIVED = "GIFT_CARD_RECEIVED"
+}
+
 export async function sendTemplateMessage(
   user: DocumentType<User>,
-  type: "writeoff" | "cancel",
+  type: TemplateMessageType,
   messages: string[]
 ) {
   if (
@@ -146,12 +152,16 @@ export async function sendTemplateMessage(
     );
     return;
   }
-  const {
-    WEIXIN_TEMPLATE_ID_WRITEOFF: writeoff,
-    WEIXIN_TEMPLATE_ID_CANCEL: cancel
-  } = process.env;
-  const templates = { writeoff, cancel };
+  const templates = Object.values(TemplateMessageType).reduce(
+    (templates, type) => {
+      templates[type] = process.env[type];
+      return templates;
+    },
+    {} as Record<TemplateMessageType, string>
+  );
+
   const messageData: Record<string, { value: string; color?: string }> = {};
+
   messages.forEach((message, index) => {
     if (index === 0) {
       messageData.first = { value: message };

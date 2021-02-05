@@ -22,6 +22,7 @@ import {
 import { DocumentType } from "@typegoose/typegoose";
 import { verify } from "jsonwebtoken";
 import moment from "moment";
+import { sendTemplateMessage, TemplateMessageType } from "../utils/wechat";
 
 export default (router: Router) => {
   // Card CURD
@@ -60,10 +61,24 @@ export default (router: Router) => {
             const card = await CardModel.findOne({ _id: cardId });
             if (card.customer.toString() === userId) {
               // verify success, now change owner
+              const sender = await UserModel.findById(card.customer);
+              const receiver = await UserModel.findById(body.customer);
               card.customer = body.customer || req.user.id;
               await card.save();
               console.log(
                 `[CRD] Card ${card.id} transferred from user ${userId} to ${card.customer}.`
+              );
+              sendTemplateMessage(
+                sender,
+                TemplateMessageType.GIFT_CARD_RECEIVED,
+                [
+                  `您分享的卡片已被${receiver.name || ""}领取`,
+                  card.title,
+                  card.balance ? `${card.balance.toFixed()}元` : "",
+                  receiver.mobile,
+                  moment(card.expiresAt).format("YYYY-MM-DD"),
+                  ""
+                ]
               );
               return res.json(card);
             } else if (card.customer.toString() === req.user.id) {
