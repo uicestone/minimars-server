@@ -62,7 +62,9 @@ export default (router: Router) => {
             if (card.customer.toString() === userId) {
               // verify success, now change owner
               const sender = await UserModel.findById(card.customer);
-              const receiver = await UserModel.findById(body.customer);
+              const receiver = await UserModel.findById(
+                body.customer || req.user.id
+              );
               card.customer = body.customer || req.user.id;
               await card.save();
               console.log(
@@ -87,7 +89,7 @@ export default (router: Router) => {
               throw "";
             }
           } catch (e) {
-            throw new HttpError(403, "Card gift code verify failed.");
+            throw new HttpError(403, "礼品卡代码无效");
           }
         }
 
