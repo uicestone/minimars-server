@@ -66,6 +66,8 @@ export default (router: Router) => {
                 `[CRD] Card ${card.id} transferred from user ${userId} to ${card.customer}.`
               );
               return res.json(card);
+            } else if (card.customer.toString() === req.user.id) {
+              return res.json(card);
             } else {
               throw "";
             }
