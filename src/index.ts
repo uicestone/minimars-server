@@ -19,6 +19,7 @@ import { config } from "./models/Config";
 import initConfig from "./utils/initConfig";
 import { initMongoose } from "./utils/mongoose";
 import playground from "./utils/playground";
+import initViso from "./utils/initViso";
 
 const app = express();
 const router = express.Router();
@@ -64,6 +65,7 @@ if (portWebSocket) {
   wss.on("listening", () => {
     console.log(`[SYS] Websocket server listening port: ${portWebSocket}.`);
   });
+  initViso(wss);
 }
 
 if (process.env.PLAYGROUND) {

@@ -21,6 +21,7 @@ import BookingModel, { BookingStatus } from "./Booking";
 import Pospal, { Ticket } from "../utils/pospal";
 import PaymentModel, { PaymentGateway, Scene } from "./Payment";
 import UserModel from "./User";
+import WebSocket from "ws";
 
 export const storeDoors: { [storeId: string]: Door[] } = {};
 export const storeServerSockets: { [storeId: string]: Socket } = {};

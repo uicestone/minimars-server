@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import moment from "moment";
+import { readFileSync } from "fs";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -24,6 +25,7 @@ import {
 } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId, isOffDay } from "../utils/helper";
+import { viso } from "../utils/Viso";
 
 export default (router: Router) => {
   // Booking CURD
@@ -419,6 +421,7 @@ export default (router: Router) => {
         // TODO restrict for roles
 
         const statusWas = booking.status;
+        const facesWas = booking.faces?.join();
 
         booking.set(req.body as BookingPutBody);
 
@@ -510,6 +513,20 @@ export default (router: Router) => {
           !booking.checkOutAt
         ) {
           booking.checkOutAt = moment().format("HH:mm:ss");
+        }
+
+        if (facesWas !== booking.faces?.join()) {
+          booking.faces.forEach((url, index) => {
+            const path = url.replace(/^.+?\/\/.+?\//, "");
+            const base64 = readFileSync(path, { encoding: "base64" });
+            const data = "data:image/jpeg;base64," + base64;
+            viso.addPerson(
+              booking.store,
+              `${booking.id}-${Date.now()}`,
+              [data],
+              booking.customer.mobile
+            );
+          });
         }
 
         await booking.save();
