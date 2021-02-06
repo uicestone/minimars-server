@@ -6,6 +6,7 @@ import bodyParser from "body-parser";
 import SocketIo from "socket.io";
 import http from "http";
 import net from "net";
+import { Server as WebSocketServer } from "ws";
 import ensureEnv from "./utils/ensureEnv";
 
 ensureEnv();
@@ -27,6 +28,7 @@ const socketServer = net.createServer(handleCreateServer(io));
 
 const portHttp: string = process.env.PORT_HTTP;
 const portSocket: string = process.env.PORT_SOCKET;
+const portWebSocket: string = process.env.PORT_WEBSOCKET;
 
 console.log(`[SYS] System time is ${new Date()}`);
 
@@ -53,6 +55,19 @@ if (portSocket) {
   });
 }
 
+let wss: WebSocketServer;
+
+if (portWebSocket) {
+  wss = new WebSocketServer({
+    port: +portWebSocket
+  });
+  wss.on("listening", () => {
+    console.log(`[SYS] Websocket server listening port: ${portWebSocket}.`);
+  });
+}
+
 if (process.env.PLAYGROUND) {
-  setTimeout(playground, 1e3);
+  setTimeout(() => {
+    playground({ wss });
+  }, 1e3);
 }

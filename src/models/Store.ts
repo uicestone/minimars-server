@@ -53,6 +53,22 @@ class Door {
   controller?: JxCtl;
 }
 
+export class FaceDevice {
+  ws?: WebSocket;
+
+  @prop()
+  mac: string;
+
+  @prop()
+  storeCode?: string;
+
+  @prop()
+  name: string;
+
+  @prop()
+  io: "in" | "out";
+}
+
 @plugin(updateTimes)
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Store {
@@ -91,6 +107,9 @@ export class Store {
 
   @prop({ type: Door })
   doors: Door[];
+
+  @prop({ type: FaceDevice })
+  faceDevices: FaceDevice[];
 
   @prop()
   ip: string;

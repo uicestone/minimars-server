@@ -22,6 +22,7 @@ import CardRouter from "./CardRouter";
 import detectUa from "../middlewares/detectUa";
 import agenda from "../utils/agenda";
 import { NextFunction, Request, Response, Router } from "express";
+import VisoRouter from "./VisoRouter";
 
 export default (app, router: Router) => {
   // register routes
@@ -40,6 +41,7 @@ export default (app, router: Router) => {
     StatsRouter,
     StoreRouter,
     UserRouter,
+    VisoRouter,
     WechatRouter
   ].forEach(R => {
     router = R(router);
