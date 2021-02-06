@@ -3,9 +3,8 @@ import multer, { diskStorage } from "multer";
 import { createHash } from "crypto";
 import { renameSync } from "fs";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
-import FileModel, { File } from "../models/File";
+import FileModel from "../models/File";
 import HttpError from "../utils/HttpError";
-import { DocumentType } from "@typegoose/typegoose";
 
 const storage = diskStorage({
   destination: function (req, file, cb) {

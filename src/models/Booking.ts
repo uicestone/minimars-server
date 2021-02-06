@@ -99,6 +99,12 @@ export class Booking {
   @prop({ type: Number })
   bandsPrinted?: number;
 
+  @prop()
+  photo?: string;
+
+  @prop({ type: String })
+  faces?: string[];
+
   @prop({
     type: String,
     enum: Object.values(BookingStatus),
