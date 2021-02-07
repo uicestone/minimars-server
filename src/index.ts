@@ -70,6 +70,6 @@ if (portWebSocket) {
 
 if (process.env.PLAYGROUND) {
   setTimeout(() => {
-    playground({ wss });
+    playground();
   }, 1e3);
 }
