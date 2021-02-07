@@ -131,6 +131,8 @@ export default async (
     }, [])
     .map(item => {
       item.amount = (item.price * item.kidsCount) / item.kidsPerCoupon;
+      // couponsCount kidsCount is used as coupon count
+      item.kidsCount = item.kidsCount / item.kidsPerCoupon;
       return item;
     });
 
