@@ -32,7 +32,7 @@ export default class Viso {
         const parsed = JSON.parse(msg.toString());
         this.onReturn(
           ws,
-          parsed.data.payload.command,
+          parsed.data.url.replace(/^.*\//, ""),
           parsed.data.payload.data
         );
       });
@@ -84,7 +84,7 @@ export default class Viso {
   }
 
   onReturn(ws: WebSocket, command: Command, payload: any = {}) {
-    console.log("[VSO] On return", Command[command], payload);
+    console.log("[VSO] On return", Command[command] || command, payload);
     switch (command) {
       case Command.GET_DEVICE_INFO:
         const device = this.devices.find(d => d.mac === payload.mac);
@@ -145,7 +145,7 @@ export default class Viso {
 }
 
 enum Command {
-  GET_DEVICE_INFO = 127
+  GET_DEVICE_INFO = "getDeviceInfo"
 }
 
 export const viso = new Viso();
