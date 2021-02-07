@@ -43,12 +43,11 @@ export const SceneLabel = {
 
 @pre("save", async function (next) {
   const payment = this as DocumentType<Payment>;
-
   if (!payment.isModified("paid") && !payment.isNew) {
     return next();
   }
 
-  if (payment.gatewayData?.provider) {
+  if (payment.gatewayData?.provider && payment.amount >= 0) {
     return next();
   }
 
