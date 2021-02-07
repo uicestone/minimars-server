@@ -142,6 +142,10 @@ export default class Viso {
   resetPersons(target: Target) {
     this.sendCommand(target, "resetPersons");
   }
+
+  addWhitelist(target: Target, ids: string[]) {
+    this.sendCommand(target, "addWhitelist", { data: ids });
+  }
 }
 
 enum Command {

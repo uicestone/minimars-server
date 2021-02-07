@@ -520,12 +520,14 @@ export default (router: Router) => {
             const path = url.replace(/^.+?\/\/.+?\//, "");
             const base64 = readFileSync(path, { encoding: "base64" });
             const data = "data:image/jpeg;base64," + base64;
+            const personNumber = `${booking.id}-${Date.now()}`;
             viso.addPerson(
               booking.store,
-              `${booking.id}-${Date.now()}`,
+              personNumber,
               [data],
               booking.customer.mobile
             );
+            viso.addWhitelist(booking.store, [personNumber]);
           });
         }
 
