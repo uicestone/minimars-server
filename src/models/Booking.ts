@@ -100,7 +100,7 @@ export class Booking {
   bandsPrinted?: number;
 
   @prop()
-  photo?: string;
+  photos?: string[];
 
   @prop({ type: String })
   faces?: string[];
