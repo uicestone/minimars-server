@@ -660,7 +660,12 @@ export class Booking {
         slug: { $in: rewardCardTypesString.split(" ") }
       });
 
-      for (let n = 0; n < this.kidsCount / (this.coupon?.kidsCount || 1); n++) {
+      for (
+        let n = 0;
+        n <
+        this.kidsCount / (this.coupon?.kidsCount || this.card?.minKids || 1);
+        n++
+      ) {
         for (const cardType of rewardCardTypes) {
           const card = cardType.issue(this.customer);
 
