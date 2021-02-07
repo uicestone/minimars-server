@@ -439,6 +439,8 @@ export const initAgenda = async () => {
     agenda.every("0 0 * * *", "set expired cards"); // run everyday at 0am
     agenda.every("1 day", "get wechat mp users");
     // agenda.every("0 20 * * *", "check balance reward cards"); // run everyday at 8pm
+    agenda.every("0 22 * * *", "verify user balance");
+    agenda.every("5 22 * * *", "sync pospal customers");
     agenda.every(
       `*/${pospalTicketsSyncInterval} 10-21 * * *`,
       "sync pospal tickets"
