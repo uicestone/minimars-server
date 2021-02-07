@@ -13,7 +13,7 @@ import { config } from "../models/Config";
 import PaymentModel, { Payment, PaymentGateway, Scene } from "./Payment";
 import { User } from "./User";
 import { Store } from "./Store";
-import { Card } from "./Card";
+import CardModel, { Card } from "./Card";
 import { Event } from "./Event";
 import { Gift } from "./Gift";
 import { Coupon } from "./Coupon";
@@ -458,6 +458,9 @@ export class Booking {
     } else if ([Scene.GIFT, Scene.EVENT].includes(this.type)) {
       this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
+      if (this.card && this.card.type === "times") {
+        this.card = await CardModel.findById(this.card);
+      }
       await this.checkIn(false);
     } else {
       this.status = BookingStatus.BOOKED;
