@@ -527,7 +527,9 @@ export default (router: Router) => {
               [data],
               booking.customer.mobile
             );
-            viso.addWhitelist(booking.store, [personNumber]);
+            setTimeout(() => {
+              viso.addWhitelist(booking.store, [personNumber]);
+            }, +(process.env.VISO_ADD_WHITE_LIST_DELAY || 5000));
           });
         }
 
