@@ -40,7 +40,6 @@ export default class Viso {
   }
 
   sendCommand(target: Target, path: string, payload = {}) {
-    console.log(`[VSO] Send command ${path} ${JSON.stringify(payload)}`);
     let devices: FaceDevice[] = [];
     if (isFaceDevice(target)) {
       if (!target.ws) {
@@ -52,11 +51,6 @@ export default class Viso {
       devices.push(target);
     } else if (isStore(target)) {
       const store = this.stores.find(s => s.code === target.code);
-      console.log(
-        `[VSO] Target store ${JSON.stringify(
-          target
-        )}, found store ${JSON.stringify(store)}`
-      );
       store.faceDevices.forEach(device => {
         if (!device.ws) {
           console.error(

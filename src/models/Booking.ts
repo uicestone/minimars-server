@@ -58,7 +58,7 @@ export const validBookingStatus = [
 
 @plugin(autoPopulate, [
   { path: "customer", select: "name avatarUrl mobile tags" },
-  { path: "store", select: "name" },
+  { path: "store", select: "name code" },
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
   { path: "card", select: "-content" },
   { path: "coupon", select: "-content" },
