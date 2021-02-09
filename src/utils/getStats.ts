@@ -103,16 +103,15 @@ export default async (
       return acc;
     }, {});
 
-  const flowAmountByScenes: { [gateway: string]: number } = payments.reduce(
-    (acc, payment) => {
+  const flowAmountByScenes: { [gateway: string]: number } = payments
+    .filter(p => flowGateways.includes(p.gateway))
+    .reduce((acc, payment) => {
       if (!acc[payment.scene]) {
         acc[payment.scene] = 0;
       }
       acc[payment.scene] += payment.amount;
       return acc;
-    },
-    {}
-  );
+    }, {});
 
   const couponsCount: {
     slug: string;
