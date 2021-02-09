@@ -19,6 +19,10 @@ export interface AuthLoginResponseBody {
   user: User;
 }
 
+export interface WechatLoginPostBody {
+  token: string;
+}
+
 export interface ListQuery {
   order?: string;
   limit?: number;
