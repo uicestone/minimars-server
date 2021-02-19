@@ -3,7 +3,6 @@ import { DocumentType } from "@typegoose/typegoose";
 import storeModel, { Store, storeDoors } from "../models/Store";
 import { JxCtl } from "jingxing-doors";
 import { parseRemoteServerData } from "jingxing-doors";
-import { sleep } from "../utils/helper";
 
 export default function handleSocketData(
   socket: Socket,

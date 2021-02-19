@@ -343,7 +343,7 @@ export const initAgenda = async () => {
 
   agenda.define("sync pospal tickets", async (job, done) => {
     // console.log(`[CRO] Running '${job.attrs.name}'...`);
-    if (process.env.DISABLE_SYNC_POSPAL_TICKETS) {
+    if (process.env.DISABLE_POSPAL_SYNC) {
       return done();
     }
     const stores = await StoreModel.find();
@@ -359,6 +359,9 @@ export const initAgenda = async () => {
   });
 
   agenda.define("sync pospal customers", async (job, done) => {
+    if (process.env.DISABLE_POSPAL_SYNC) {
+      return done();
+    }
     try {
       console.log(`[CRO] Running '${job.attrs.name}'...`);
       const pospal = new Pospal();
