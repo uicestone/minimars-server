@@ -27,6 +27,7 @@ export default class Viso {
     });
     this.stores = stores;
     wss.on("connection", ws => {
+      console.log(`[VSO] Websocket connected.`);
       this.getDeviceInfo(ws);
       ws.on("message", msg => {
         const parsed = JSON.parse(msg.toString());
@@ -35,6 +36,9 @@ export default class Viso {
           parsed.data.url.replace(/^.*\//, ""),
           parsed.data.payload.data
         );
+      });
+      ws.on("close", ws => {
+        console.log(`[VSO] Websocket closed.`);
       });
     });
   }
@@ -97,7 +101,7 @@ export default class Viso {
         console.log(
           `[VSO] Face device ${device.storeCode} ${device.name} connected.`
         );
-        this.resetPersons(device);
+        // this.resetPersons(device);
         break;
     }
   }
