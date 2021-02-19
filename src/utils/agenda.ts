@@ -181,7 +181,7 @@ export const initAgenda = async () => {
     });
     for (const cardType of cardTypes) {
       const rewardCardTypes = await CardTypeModel.find({
-        slug: cardType.rewardCardTypes.split(" ")
+        slug: { $in: cardType.rewardCardTypes.split(" ") }
       });
 
       for (const [, user] of userMap) {

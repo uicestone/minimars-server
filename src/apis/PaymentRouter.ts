@@ -10,6 +10,7 @@ import PaymentModel, {
   Payment,
   PaymentGateway,
   receptionGateways,
+  Scene,
   SceneLabel
 } from "../models/Payment";
 import StoreModel from "../models/Store";
@@ -119,7 +120,9 @@ export default (router: Router) => {
         }
 
         if (queryParams.scene) {
-          query.find({ scene: { $in: queryParams.scene.split(",") } });
+          query.find({
+            scene: { $in: queryParams.scene.split(",") as Scene[] }
+          });
         }
 
         let total = await query.countDocuments();
@@ -235,7 +238,7 @@ export default (router: Router) => {
       }
 
       if (queryParams.scene) {
-        query.find({ scene: { $in: queryParams.scene.split(",") } });
+        query.find({ scene: { $in: queryParams.scene.split(",") as Scene[] } });
       }
 
       const payments = await query.find().limit(5e3).exec();

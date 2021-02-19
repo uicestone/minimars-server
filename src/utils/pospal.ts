@@ -169,7 +169,7 @@ export default class Pospal {
     });
     await userModel.updateOne(
       { _id: user.id },
-      { pospalId: customerInfo.customerUid }
+      { pospalId: customerInfo.customerUid.toString() }
     );
     console.log(
       `[PSP] New Pospal customer created ${customerInfo.customerUid} ${user.mobile}.`
