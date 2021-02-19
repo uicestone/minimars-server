@@ -1,6 +1,5 @@
 import moment from "moment";
 import { Socket } from "net";
-import { Server as SocketIoServer } from "socket.io";
 import handleSocketData from "./handleSocketData";
 import { Store as IStore, storeServerSockets } from "../models/Store";
 import { DocumentType } from "@typegoose/typegoose";
@@ -8,7 +7,7 @@ import { DocumentType } from "@typegoose/typegoose";
 const pingInterval = +process.env.DOOR_PING_INTERVAL || 10000;
 let connections = 0;
 
-export default function handleCreateServer(io: SocketIoServer) {
+export default function handleCreateServer() {
   return async (socket: Socket) => {
     const client: { store: DocumentType<IStore>; connectedAt: Date } = {
       store: null,

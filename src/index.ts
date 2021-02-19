@@ -3,7 +3,6 @@
 
 import express from "express";
 import bodyParser from "body-parser";
-import SocketIo from "socket.io";
 import http from "http";
 import net from "net";
 import { Server as WebSocketServer } from "ws";
@@ -24,8 +23,7 @@ import initViso from "./utils/initViso";
 const app = express();
 const router = express.Router();
 const httpServer = http.createServer(app);
-const io = SocketIo(httpServer);
-const socketServer = net.createServer(handleCreateServer(io));
+const socketServer = net.createServer(handleCreateServer());
 
 const portHttp: string = process.env.PORT_HTTP;
 const portSocket: string = process.env.PORT_SOCKET;
