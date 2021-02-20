@@ -300,6 +300,9 @@ export const initAgenda = async () => {
   });
 
   agenda.define("get wechat mp users", async (job, done) => {
+    if (process.env.DISABLE_WECHAT_SYNC) {
+      done();
+    }
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const openids = await getMpUserOpenids();
     let start = 0;
