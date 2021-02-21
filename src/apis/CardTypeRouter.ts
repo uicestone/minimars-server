@@ -31,7 +31,7 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         const queryParams = req.query as CardTypeQuery;
         const { limit, skip } = req.pagination;
-        const query = CardTypeModel.find().populate("customer");
+        const query = CardTypeModel.find();
         const sort = parseSortString(queryParams.order) || {
           type: -1,
           price: 1

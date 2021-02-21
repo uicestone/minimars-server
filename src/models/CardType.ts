@@ -14,7 +14,7 @@ import HttpError from "../utils/HttpError";
 import moment from "moment";
 
 @plugin(updateTimes)
-@plugin(autoPopulate, [{ path: "stores", select: "-content" }])
+@plugin(autoPopulate, [{ path: "stores", select: "name code" }])
 @pre("validate", async function (this: DocumentType<CardType>, next) {
   if (this.customerTags) {
     this.customerTags = this.customerTags.map(t => t.toLowerCase());
