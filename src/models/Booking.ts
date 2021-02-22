@@ -314,19 +314,13 @@ export class Booking {
           (booking.card.price / booking.card.times) * booking.kidsCount || 0,
         title,
         attach,
+        booking,
         gateway: PaymentGateway.Card,
+        times: booking.kidsCount,
         gatewayData: {
           atReception,
           cardId: booking.card.id,
-          bookingId: booking.id,
-          times:
-            booking.card.type === "times"
-              ? Math.min(
-                  booking.kidsCount,
-                  booking.card.maxKids
-                  // booking.card.timesLeft
-                )
-              : 1
+          timesBefore: booking.card.timesLeft
         }
       });
       await cardPayment.save();
@@ -347,6 +341,7 @@ export class Booking {
           booking.coupon.kidsCount,
         title,
         attach,
+        booking,
         gateway: PaymentGateway.Coupon,
         gatewayData: {
           atReception,
@@ -373,9 +368,12 @@ export class Booking {
         amountForceDeposit: booking.socksCount * config.sockPrice || 0,
         title,
         attach,
+        booking,
         gateway: PaymentGateway.Balance,
         gatewayData: {
-          atReception
+          atReception,
+          balanceBefore: booking.customer.balance,
+          balanceDepositBefore: booking.customer.balanceDeposit
         }
       });
 
@@ -404,6 +402,7 @@ export class Booking {
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
         title,
         attach,
+        booking,
         gateway: paymentGateway,
         gatewayData: {
           atReception
@@ -426,6 +425,7 @@ export class Booking {
         amountInPoints: booking.priceInPoints,
         title,
         attach,
+        booking,
         gateway: paymentGateway,
         gatewayData: {
           atReception
@@ -554,13 +554,13 @@ export class Booking {
           : undefined,
         title: `退款：${p.title}`,
         attach: p.attach,
+        booking: p.booking,
         gateway: p.gateway,
+        card: p.card,
+        times: p.times ? -p.times : undefined,
         gatewayData: p.gatewayData,
         original: p.id
       });
-      if (p.gateway === PaymentGateway.Card) {
-        p.gatewayData.cardRefund = true;
-      }
       await refundPayment.save();
       booking.payments.push(refundPayment);
     }
@@ -575,6 +575,7 @@ export class Booking {
         amountInPoints: -p.amountInPoints,
         title: `积分退还：${p.title}`,
         attach: p.attach,
+        booking: p.booking,
         gateway: p.gateway,
         gatewayData: p.gatewayData,
         original: p.id
@@ -592,6 +593,7 @@ export class Booking {
           amount: -p.amount,
           title: `退款：${p.title}`,
           attach: p.attach,
+          booking: p.booking,
           gateway: p.gateway,
           original: p.id
         });

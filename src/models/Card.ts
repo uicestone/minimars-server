@@ -212,8 +212,13 @@ export class Card {
         amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
         title,
         attach,
+        card,
         gateway: paymentGateway
       });
+
+      if (card.type === "times") {
+        payment.times = -card.times;
+      }
 
       await payment.save();
 
@@ -253,6 +258,8 @@ export class Card {
           amount: -p.amount,
           title: `退款：${p.title}`,
           attach: p.attach,
+          card: p.card,
+          times: p.times ? -p.times : undefined,
           gateway: p.gateway,
           original: p.id
         });

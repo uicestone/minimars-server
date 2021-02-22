@@ -11,8 +11,8 @@ import {
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { User } from "./User";
-import BookingModel from "./Booking";
-import CardModel, { CardStatus } from "./Card";
+import BookingModel, { Booking } from "./Booking";
+import CardModel, { Card, CardStatus } from "./Card";
 import { Store } from "./Store";
 import {
   unifiedOrder as wechatUnifiedOrder,
@@ -126,19 +126,14 @@ export const SceneLabel = {
       }
       break;
     case PaymentGateway.Card:
-      if (
-        !payment.gatewayData.bookingId ||
-        !payment.gatewayData.cardId ||
-        !payment.gatewayData.times
-      ) {
+      if (!payment.times || !payment.gatewayData.cardId) {
         throw new Error("invalid_card_payment_gateway_data");
       }
       const card = await CardModel.findOne({ _id: payment.gatewayData.cardId });
 
-      if (payment.gatewayData.cardRefund) {
-        card.timesLeft += payment.gatewayData.times;
+      if (payment.times < 0) {
+        card.timesLeft -= payment.times;
         await card.save();
-        // await customer.updateCardBalance();
         console.log(
           `[PAY] Card ${card.id} refunded, time left: ${card.timesLeft}.`
         );
@@ -146,18 +141,16 @@ export const SceneLabel = {
         if (card.status !== CardStatus.ACTIVATED) {
           throw new Error("invalid_card");
         }
-        if (card.timesLeft < payment.gatewayData.times) {
+        if (card.timesLeft < payment.times) {
           throw new Error("insufficient_card_times");
         }
-        card.timesLeft -= payment.gatewayData.times;
+        card.timesLeft -= payment.times;
         await card.save();
-        // await customer.updateCardBalance();
         console.log(
           `[PAY] Card ${card.id} used in ${payment.gatewayData.bookingId}, times left: ${card.timesLeft}.`
         );
       }
       payment.paid = true;
-      // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
         await payment.customer.addPoints(payment.amount);
       }
@@ -247,6 +240,15 @@ export class Payment {
 
   @prop({ type: String, index: true })
   attach: string;
+
+  @prop({ ref: "Booking" })
+  booking?: Ref<Booking>;
+
+  @prop({ ref: "Card" })
+  card?: Ref<Card>;
+
+  @prop({ type: Number })
+  times?: number;
 
   @prop({ required: true, index: true })
   gateway: PaymentGateway;
