@@ -252,6 +252,7 @@ export default (router: Router) => {
           "已支付",
           "金额",
           "余额面额",
+          "次数",
           "门店",
           "业务场景",
           "明细",
@@ -268,6 +269,7 @@ export default (router: Router) => {
           payment.paid,
           payment.amountDeposit || payment.amount,
           payment.amountDeposit ? payment.amount : "-",
+          payment.times || "-",
           (
             stores.find(s => s.id === (payment.store || "").toString()) || {
               name: "-"
