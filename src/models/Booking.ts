@@ -316,7 +316,7 @@ export class Booking {
         attach,
         booking,
         gateway: PaymentGateway.Card,
-        times: booking.kidsCount,
+        times: booking.kidsCount || 1,
         gatewayData: {
           atReception,
           cardId: booking.card.id,
