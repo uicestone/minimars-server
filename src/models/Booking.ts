@@ -131,7 +131,7 @@ export class Booking {
   priceInPoints?: number;
 
   @prop({ type: Number })
-  amountPaid = 0;
+  amountPaid?: number;
 
   @prop({ type: Number })
   amountPaidInBalance?: number;
@@ -670,7 +670,7 @@ export class Booking {
     const paymentsAmounts = this.payments.reduce(
       (total, payment) => {
         if (payment.paid) {
-          total.amount += payment.amount || 0;
+          total.amountPaid += payment.amount;
           if (payment.gateway === PaymentGateway.Card) {
             total.amountPaidInCard += payment.amount;
           }
@@ -685,15 +685,15 @@ export class Booking {
         return total;
       },
       {
-        amount: 0,
+        amountPaid: 0,
         amountPaidInBalance: 0,
         amountPaidInDeposit: 0,
         amountPaidInCard: 0,
         amountPaidInPoints: 0
       }
     );
-    this.amountPaid = paymentsAmounts.amount;
     [
+      "amountPaid",
       "amountPaidInDeposit",
       "amountPaidInBalance",
       "amountPaidInCard",
