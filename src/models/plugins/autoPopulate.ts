@@ -15,6 +15,10 @@ function autoPopulate(schema, options) {
   async function postFind(docs) {
     await Promise.all(
       populates.map(populate => {
+        if (this.options.skipAutoPopulationPaths?.includes(populate.path)) {
+          return;
+        }
+        // console.log("Populate:", this.model, populate, docs.length);
         return this.model.populate(docs, populate);
       })
     );

@@ -50,10 +50,16 @@ export default async (
     paymentsQuery.find({ store });
   }
 
+  bookingsPaidQuery.setOptions({
+    skipAutoPopulationPaths: ["customer", "store", "payments", "event", "gift"]
+  });
+  paymentsQuery.setOptions({ skipAutoPopulationPaths: ["customer"] });
+  console.time("[STATS] Queries took:");
   const [bookingsPaid, payments] = await Promise.all([
     bookingsPaidQuery.exec(),
     paymentsQuery.exec()
   ]);
+  console.timeEnd("[STATS] Queries took:");
   // console.log("[DEBUG] Bookings & payments queried:", Date.now() - starts);
 
   const flowAmount = payments
@@ -161,16 +167,13 @@ export default async (
 
       item.adultsCount += booking.adultsCount;
       item.kidsCount += booking.kidsCount;
-      item.amount += booking.payments
-        .filter(p =>
-          [PaymentGateway.Card, PaymentGateway.Balance].includes(p.gateway)
-        )
-        .reduce((amount, p) => amount + p.amount, 0);
+      item.amount +=
+        (booking.amountPaidInCard || 0) + (booking.amountPaidInDeposit || 0);
       return acc;
     }, []);
 
   const balanceCount = bookingsPaid
-    .filter(b => b.payments.some(p => p.gateway === PaymentGateway.Balance))
+    .filter(b => b.amountPaidInBalance)
     .reduce(
       (acc, booking) => {
         acc.adultsCount += booking.adultsCount;
