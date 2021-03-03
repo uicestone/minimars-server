@@ -11,27 +11,25 @@ import { DocumentType } from "@typegoose/typegoose";
 
 export default async (
   dateInput?: string | Date,
-  dateInputFrom?: string | Date,
+  dateEndInput?: string | Date,
   store?: DocumentType<Store>
 ) => {
   // const starts: number = Date.now();
   // console.log("[DEBUG] Stats starts:", starts);
   const dateStr = moment(dateInput).format("YYYY-MM-DD"),
-    dateStrFrom = dateInputFrom && moment(dateInputFrom).format("YYYY-MM-DD"),
-    startOfDay = moment(dateInputFrom || dateInput)
-      .startOf("day")
+    dateEndStr = moment(dateEndInput || dateInput).format("YYYY-MM-DD"),
+    startOfDay = moment(dateInput).startOf("day").toDate(),
+    endOfDay = moment(dateEndInput || dateInput)
+      .endOf("day")
       .toDate(),
-    endOfDay = moment(dateInput).endOf("day").toDate(),
-    dateRangeStartStr = moment(dateInputFrom || dateInput)
-      .subtract(6, "days")
-      .format("YYYY-MM-DD"),
-    startOfDateRange = moment(dateInput)
-      .subtract(6, "days")
-      .startOf("day")
-      .toDate();
-
+    dateRangeStartStr = dateEndInput
+      ? moment(dateInput).format("YYYY-MM-DD")
+      : moment(dateInput).subtract(6, "days").format("YYYY-MM-DD"),
+    dateRangeStart = dateEndInput
+      ? moment(dateInput).toDate()
+      : moment(dateInput).subtract(6, "days").startOf("day").toDate();
   const bookingsPaidQuery = Booking.find({
-    date: dateStrFrom ? { $gte: dateStrFrom, $lte: dateStr } : dateStr,
+    date: { $gte: dateStr, $lte: dateEndStr },
     status: { $in: paidBookingStatus },
     type: Scene.PLAY
   });
@@ -193,7 +191,7 @@ export default async (
   // console.log("[DEBUG] Groups calculated:", Date.now() - starts);
 
   const dailyCustomers = await Booking.aggregate([
-    { $match: { date: { $gte: dateRangeStartStr, $lte: dateStr } } },
+    { $match: { date: { $gte: dateRangeStartStr, $lte: dateEndStr } } },
     {
       $project: {
         adultsCount: 1,
@@ -253,7 +251,7 @@ export default async (
   const dailyFlowAmount = await Payment.aggregate([
     {
       $match: {
-        createdAt: { $gte: startOfDateRange, $lte: endOfDay },
+        createdAt: { $gte: dateRangeStart, $lte: endOfDay },
         paid: true,
         gateway: { $in: flowGateways }
       }
@@ -308,7 +306,7 @@ export default async (
   const dailyCardCouponPayment = await Payment.aggregate([
     {
       $match: {
-        createdAt: { $gte: startOfDateRange, $lte: endOfDay },
+        createdAt: { $gte: dateRangeStart, $lte: endOfDay },
         paid: true,
         gateway: { $in: cardCouponGateways }
       }

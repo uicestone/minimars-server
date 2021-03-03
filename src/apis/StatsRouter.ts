@@ -128,12 +128,13 @@ export default (router: Router) => {
     })
   );
 
-  router.route("/stats/:date?").get(
+  router.route("/stats/:date?/:dateEnd?").get(
     handleAsyncErrors(async (req: Request, res: Response) => {
       const dateInput = req.params.date;
+      const dateInputEnd = req.params.dateEnd;
       const stats = await getStats(
         dateInput,
-        undefined,
+        dateInputEnd,
         req.query.store || req.user.store
       );
       res.json(stats);
