@@ -118,11 +118,23 @@ export class Booking {
   })
   statusWas?: BookingStatus;
 
+  /**
+   * @deprecated
+   */
   @prop()
   price?: number;
 
+  /**
+   * @deprecated
+   */
   @prop()
   priceInPoints?: number;
+
+  @prop({ type: Number })
+  amountPaid = 0;
+
+  @prop({ type: Number })
+  amountInPointsPaid?: number;
 
   @prop({ ref: "Card" })
   card?: DocumentType<Card>;
@@ -633,6 +645,35 @@ export class Booking {
       }
     }
     // send user notification
+  }
+
+  async setAmountPaid(
+    this: DocumentType<Booking>,
+    forcePopulatePayments = false
+  ): Promise<void> {
+    if (!this.populated("payments") || forcePopulatePayments) {
+      await this.populate({
+        path: "payments",
+        options: { sort: { _id: -1 } },
+        select: "-customer"
+      }).execPopulate();
+    }
+    const { amount, amountInPoints } = this.payments.reduce(
+      (total, payment) => {
+        if (payment.paid) {
+          total.amount += payment.amount || 0;
+          if (payment.amountInPoints) {
+            total.amountInPoints += payment.amountInPoints;
+          }
+        }
+        return total;
+      },
+      { amount: 0, amountInPoints: 0 }
+    );
+    this.amountPaid = amount;
+    if (amountInPoints) {
+      this.amountInPointsPaid = amountInPoints;
+    }
   }
 
   async checkIn(this: DocumentType<Booking>, save = true) {
