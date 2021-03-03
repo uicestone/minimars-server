@@ -134,7 +134,16 @@ export class Booking {
   amountPaid = 0;
 
   @prop({ type: Number })
-  amountInPointsPaid?: number;
+  amountPaidInBalance?: number;
+
+  @prop({ type: Number })
+  amountPaidInDeposit?: number;
+
+  @prop({ type: Number })
+  amountPaidInCard?: number;
+
+  @prop({ type: Number })
+  amountPaidInPoints?: number;
 
   @prop({ ref: "Card" })
   card?: DocumentType<Card>;
@@ -658,22 +667,44 @@ export class Booking {
         select: "-customer"
       }).execPopulate();
     }
-    const { amount, amountInPoints } = this.payments.reduce(
+    const paymentsAmounts = this.payments.reduce(
       (total, payment) => {
         if (payment.paid) {
           total.amount += payment.amount || 0;
+          if (payment.gateway === PaymentGateway.Card) {
+            total.amountPaidInCard += payment.amount;
+          }
+          if (payment.gateway === PaymentGateway.Balance) {
+            total.amountPaidInDeposit += payment.amountDeposit;
+            total.amountPaidInBalance += payment.amount;
+          }
           if (payment.amountInPoints) {
-            total.amountInPoints += payment.amountInPoints;
+            total.amountPaidInPoints += payment.amountInPoints;
           }
         }
         return total;
       },
-      { amount: 0, amountInPoints: 0 }
+      {
+        amount: 0,
+        amountPaidInBalance: 0,
+        amountPaidInDeposit: 0,
+        amountPaidInCard: 0,
+        amountPaidInPoints: 0
+      }
     );
-    this.amountPaid = amount;
-    if (amountInPoints) {
-      this.amountInPointsPaid = amountInPoints;
-    }
+    this.amountPaid = paymentsAmounts.amount;
+    [
+      "amountPaidInDeposit",
+      "amountPaidInBalance",
+      "amountPaidInCard",
+      "amountPaidInPoints"
+    ].forEach(amountField => {
+      if (paymentsAmounts[amountField]) {
+        this[amountField] = paymentsAmounts[amountField];
+      } else {
+        this[amountField] = undefined;
+      }
+    });
   }
 
   async checkIn(this: DocumentType<Booking>, save = true) {

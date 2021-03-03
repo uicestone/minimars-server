@@ -6,7 +6,8 @@ import {
   Ref,
   DocumentType,
   modelOptions,
-  Severity
+  Severity,
+  post
 } from "@typegoose/typegoose";
 import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
@@ -206,6 +207,19 @@ export const SceneLabel = {
       throw new Error("unsupported_payment_gateway");
   }
   next();
+})
+@post("save", function (this: DocumentType<Payment>) {
+  if (this.booking) {
+    // update booking paid amount 1s after payment save
+    // this is dirty but working
+    setTimeout(async () => {
+      const booking = await BookingModel.findById(this.booking);
+      if (booking) {
+        await booking.setAmountPaid();
+        await booking.save();
+      }
+    }, 1000);
+  }
 })
 @plugin(autoPopulate, [{ path: "customer", select: "name avatarUrl mobile" }])
 @plugin(updateTimes)
