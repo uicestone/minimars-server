@@ -149,6 +149,7 @@ export default (router: Router) => {
             customer: card.customer,
             stores: { $all: card.stores },
             timesLeft: { $gt: 0 },
+            type: "times",
             expiresAt: { $lt: card.expiresAt },
             end: null
           });
