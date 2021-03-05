@@ -29,8 +29,11 @@ export enum Scene {
   PARTY = "party",
   EVENT = "event",
   GIFT = "gift",
+  MALL = "mall",
   FOOD = "food",
-  CARD = "card"
+  CARD = "card",
+  BALANCE = "balance",
+  PERIOD = "period"
 }
 
 export const SceneLabel = {

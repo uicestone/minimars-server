@@ -30,8 +30,7 @@ export default async (
       : moment(dateInput).subtract(6, "days").startOf("day").toDate();
   const bookingsPaidQuery = Booking.find({
     date: { $gte: dateStr, $lte: dateEndStr },
-    status: { $in: paidBookingStatus },
-    type: Scene.PLAY
+    status: { $in: paidBookingStatus }
   });
 
   if (store) {
@@ -70,32 +69,53 @@ export default async (
     .filter(p => cardCouponGateways.includes(p.gateway))
     .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
 
-  const customerCount = bookingsPaid.reduce(
-    (count, booking) => count + booking.adultsCount + booking.kidsCount,
-    0
-  );
-  // console.log("[DEBUG] Count calculated:", Date.now() - starts);
+  const playAmount = payments
+    .filter(p => p.scene === Scene.PLAY)
+    .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
 
-  const customersByType = bookingsPaid.reduce(
-    (acc, booking) => {
-      if (booking.card) {
-        acc.card.adultsCount += booking.adultsCount;
-        acc.card.kidsCount += booking.kidsCount;
-      } else if (booking.coupon) {
-        acc.coupon.adultsCount += booking.adultsCount;
-        acc.coupon.kidsCount += booking.kidsCount;
-      } else {
-        acc.guest.adultsCount += booking.adultsCount;
-        acc.guest.kidsCount += booking.kidsCount;
+  const foodAmount = payments
+    .filter(p => p.scene === Scene.FOOD)
+    .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
+
+  const mallAmount = payments
+    .filter(p => p.scene === Scene.MALL)
+    .reduce((amount, p) => amount + (p.amountDeposit || p.amount), 0);
+
+  const customerCount = bookingsPaid
+    .filter(b => b.type === Scene.PLAY)
+    .reduce(
+      (count, booking) => count + booking.adultsCount + booking.kidsCount,
+      0
+    );
+
+  const foodBookingsCount = bookingsPaid.filter(b => b.type === Scene.FOOD)
+    .length;
+
+  const mallBookingsCount = bookingsPaid.filter(b => b.type === Scene.MALL)
+    .length;
+
+  const customersByType = bookingsPaid
+    .filter(b => b.type === Scene.PLAY)
+    .reduce(
+      (acc, booking) => {
+        if (booking.card) {
+          acc.card.adultsCount += booking.adultsCount;
+          acc.card.kidsCount += booking.kidsCount;
+        } else if (booking.coupon) {
+          acc.coupon.adultsCount += booking.adultsCount;
+          acc.coupon.kidsCount += booking.kidsCount;
+        } else {
+          acc.guest.adultsCount += booking.adultsCount;
+          acc.guest.kidsCount += booking.kidsCount;
+        }
+        return acc;
+      },
+      {
+        card: { adultsCount: 0, kidsCount: 0 },
+        coupon: { adultsCount: 0, kidsCount: 0 },
+        guest: { adultsCount: 0, kidsCount: 0 }
       }
-      return acc;
-    },
-    {
-      card: { adultsCount: 0, kidsCount: 0 },
-      coupon: { adultsCount: 0, kidsCount: 0 },
-      guest: { adultsCount: 0, kidsCount: 0 }
-    }
-  );
+    );
 
   const flowAmountByGateways: { [gateway: string]: number } = payments
     .filter(p => flowGateways.includes(p.gateway))
@@ -117,6 +137,18 @@ export default async (
       return acc;
     }, {});
 
+  const flowAmountByStores: { [storeId: string]: number } = payments
+    .filter(p => flowGateways.includes(p.gateway))
+    .reduce((acc, payment) => {
+      if (!payment.store) return acc;
+      const storeId = payment.store.toString();
+      if (!acc[storeId]) {
+        acc[storeId] = 0;
+      }
+      acc[storeId] += payment.amount;
+      return acc;
+    }, {});
+
   const couponsCount: {
     slug: string;
     name: string;
@@ -124,6 +156,7 @@ export default async (
     kidsPerCoupon: number;
     amount: number;
   }[] = bookingsPaid
+    .filter(b => b.type === Scene.PLAY)
     .filter(b => b.coupon)
     .reduce((acc, booking) => {
       let item = acc.find(c => c.name === booking.coupon.title);
@@ -151,6 +184,7 @@ export default async (
     });
 
   const cardsCount = bookingsPaid
+    .filter(b => b.type === Scene.PLAY)
     .filter(b => b.card)
     .reduce((acc, booking) => {
       let item = acc.find(i => i.name === booking.card.title);
@@ -173,6 +207,7 @@ export default async (
     }, []);
 
   const balanceCount = bookingsPaid
+    .filter(b => b.type === Scene.PLAY)
     .filter(b => b.amountPaidInBalance)
     .reduce(
       (acc, booking) => {
@@ -364,9 +399,15 @@ export default async (
   return {
     flowAmount,
     cardCouponAmount,
+    playAmount,
+    foodAmount,
+    mallAmount,
     customerCount,
+    foodBookingsCount,
+    mallBookingsCount,
     flowAmountByGateways,
     flowAmountByScenes,
+    flowAmountByStores,
     couponsCount,
     cardsCount,
     balanceCount,
