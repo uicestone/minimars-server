@@ -40,7 +40,7 @@ export default (router: Router) => {
         if (req.user.role === "manager") {
           query.find({ stores: { $in: [req.user.store.id, []] } });
           query.find({ enabled: true });
-        } else if (req.user.role !== "admin") {
+        } else if (!["admin", "accountant"].includes(req.user.role)) {
           throw new HttpError(403);
         }
 
