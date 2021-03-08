@@ -167,6 +167,15 @@ export class Store {
   }
 
   async syncPospalTickets(from: string | number, to?: string) {
+    if (process.env.DISABLE_POSPAL_SYNC) {
+      console.log(
+        "Mock sync pospal tickets:",
+        this.code,
+        moment().format("HH:mm:ss")
+      );
+      return;
+    }
+
     const pospal = new Pospal(this.code);
     const result: Ticket[] =
       typeof from === "number"

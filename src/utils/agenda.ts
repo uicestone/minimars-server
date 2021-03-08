@@ -15,7 +15,7 @@ import configModel, { Config } from "../models/Config";
 import CardTypeModel from "../models/CardType";
 import StoreModel from "../models/Store";
 import paymentModel, { PaymentGateway } from "../models/Payment";
-import { saveContentImages } from "./helper";
+import { saveContentImages, sleep } from "./helper";
 import importPrevData from "./importPrevData";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
 import Pospal from "./pospal";
@@ -349,14 +349,39 @@ export const initAgenda = async () => {
     if (process.env.DISABLE_POSPAL_SYNC) {
       return done();
     }
+    // this job is run every minute, but we need more frequency, so we use for and sleep
+    const peakInterval = 15;
+    const troughInterval = 30;
+    const open = "09:30";
+    const close = "20:00";
+    const peaks = ["11:30-14:00", "17:30-18:30"];
     const stores = await StoreModel.find();
-    for (const store of stores) {
-      try {
-        await store.syncPospalTickets(pospalTicketsSyncInterval * 2);
-      } catch (e) {
-        continue;
-      }
+    const time = moment().format("HH:mm");
+
+    if (time < open || time > close) {
+      return done();
     }
+
+    const interval = peaks.some(peakStr => {
+      const peak = peakStr.split("-");
+      return time >= peak[0] && time < peak[1];
+    })
+      ? peakInterval
+      : troughInterval;
+    console.log("interval:", interval);
+    const timesInAMinute = Math.floor(60 / interval);
+
+    for (let n = 0; n < timesInAMinute; n++) {
+      stores.forEach(async store => {
+        try {
+          await store.syncPospalTickets(pospalTicketsSyncInterval * 2);
+        } catch (e) {
+          return;
+        }
+      });
+      await sleep(interval * 1000);
+    }
+
     // console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
@@ -447,10 +472,7 @@ export const initAgenda = async () => {
     // agenda.every("0 20 * * *", "check balance reward cards"); // run everyday at 8pm
     agenda.every("0 22 * * *", "verify user balance");
     agenda.every("5 22 * * *", "sync pospal customers");
-    agenda.every(
-      `*/${pospalTicketsSyncInterval} 10-21 * * *`,
-      "sync pospal tickets"
-    );
+    agenda.every(`* * * * *`, "sync pospal tickets");
   });
 
   agenda.on("error", err => {
