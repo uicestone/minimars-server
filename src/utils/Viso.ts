@@ -88,7 +88,11 @@ export default class Viso {
   }
 
   onReturn(ws: WebSocket, command: Command, payload: any = {}) {
-    console.log("[VSO] On return", Command[command] || command, payload);
+    console.log(
+      "[VSO] On return",
+      Command[command] || command,
+      JSON.stringify(payload)
+    );
     switch (command) {
       case Command.GET_DEVICE_INFO:
         const device = this.devices.find(d => d.mac === payload.mac);
