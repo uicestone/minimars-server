@@ -209,7 +209,7 @@ export class Store {
       });
       throw new Error("invalid_payment_code");
     }
-    if (typeof from !== "number" || result.length) {
+    if (typeof from !== "number") {
       console.log(`[STR] Fetched ${result.length} Pospal tickets.`);
     }
     let insertBookings = 0;
@@ -294,7 +294,7 @@ export class Store {
         continue;
       }
     }
-    if (typeof from !== "number" || result.length) {
+    if (typeof from !== "number" || insertBookings) {
       console.log(`[STR] Created ${insertBookings} food bookings.`);
     }
   }
