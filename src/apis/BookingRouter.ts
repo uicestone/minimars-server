@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import moment from "moment";
 import { readFileSync } from "fs";
 import paginatify from "../middlewares/paginatify";
@@ -11,7 +11,6 @@ import BookingModel, {
   paidBookingStatus
 } from "../models/Booking";
 import UserModel from "../models/User";
-import StoreModel from "../models/Store";
 import PaymentModel, { PaymentGateway, Scene } from "../models/Payment";
 import CardModel, { CardStatus } from "../models/Card";
 import { config } from "../models/Config";
@@ -20,8 +19,7 @@ import {
   BookingPostQuery,
   BookingPutBody,
   BookingQuery,
-  BookingPricePostBody,
-  BookingPriceResponseBody
+  BookingPricePostBody
 } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId, isOffDay } from "../utils/helper";
@@ -65,13 +63,13 @@ export default (router: Router) => {
           await booking.populate("customer").execPopulate();
         }
 
-        console.log(
-          `[BOK] Create booking for customer ${booking.customer.mobile} ${booking.customer.id}.`
-        );
-
         if (!booking.customer) {
           throw new HttpError(400, "客户信息错误");
         }
+
+        console.log(
+          `[BOK] Create booking for customer ${booking.customer.mobile} ${booking.customer.id}.`
+        );
 
         await booking.populate("store").execPopulate();
 
@@ -86,7 +84,7 @@ export default (router: Router) => {
         }
 
         if (!booking.checkInAt) {
-          booking.checkInAt = config.appointmentDeadline;
+          booking.checkInAt = config.appointmentDeadline || "16:00:00";
         }
 
         if (
@@ -97,6 +95,7 @@ export default (router: Router) => {
         }
 
         if (booking.type === Scene.PLAY) {
+          if (!booking.store) throw new Error("missing_booking_store");
           if (!booking.kidsCount) {
             booking.kidsCount = 0;
           }
@@ -111,7 +110,7 @@ export default (router: Router) => {
             });
             const kidsCountToday =
               booking.kidsCount +
-              otherBookings.reduce((c, b) => c + b.kidsCount, 0);
+              otherBookings.reduce((c, b) => c + (b.kidsCount || 0), 0);
             if (!booking.populated("card")) {
               await booking.populate("card", "-content").execPopulate();
             }
@@ -122,6 +121,7 @@ export default (router: Router) => {
               throw new HttpError(400, "会员卡不支持该门店");
             }
             if (
+              booking.card.maxKids &&
               kidsCountToday > booking.card.maxKids &&
               req.user.role !== "admin"
             ) {
@@ -177,7 +177,8 @@ export default (router: Router) => {
             throw new HttpError(400, "活动信息错误");
           }
           if (
-            booking.event.kidsCountLeft !== undefined &&
+            booking.event.kidsCountLeft !== null &&
+            body.kidsCount !== undefined &&
             booking.event.kidsCountLeft < body.kidsCount
           ) {
             throw new HttpError(400, "活动儿童人数名额不足");
@@ -192,6 +193,8 @@ export default (router: Router) => {
         }
 
         if (body.type === Scene.GIFT) {
+          if (booking.quantity === undefined)
+            throw new Error("invalid_quantity");
           if (!booking.populated("gift")) {
             await booking.populate("gift").execPopulate();
           }
@@ -200,7 +203,7 @@ export default (router: Router) => {
           }
           if (
             booking.gift.quantity >= 0 &&
-            booking.gift.quantity < body.quantity
+            booking.gift.quantity < booking.quantity
           ) {
             throw new HttpError(400, "礼品库存不足");
           }
@@ -212,7 +215,7 @@ export default (router: Router) => {
               customer: booking.customer
             });
             const historyQuantity = historyGiftBookings.reduce(
-              (quantity, booking) => quantity + booking.quantity,
+              (quantity, booking) => quantity + (booking.quantity || 0),
               0
             );
             if (
@@ -227,7 +230,10 @@ export default (router: Router) => {
         if (booking.type === Scene.FOOD) {
           if (!booking.price) {
             const card = await CardModel.findById(booking.card);
-            if (card && [undefined, null].includes(card.fixedPrice)) {
+            if (
+              card &&
+              (card.fixedPrice === null || card.fixedPrice === undefined)
+            ) {
               throw new HttpError(400, "请填写收款金额");
             }
           }
@@ -240,32 +246,27 @@ export default (router: Router) => {
         }
 
         try {
-          await booking.calculatePrice();
+          const bookingPrice = await booking.calculatePrice();
+          if (booking.customer.isNew) {
+            await booking.customer.save();
+          }
+          await booking.createPayment(
+            {
+              paymentGateway:
+                query.paymentGateway ||
+                (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
+              useBalance: query.useBalance !== "false",
+              atReception:
+                ["manager", "eventManager"].includes(req.user.role) &&
+                booking.customer.id !== req.user.id
+            },
+            bookingPrice.price,
+            bookingPrice.priceInPoints
+          );
         } catch (err) {
           switch (err.message) {
             case "coupon_not_found":
               throw new HttpError(400, "优惠不存在");
-            default:
-              throw err;
-          }
-        }
-
-        if (booking.customer.isNew) {
-          await booking.customer.save();
-        }
-
-        try {
-          await booking.createPayment({
-            paymentGateway:
-              query.paymentGateway ||
-              (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
-            useBalance: query.useBalance !== "false",
-            atReception:
-              ["manager", "eventManager"].includes(req.user.role) &&
-              booking.customer.id !== req.user.id
-          });
-        } catch (err) {
-          switch (err.message) {
             case "no_customer_openid":
               throw new HttpError(400, "缺少客户openid");
             case "incomplete_gateway_data":
@@ -312,7 +313,7 @@ export default (router: Router) => {
         if (req.user.role === "customer") {
           query.find({ customer: req.user._id });
         } else if (["manager", "eventManager"].includes(req.user.role)) {
-          query.find({ store: { $in: [req.user.store.id, null] } });
+          query.find({ store: { $in: [req.user.store?.id, null] } });
         } else if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -328,30 +329,30 @@ export default (router: Router) => {
         if (queryParams.customerKeyword) {
           if (isValidHexObjectId(queryParams.customerKeyword)) {
             // @ts-ignore
-            query.find({ customer: queryParams.customerKeyword });
+            query.where({ customer: queryParams.customerKeyword });
           } else {
             const matchCustomers = await UserModel.find({
               $text: { $search: queryParams.customerKeyword }
             });
-            query.find({ customer: { $in: matchCustomers } });
+            query.where({ customer: { $in: matchCustomers } });
           }
         }
 
         if (queryParams.paymentType) {
           switch (queryParams.paymentType) {
             case "guest":
-              query.find({ coupon: null, card: null });
+              query.where({ coupon: null, card: null });
               break;
             case "coupon":
-              query.find({ coupon: { $ne: null } });
+              query.where({ coupon: { $ne: null } });
               break;
             case "card":
-              query.find({ card: { $ne: null } });
+              query.where({ card: { $ne: null } });
               break;
           }
         }
 
-        [
+        ([
           "type",
           "store",
           "date",
@@ -359,7 +360,7 @@ export default (router: Router) => {
           "event",
           "gift",
           "coupon"
-        ].forEach(field => {
+        ] as Array<keyof BookingQuery>).forEach(field => {
           if (queryParams[field]) {
             query.find({ [field]: queryParams[field] });
           }
@@ -386,24 +387,26 @@ export default (router: Router) => {
     .route("/booking/:bookingId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const booking = await BookingModel.findOne({
-          _id: req.params.bookingId
-        });
-        if (!booking) {
-          throw new HttpError(
-            404,
-            `Booking not found: ${req.params.bookingId}`
-          );
-        }
-        if (req.user.role === "customer") {
-          if (!booking.customer.equals(req.user)) {
-            throw new HttpError(403);
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const booking = await BookingModel.findOne({
+            _id: req.params.bookingId
+          });
+          if (!booking) {
+            throw new HttpError(
+              404,
+              `Booking not found: ${req.params.bookingId}`
+            );
           }
+          if (req.user.role === "customer") {
+            if (!booking.customer?.equals(req.user)) {
+              throw new HttpError(403);
+            }
+          }
+          req.item = booking;
+          next();
         }
-        req.item = booking;
-        next();
-      })
+      )
     )
 
     // get the booking with that id
@@ -516,20 +519,22 @@ export default (router: Router) => {
         }
 
         if (facesWas !== booking.faces?.join()) {
-          booking.faces.forEach((url, index) => {
+          if (!booking.store || !booking.customer)
+            throw new Error("invalid_customer");
+          booking.faces?.forEach((url, index) => {
             const path = url.replace(/^.+?\/\/.+?\//, "");
             const base64 = readFileSync(path, { encoding: "base64" });
             const data = "data:image/jpeg;base64," + base64;
             const personNumber = `${booking.id}-${Date.now()}`;
+            if (!booking.store || !booking.customer)
+              throw Error("invalid_booking");
             viso.addPerson(
               booking.store,
               personNumber,
               [data],
               booking.customer.mobile
             );
-            setTimeout(() => {
-              viso.addWhitelist(booking.store, [personNumber]);
-            }, +(process.env.VISO_ADD_WHITE_LIST_DELAY || 5000));
+            viso.addWhitelist(booking.store, [personNumber]);
           });
         }
 
@@ -573,17 +578,7 @@ export default (router: Router) => {
         throw new HttpError(401, "客户信息错误");
       }
 
-      if (!booking.store) {
-        booking.store = await StoreModel.findOne();
-        // TODO booking default store should be disabled
-      }
       await booking.populate("store").execPopulate();
-
-      if (!booking.store || !booking.store.name) {
-        if (booking.type !== Scene.GIFT) {
-          throw new HttpError(400, "门店信息错误");
-        }
-      }
 
       if (!booking.date) {
         booking.date = moment().format("YYYY-MM-DD");
@@ -594,7 +589,8 @@ export default (router: Router) => {
       }
 
       try {
-        await booking.calculatePrice();
+        const bookingPrice = await booking.calculatePrice();
+        res.json(bookingPrice);
       } catch (err) {
         switch (err.message) {
           case "coupon_not_found":
@@ -603,13 +599,6 @@ export default (router: Router) => {
             throw err;
         }
       }
-
-      const result = {
-        price: booking.price,
-        priceInPoints: booking.priceInPoints || undefined
-      } as BookingPriceResponseBody;
-
-      res.json(result);
     })
   );
 

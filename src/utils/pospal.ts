@@ -285,7 +285,7 @@ export default class Pospal {
     return result;
   }
 
-  async queryMultiDateTickets(dateStart: string, dateEnd: string) {
+  async queryMultiDateTickets(dateStart: string, dateEnd?: string) {
     const end = moment(dateEnd).startOf("day").valueOf();
     let result = [];
     for (

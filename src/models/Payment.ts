@@ -89,7 +89,7 @@ export const SceneLabel = {
         });
         if (!originalPayment) throw new Error("invalid_refund_original");
         const wechatRefundOrderData = await refundOrder(
-          payment.original,
+          payment.original || "",
           payment.id,
           originalPayment.amount,
           payment.amount
@@ -126,7 +126,7 @@ export const SceneLabel = {
       payment.amountDeposit = depositPaymentAmount;
       payment.paid = true;
       if (payment.attach.match(/^booking /)) {
-        await payment.customer.addPoints(payment.amount);
+        await payment.customer?.addPoints(payment.amount);
       }
       break;
     case PaymentGateway.Card:
@@ -134,6 +134,9 @@ export const SceneLabel = {
         throw new Error("invalid_card_payment_gateway_data");
       }
       const card = await CardModel.findOne({ _id: payment.gatewayData.cardId });
+
+      if (!card || card.timesLeft === undefined)
+        throw new Error("invalid_card");
 
       if (payment.times < 0) {
         card.timesLeft -= payment.times;
@@ -156,7 +159,7 @@ export const SceneLabel = {
       }
       payment.paid = true;
       if (payment.attach.match(/^booking /)) {
-        await payment.customer.addPoints(payment.amount);
+        await payment.customer?.addPoints(payment.amount);
       }
 
       break;
@@ -170,7 +173,7 @@ export const SceneLabel = {
       payment.paid = true;
       // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
-        await payment.customer.addPoints(payment.amount);
+        await payment.customer?.addPoints(payment.amount);
       }
       break;
     case PaymentGateway.Pr:
@@ -181,25 +184,31 @@ export const SceneLabel = {
       payment.paid = true;
       // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
-        await payment.customer.addPoints(payment.amount);
+        await payment.customer?.addPoints(payment.amount);
       }
       break;
     case PaymentGateway.Dianping:
       payment.paid = true;
       // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
-        await payment.customer.addPoints(payment.amount);
+        await payment.customer?.addPoints(payment.amount);
       }
       break;
     case PaymentGateway.Shouqianba:
       payment.paid = true;
       // await payment.paidSuccess();
       if (payment.attach.match(/^booking /)) {
-        await payment.customer.addPoints(payment.amount);
+        await payment.customer?.addPoints(payment.amount);
       }
       break;
     case PaymentGateway.Points:
-      if (payment.amountInPoints > customer.points) {
+      if (payment.amountInPoints === undefined) {
+        throw new Error("invalid_points_payment");
+      }
+      if (
+        customer.points === undefined ||
+        payment.amountInPoints > customer.points
+      ) {
         throw new Error("insufficient_points");
       }
       await customer.addPoints(-payment.amountInPoints);
@@ -229,7 +238,7 @@ export const SceneLabel = {
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Payment {
   @prop({ enum: Object.values(Scene), required: true })
-  scene: Scene;
+  scene!: Scene;
 
   @prop({ ref: "User", index: true })
   customer?: DocumentType<User>;
@@ -238,7 +247,7 @@ export class Payment {
   store?: Ref<Store>;
 
   @prop({ required: true })
-  amount: number;
+  amount!: number;
 
   @prop()
   amountForceDeposit?: number;
@@ -250,13 +259,13 @@ export class Payment {
   amountInPoints?: number;
 
   @prop({ default: false })
-  paid: boolean;
+  paid: boolean = false;
 
   @prop({ default: " " })
-  title: string;
+  title: string = " ";
 
-  @prop({ type: String, index: true })
-  attach: string;
+  @prop({ type: String, required: true })
+  attach!: string;
 
   @prop({ ref: "Booking" })
   booking?: Ref<Booking>;
@@ -267,11 +276,11 @@ export class Payment {
   @prop({ type: Number })
   times?: number;
 
-  @prop({ required: true, index: true })
-  gateway: PaymentGateway;
+  @prop({ required: true })
+  gateway!: PaymentGateway;
 
   @prop({ default: {} })
-  gatewayData: Record<string, any>;
+  gatewayData: Record<string, any> = {};
 
   @prop()
   original?: string;
@@ -312,6 +321,7 @@ export class Payment {
       case "booking":
         if (!isValidHexObjectId(paymentAttach[1])) break;
         const booking = await BookingModel.findOne({ _id: paymentAttach[1] });
+        if (!booking) throw new Error("invalid_booking");
         if (payment.amount >= 0) {
           // TODO: no, single payment success is not booking payment success
           // so right now we don't trigger paidSuccess for balance/card/coupon payment
@@ -330,6 +340,7 @@ export class Payment {
       case "card":
         if (!isValidHexObjectId(paymentAttach[1])) break;
         const card = await CardModel.findOne({ _id: paymentAttach[1] });
+        if (!card) throw new Error("invalid_card");
         await card.paymentSuccess();
         await card.save();
         console.log(`[PAY] Card purchase success, id: ${card._id}.`);

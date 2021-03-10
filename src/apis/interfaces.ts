@@ -56,11 +56,6 @@ export interface BookingQuery extends ListQuery {
 
 export interface BookingPricePostBody extends Partial<Booking> {}
 
-export interface BookingPriceResponseBody {
-  price: number;
-  priceInPoints?: number;
-}
-
 export interface CardPostBody extends Partial<Card> {}
 
 export interface CardPutBody extends Partial<Card> {}

@@ -11,7 +11,7 @@ import updateTimes from "./plugins/updateTimes";
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 class ConfigDocument {
   @prop()
-  desc: string;
+  desc?: string;
 
   @prop()
   value: any;

@@ -31,25 +31,25 @@ import updateTimes from "./plugins/updateTimes";
 })
 export class Coupon {
   @prop({ required: true })
-  title: string;
+  title!: string;
 
   @prop({ ref: "Store" })
-  stores: Ref<Store>[];
+  stores!: Ref<Store>[];
 
   @prop()
-  content: string;
+  content?: string;
 
-  @prop({ type: Number })
+  @prop({ type: Number, default: 1 })
   kidsCount = 1;
 
   @prop({ type: Number })
-  price = 0;
+  price?: number;
 
-  @prop({ type: Number })
-  priceThirdParty: number;
+  @prop({ type: Number, required: true })
+  priceThirdParty!: number;
 
   @prop({ type: Number, default: 2 })
-  freeParentsPerKid: number;
+  freeParentsPerKid: number = 2;
 
   @prop()
   start?: Date;

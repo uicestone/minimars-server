@@ -56,6 +56,23 @@ export const validBookingStatus = [
   BookingStatus.FINISHED
 ];
 
+export class BookingPrice {
+  price = 0;
+  priceInPoints?: number;
+  coupon?: Coupon;
+}
+
+type Amounts = Required<
+  Pick<
+    Booking,
+    | "amountPaid"
+    | "amountPaidInBalance"
+    | "amountPaidInDeposit"
+    | "amountPaidInCard"
+    | "amountPaidInPoints"
+  >
+>;
+
 @plugin(autoPopulate, [
   { path: "customer", select: "name avatarUrl mobile tags" },
   { path: "store", select: "name code" },
@@ -69,23 +86,23 @@ export const validBookingStatus = [
 // @index({ date: 1, checkInAt: 1, customer: 1 }, { unique: true })
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Booking {
-  @prop({ ref: "User", index: true })
+  @prop({ ref: "User" })
   customer?: DocumentType<User>;
 
   @prop({ ref: "Store" })
-  store: DocumentType<Store>;
+  store?: DocumentType<Store>;
 
   @prop({ enum: Object.values(Scene), required: true })
-  type: Scene;
-
-  @prop({ required: true, index: true })
-  date: string;
+  type!: Scene;
 
   @prop({ required: true })
-  checkInAt: string;
+  date!: string;
+
+  @prop({ required: true })
+  checkInAt!: string;
 
   @prop()
-  checkOutAt: string;
+  checkOutAt?: string;
 
   @prop({ type: Number })
   adultsCount?: number;
@@ -99,7 +116,7 @@ export class Booking {
   @prop({ type: Number })
   bandsPrinted?: number;
 
-  @prop()
+  @prop({ type: String })
   photos?: string[];
 
   @prop({ type: String })
@@ -110,7 +127,7 @@ export class Booking {
     enum: Object.values(BookingStatus),
     default: BookingStatus.PENDING
   })
-  status: BookingStatus;
+  status: BookingStatus = BookingStatus.PENDING;
 
   @prop({
     type: String,
@@ -118,17 +135,8 @@ export class Booking {
   })
   statusWas?: BookingStatus;
 
-  /**
-   * @deprecated
-   */
-  @prop()
+  @prop({ type: Number })
   price?: number;
-
-  /**
-   * @deprecated
-   */
-  @prop()
-  priceInPoints?: number;
 
   @prop({ type: Number })
   amountPaid?: number;
@@ -157,44 +165,58 @@ export class Booking {
   @prop({ ref: "Gift" })
   gift?: DocumentType<Gift>;
 
-  @prop() // quantity of gifts
+  @prop({ type: Number }) // quantity of gifts
   quantity?: number;
 
   @prop({ ref: "Payment" })
-  payments?: DocumentType<Payment>[];
+  payments!: DocumentType<Payment>[];
 
-  @prop({ remarks: String })
+  @prop()
   remarks?: string;
 
   @prop({ type: Object })
   providerData?: Record<string, any>;
 
-  async calculatePrice(this: DocumentType<Booking>) {
-    const booking = this;
+  async calculatePrice(this: DocumentType<Booking>): Promise<BookingPrice> {
+    const bookingPrice = new BookingPrice();
 
-    if (!booking.populated("customer")) {
-      await booking.populate("customer").execPopulate();
+    if (!this.populated("customer")) {
+      await this.populate("customer").execPopulate();
     }
 
-    if (booking.type === "play") {
-      let kidsCount = booking.kidsCount;
+    if (this.type === "play") {
+      if (
+        this.adultsCount === undefined ||
+        this.kidsCount === undefined ||
+        config.freeParentsPerKid === undefined ||
+        config.extraParentFullDayPrice === undefined ||
+        config.kidFullDayPrice === undefined
+      ) {
+        throw new Error("undefined_play_params");
+      }
+      let kidsCount = this.kidsCount;
       let extraAdultsCount = Math.max(
         0,
-        booking.adultsCount - booking.kidsCount * config.freeParentsPerKid
+        this.adultsCount - this.kidsCount * config.freeParentsPerKid
       );
 
-      if (booking.card) {
-        if (!booking.populated("card")) {
-          await booking.populate("card").execPopulate();
+      if (this.card) {
+        if (!this.populated("card")) {
+          await this.populate("card").execPopulate();
         }
-        if (booking.card.type === "balance") {
-          booking.card = null;
+        if (
+          this.card.maxKids === undefined ||
+          this.card.freeParentsPerKid === undefined
+        )
+          throw new Error("invalid_card");
+        if (this.card.type === "balance") {
+          this.card = undefined;
         } else {
-          kidsCount = Math.max(0, booking.kidsCount - booking.card.maxKids);
+          kidsCount = Math.max(0, this.kidsCount - this.card.maxKids);
           extraAdultsCount = Math.max(
             0,
-            booking.adultsCount -
-              (booking.kidsCount - kidsCount) * booking.card.freeParentsPerKid -
+            this.adultsCount -
+              (this.kidsCount - kidsCount) * this.card.freeParentsPerKid -
               kidsCount * config.freeParentsPerKid
           );
         }
@@ -202,79 +224,89 @@ export class Booking {
         // TODO check card valid period
       }
 
-      if (booking.coupon) {
-        if (!booking.populated("coupon")) {
-          await booking.populate("coupon").execPopulate();
+      if (this.coupon) {
+        if (!this.populated("coupon")) {
+          await this.populate("coupon").execPopulate();
         }
-        if (!booking.coupon) {
+        if (!this.coupon) {
           throw new Error("coupon_not_found");
         }
         kidsCount = 0;
         extraAdultsCount = Math.max(
           0,
-          booking.adultsCount -
-            booking.kidsCount * booking.coupon.freeParentsPerKid
+          this.adultsCount - this.kidsCount * this.coupon.freeParentsPerKid
         );
       }
 
-      booking.price =
+      bookingPrice.price =
         config.extraParentFullDayPrice * extraAdultsCount +
         config.kidFullDayPrice * kidsCount;
 
-      if (booking.coupon && booking.coupon.price) {
-        booking.price += booking.coupon.price * booking.kidsCount;
+      if (this.coupon && this.coupon.price) {
+        bookingPrice.price += this.coupon.price * this.kidsCount;
       }
 
-      booking.price += booking.socksCount * config.sockPrice;
-      booking.price = +booking.price.toFixed(2);
-    } else if (booking.type === "event") {
-      if (!booking.populated("event")) {
-        await booking
-          .populate({ path: "event", select: "-content" })
-          .execPopulate();
+      if (config.sockPrice && this.socksCount) {
+        bookingPrice.price += this.socksCount * config.sockPrice;
       }
-      if (!booking.event) {
-        return;
+      bookingPrice.price = +bookingPrice.price.toFixed(2);
+    } else if (this.type === "event") {
+      if (this.kidsCount === undefined) {
+        throw new Error("undefined_event_kids_count");
+      }
+      if (!this.populated("event")) {
+        await this.populate({
+          path: "event",
+          select: "-content"
+        }).execPopulate();
+      }
+      if (!this.event) {
+        return bookingPrice;
         // throw new Error("invalid_event");
       }
-      if (booking.event.priceInPoints) {
-        booking.priceInPoints = booking.event.priceInPoints * booking.kidsCount;
+      if (this.event.priceInPoints) {
+        bookingPrice.priceInPoints = this.event.priceInPoints * this.kidsCount;
       }
-      if (booking.event.price) {
-        booking.price = booking.event.price * booking.kidsCount;
+      if (this.event.price) {
+        bookingPrice.price = this.event.price * this.kidsCount;
       }
-    } else if (booking.type === "gift") {
-      if (!booking.populated("gift")) {
-        await booking.populate("gift").execPopulate();
+    } else if (this.type === "gift") {
+      if (this.quantity === undefined) {
+        throw new Error("undefined_gift_quantity");
       }
-      if (!booking.gift) {
-        return;
+      if (!this.populated("gift")) {
+        await this.populate("gift").execPopulate();
+      }
+      if (!this.gift) {
+        return bookingPrice;
         // throw new Error("invalid_gift");
       }
-      if (booking.gift.priceInPoints) {
-        booking.priceInPoints = booking.gift.priceInPoints * booking.quantity;
+      if (this.gift.priceInPoints) {
+        bookingPrice.priceInPoints = this.gift.priceInPoints * this.quantity;
       }
-      if (booking.gift.price) {
-        booking.price = booking.gift.price * booking.quantity;
+      if (this.gift.price) {
+        bookingPrice.price = this.gift.price * this.quantity;
       }
-    } else if (booking.type === "food") {
-      if (booking.card && !booking.populated("card")) {
-        await booking.populate("card").execPopulate();
+    } else if (this.type === "food") {
+      if (this.card && !this.populated("card")) {
+        await this.populate("card").execPopulate();
         if (
-          booking.card.type === "coupon" &&
-          (!booking.card.overPrice || booking.price >= booking.card.overPrice)
+          this.card.type === "coupon" &&
+          (!this.card.overPrice || bookingPrice.price >= this.card.overPrice)
         ) {
-          if (booking.card.discountPrice) {
-            booking.price -= booking.card.discountPrice;
-          } else if (booking.card.discountRate) {
-            booking.price = booking.price * (1 - booking.card.discountRate);
+          if (this.card.discountPrice) {
+            bookingPrice.price -= this.card.discountPrice;
+          } else if (this.card.discountRate) {
+            bookingPrice.price =
+              bookingPrice.price * (1 - this.card.discountRate);
           }
         }
-        if (booking.card.type === "coupon" && booking.card.fixedPrice) {
-          booking.price = booking.card.fixedPrice;
+        if (this.card.type === "coupon" && this.card.fixedPrice) {
+          bookingPrice.price = this.card.fixedPrice;
         }
       }
     }
+    return bookingPrice;
   }
 
   async createPayment(
@@ -284,33 +316,40 @@ export class Booking {
       useBalance = true,
       atReception = false
     }: {
-      paymentGateway: PaymentGateway;
+      paymentGateway?: PaymentGateway;
       useBalance?: boolean;
       atReception?: boolean;
     },
-    amount?: number
+    amount: number,
+    amountInPoints?: number
   ) {
     const booking = this;
-    let totalPayAmount = amount || booking.price;
+    let totalPayAmount = amount;
     let balancePayAmount = 0;
     let attach = `booking ${booking._id}`;
     let title = "";
 
     if (booking.type === Scene.GIFT) {
+      if (!booking.gift) throw new Error("undefined_gift");
       title = `${booking.gift.title} ${booking.quantity}份 ${
         booking.store?.name || "门店通用"
       } `;
     } else if (booking.type === Scene.EVENT) {
+      if (!booking.event || !booking.store)
+        throw new Error("undefined_event_store");
       title = `${booking.event.title} ${booking.kidsCount}人 ${booking.store.name} `;
     } else if (booking.type === Scene.FOOD) {
       title = `餐饮消费`;
     } else {
+      if (!booking.store) throw new Error("undefined_play_store");
       title = `${booking.store.name} ${booking.adultsCount}大${
         booking.kidsCount
       }小 ${booking.date.substr(5)} ${booking.checkInAt.substr(0, 5)}前入场`;
     }
 
     if (booking.card && ["times", "coupon"].includes(booking.card.type)) {
+      if (booking.card.times === undefined)
+        throw new Error("invalid_times_coupon_card");
       if (!atReception) {
         if (
           booking.card.start &&
@@ -319,7 +358,7 @@ export class Booking {
         ) {
           throw new Error("card_not_started");
         }
-        const cardExpiresAt = booking.card.end || booking.card.expiresAt;
+        const cardExpiresAt = booking.card.expiresAt || booking.card.end;
         if (
           cardExpiresAt &&
           new Date(cardExpiresAt) < moment(booking.date).startOf("day").toDate()
@@ -332,7 +371,7 @@ export class Booking {
         customer: booking.customer,
         store: booking.store,
         amount:
-          (booking.card.price / booking.card.times) * booking.kidsCount || 0,
+          (booking.card.price / booking.card.times) * (booking.kidsCount || 1),
         title,
         attach,
         booking,
@@ -349,7 +388,7 @@ export class Booking {
     }
 
     if (booking.coupon) {
-      if (booking.kidsCount % booking.coupon.kidsCount) {
+      if ((booking.kidsCount || 0) % booking.coupon.kidsCount) {
         throw new Error("coupon_kids_count_not_match");
       }
       title = booking.coupon.title + " " + title;
@@ -358,7 +397,7 @@ export class Booking {
         customer: booking.customer,
         store: booking.store,
         amount:
-          (booking.coupon.priceThirdParty * booking.kidsCount) /
+          (booking.coupon.priceThirdParty * (booking.kidsCount || 1)) /
           booking.coupon.kidsCount,
         title,
         attach,
@@ -377,7 +416,7 @@ export class Booking {
     if (
       totalPayAmount >= 0.01 &&
       useBalance &&
-      booking.customer.balance &&
+      booking.customer?.balance &&
       paymentGateway !== PaymentGateway.Points
     ) {
       balancePayAmount = Math.min(totalPayAmount, booking.customer.balance);
@@ -386,7 +425,8 @@ export class Booking {
         customer: booking.customer,
         store: booking.store,
         amount: balancePayAmount,
-        amountForceDeposit: booking.socksCount * config.sockPrice || 0,
+        amountForceDeposit:
+          (booking.socksCount || 0) * (config.sockPrice || 0) || 0,
         title,
         attach,
         booking,
@@ -437,13 +477,13 @@ export class Booking {
       await extraPayment.save();
       booking.payments.push(extraPayment);
     }
-    if (booking.priceInPoints && paymentGateway === PaymentGateway.Points) {
+    if (amountInPoints && paymentGateway === PaymentGateway.Points) {
       const pointsPayment = new PaymentModel({
         scene: booking.type,
         customer: booking.customer,
         store: booking.store,
         amount: 0,
-        amountInPoints: booking.priceInPoints,
+        amountInPoints,
         title,
         attach,
         booking,
@@ -463,7 +503,7 @@ export class Booking {
       await pointsPayment.save();
       booking.payments.push(pointsPayment);
     }
-    if (paymentGateway === PaymentGateway.Points && !booking.priceInPoints) {
+    if (paymentGateway === PaymentGateway.Points && !amountInPoints) {
       throw new Error("points_gateway_not_supported");
     }
 
@@ -480,7 +520,9 @@ export class Booking {
       this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
       if (this.card && this.card.type === "times") {
-        this.card = await CardModel.findById(this.card);
+        const card = await CardModel.findById(this.card);
+        if (!card) throw new Error("invalid_card");
+        this.card = card;
       }
       await this.checkIn(false);
     } else {
@@ -496,10 +538,10 @@ export class Booking {
           select: "-content"
         }).execPopulate();
       }
-      if (!this.event) {
+      if (!this.event || !this.kidsCount) {
         throw new Error("invalid_event");
       }
-      if (this.event.kidsCountMax) {
+      if (this.event.kidsCountMax && this.event.kidsCountLeft) {
         this.event.kidsCountLeft -= this.kidsCount;
         console.log(
           `[BOK] Event ${this.event.id} kids left ${this.event.kidsCountLeft}, ${this.kidsCount} occupied by booking ${this.id}.`
@@ -510,7 +552,7 @@ export class Booking {
       if (!this.populated("gift")) {
         await this.populate("gift").execPopulate();
       }
-      if (!this.gift) {
+      if (!this.gift || !this.quantity) {
         throw new Error("invalid_gift");
       }
       if (this.gift.quantity) {
@@ -526,8 +568,7 @@ export class Booking {
       await this.populate("customer").execPopulate();
     }
 
-    if (this.gift && this.gift.tagCustomer) {
-      if (!this.customer.tags) this.customer.tags = [];
+    if (this.gift && this.gift.tagCustomer && this.customer) {
       if (!this.customer.tags.includes(this.gift.tagCustomer)) {
         this.customer.tags.push(this.gift.tagCustomer);
         await this.customer.save();
@@ -593,7 +634,7 @@ export class Booking {
         customer: p.customer,
         store: booking.store,
         amount: 0,
-        amountInPoints: -p.amountInPoints,
+        amountInPoints: p.amountInPoints && -p.amountInPoints,
         title: `积分退还：${p.title}`,
         attach: p.attach,
         booking: p.booking,
@@ -634,10 +675,10 @@ export class Booking {
           select: "-content"
         }).execPopulate();
       }
-      if (!this.event) {
+      if (!this.event || !this.kidsCount) {
         throw new Error("invalid_event");
       }
-      if (this.event.kidsCountMax) {
+      if (this.event.kidsCountMax && this.event.kidsCountLeft) {
         this.event.kidsCountLeft += this.kidsCount;
         await this.event.save();
       }
@@ -645,7 +686,7 @@ export class Booking {
       if (!this.populated("gift")) {
         await this.populate("gift").execPopulate();
       }
-      if (!this.gift) {
+      if (!this.gift || !this.quantity) {
         throw new Error("invalid_gift");
       }
       if (this.gift.quantity) {
@@ -675,7 +716,7 @@ export class Booking {
             total.amountPaidInCard += payment.amount;
           }
           if (payment.gateway === PaymentGateway.Balance) {
-            total.amountPaidInDeposit += payment.amountDeposit;
+            total.amountPaidInDeposit += payment.amountDeposit || 0;
             total.amountPaidInBalance += payment.amount;
           }
           if (payment.amountInPoints) {
@@ -691,14 +732,15 @@ export class Booking {
         amountPaidInCard: 0,
         amountPaidInPoints: 0
       }
-    );
-    [
+    ) as Amounts;
+
+    ([
       "amountPaid",
       "amountPaidInDeposit",
       "amountPaidInBalance",
       "amountPaidInCard",
       "amountPaidInPoints"
-    ].forEach(amountField => {
+    ] as Array<keyof Amounts>).forEach(amountField => {
       if (paymentsAmounts[amountField]) {
         this[amountField] = paymentsAmounts[amountField];
       } else {
@@ -708,28 +750,27 @@ export class Booking {
   }
 
   async checkIn(this: DocumentType<Booking>, save = true) {
-    const booking = this;
-    booking.status = BookingStatus.IN_SERVICE;
-    booking.checkInAt = moment().format("HH:mm:ss");
+    this.status = BookingStatus.IN_SERVICE;
+    this.checkInAt = moment().format("HH:mm:ss");
     if (save) {
-      await booking.save();
+      await this.save();
     }
 
-    console.log(`[BOK] Booking ${booking.id} checked in.`);
+    console.log(`[BOK] Booking ${this.id} checked in.`);
 
-    if (booking.card && !booking.populated("card")) {
-      await booking.populate("card").execPopulate();
+    if (this.card && !this.populated("card")) {
+      await this.populate("card").execPopulate();
     }
 
-    if (booking.coupon && !booking.populated("coupon")) {
-      await booking.populate("coupon").execPopulate();
+    if (this.coupon && !this.populated("coupon")) {
+      await this.populate("coupon").execPopulate();
     }
 
     const rewardCardTypesString =
       this.coupon?.rewardCardTypes ||
       (this.card?.type !== "balance" && this.card?.rewardCardTypes);
 
-    if (rewardCardTypesString) {
+    if (rewardCardTypesString && this.kidsCount && this.customer) {
       const rewardCardTypes = await CardTypeModel.find({
         slug: { $in: rewardCardTypesString.split(" ") }
       });
@@ -754,14 +795,14 @@ export class Booking {
       }
     }
 
-    if (booking.card?.type === "times") {
-      sendTemplateMessage(booking.customer, TemplateMessageType.WRITEOFF, [
+    if (this.card?.type === "times" && this.customer && this.store) {
+      sendTemplateMessage(this.customer, TemplateMessageType.WRITEOFF, [
         "您的次卡已成功核销",
-        booking.customer.name,
-        `${booking.store.name} ${booking.adultsCount}大${booking.kidsCount}小`,
-        `${booking.kidsCount}`,
-        `${booking.date} ${booking.checkInAt}`,
-        `卡内剩余次数：${booking.card.timesLeft}`
+        this.customer.name || "",
+        `${this.store.name} ${this.adultsCount}大${this.kidsCount}小`,
+        `${this.kidsCount}`,
+        `${this.date} ${this.checkInAt}`,
+        `卡内剩余次数：${this.card.timesLeft}`
       ]);
     }
   }
@@ -789,7 +830,7 @@ export class Booking {
       await this.save();
     }
 
-    if (this.type === Scene.PLAY && this.store) {
+    if (this.type === Scene.PLAY && this.store && this.customer) {
       sendTemplateMessage(this.customer, TemplateMessageType.CANCEL, [
         "您的预约已被取消",
         `${this.store.name} ${this.adultsCount}大${this.kidsCount}小`,
@@ -812,7 +853,11 @@ export class Booking {
     }
   }
 
-  async checkStoreLimit(this: DocumentType<Booking>, group = "common") {
+  async checkStoreLimit(
+    this: DocumentType<Booking>,
+    group: "common" | "coupon" = "common"
+  ) {
+    if (!this.store || !this.store.dailyLimit || !this.kidsCount) return;
     const dayOfWeek = moment(this.date).day();
     const special = this.store.dailyLimit.dates.find(
       d => d.date === this.date && d.group === group
@@ -833,7 +878,7 @@ export class Booking {
         coupon: { $exists: true }
       });
       const kidsCount = bookings.reduce(
-        (count, booking) => count + booking.kidsCount,
+        (count, booking) => count + (booking.kidsCount || 0),
         0
       );
       if (kidsCount + this.kidsCount > limit) {

@@ -27,70 +27,70 @@ export const storeDoors: { [storeId: string]: Door[] } = {};
 export const storeServerSockets: { [storeId: string]: Socket } = {};
 
 class DailyLimitDate {
-  @prop()
-  date: string;
-  @prop()
-  group: string;
-  @prop({ type: Number })
-  limit: number;
+  @prop({ required: true })
+  date!: string;
+  @prop({ required: true })
+  group!: string;
+  @prop({ type: Number, required: true })
+  limit!: number;
 }
 
 class DailyLimit {
-  @prop({ type: Number })
-  common: number[];
-  @prop({ type: Number })
-  coupon: number[];
-  @prop({ type: DailyLimitDate })
-  dates: DailyLimitDate[];
+  @prop({ type: Number, required: true })
+  common!: number[];
+  @prop({ type: Number, required: true })
+  coupon!: number[];
+  @prop({ type: DailyLimitDate, required: true })
+  dates!: DailyLimitDate[];
 }
 
 class Door {
-  @prop()
-  ip: string;
-  @prop()
-  name: string;
-  @prop()
-  io: "in" | "out";
+  @prop({ required: true })
+  ip!: string;
+  @prop({ required: true })
+  name!: string;
+  @prop({ required: true })
+  io!: "in" | "out";
   controller?: JxCtl;
 }
 
 export class FaceDevice {
   ws?: WebSocket;
 
-  @prop()
-  mac: string;
+  @prop({ required: true })
+  mac!: string;
 
   @prop()
   storeCode?: string;
 
-  @prop()
-  name: string;
+  @prop({ required: true })
+  name!: string;
 
-  @prop()
-  io: "in" | "out";
+  @prop({ required: true })
+  io!: "in" | "out";
 }
 
 @plugin(updateTimes)
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Store {
   @prop({ unique: true })
-  name: string;
+  name!: string;
 
   @prop({ unique: true })
-  code: string;
+  code!: string;
 
   @prop()
-  address: string;
+  address!: string;
 
   @prop()
-  phone: string;
+  phone!: string;
 
   @prop({
     required: true,
     get: v => appendResizeImageUrl(v),
     set: v => removeResizeImageUrl(v)
   })
-  posterUrl: string;
+  posterUrl!: string;
 
   @prop({
     get: v => appendResizeHtmlImage(v),
@@ -101,19 +101,19 @@ export class Store {
   @prop({
     default: { common: [], coupon: [], dates: [] }
   })
-  dailyLimit: DailyLimit;
+  dailyLimit: DailyLimit = { common: [], coupon: [], dates: [] };
 
   @prop()
-  partyRooms: number;
+  partyRooms?: number;
 
   @prop({ type: Door })
-  doors: Door[];
+  doors?: Door[];
 
   @prop({ type: FaceDevice })
-  faceDevices: FaceDevice[];
+  faceDevices?: FaceDevice[];
 
   @prop()
-  ip: string;
+  ip?: string;
 
   @prop({ type: Object })
   pospalPaymentMethodMap?: Record<string, PaymentGateway>;
@@ -133,7 +133,7 @@ export class Store {
     for (const door of doors) {
       await sleep(1000);
       console.log(`[STR] Auth ${no} to store ${this.code}.`);
-      door.controller.registerCard(no, moment().format("YYYY-MM-DD"));
+      door.controller?.registerCard(no, moment().format("YYYY-MM-DD"));
     }
   }
 
@@ -148,8 +148,9 @@ export class Store {
     const door = doors.find(d => d.name === name);
     if (!door) {
       console.error(`[STR] Door ${name} not found in store ${this.code}.`);
+      return;
     }
-    door.controller.openDoor(0); // assume 1-1 controller-door, so each controller has only 1 door
+    door.controller?.openDoor(0); // assume 1-1 controller-door, so each controller has only 1 door
   }
 
   async initDoors(this: DocumentType<Store>) {
@@ -162,7 +163,7 @@ export class Store {
     }
     for (const door of doors) {
       await sleep(1000);
-      door.controller.init();
+      door.controller?.init();
     }
   }
 
@@ -194,7 +195,7 @@ export class Store {
       });
     });
     if (invalidPaymentMethodCodes.length) {
-      pospal.queryAllPayMethod().then(methods => {
+      pospal.queryAllPayMethod().then((methods: { code: string }[]) => {
         const methodsUndefined = methods.filter(m =>
           invalidPaymentMethodCodes.includes(m.code)
         );
@@ -255,7 +256,7 @@ export class Store {
               store: this,
               amount: p.amount,
               attach: `booking ${booking.id}`,
-              gateway: this.pospalPaymentMethodMap[p.code],
+              gateway: this.pospalPaymentMethodMap?.[p.code],
               gatewayData: { provider: "pospal" },
               createdAt: new Date(ticket.datetime)
             });
@@ -271,6 +272,7 @@ export class Store {
         await Promise.all(
           payments.map(async p => {
             if (p.gateway === PaymentGateway.Balance) {
+              if (!p.customer) return;
               const { depositPaymentAmount } = await p.customer.writeOffBalance(
                 p.amount,
                 0,

@@ -26,13 +26,13 @@ import moment from "moment";
 })
 export class Post {
   @prop({ required: true })
-  title: string;
+  title!: string;
 
   @prop({ unique: true, sparse: true })
   slug?: string;
 
   @prop({ type: String })
-  tags: string[];
+  tags!: string[];
 
   @prop({
     type: Date,
@@ -53,7 +53,7 @@ export class Post {
     get: v => appendResizeImageUrl(v),
     set: v => removeResizeImageUrl(v)
   })
-  posterUrl: string;
+  posterUrl!: string;
 
   @prop({
     get: v => appendResizeHtmlImage(v),
@@ -65,7 +65,7 @@ export class Post {
   target?: string;
 
   @prop({ ref: "User", required: true })
-  author: DocumentType<User>;
+  author!: DocumentType<User>;
 }
 
 const PostModel = getModelForClass(Post, {

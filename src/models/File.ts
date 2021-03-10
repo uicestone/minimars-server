@@ -3,14 +3,14 @@ import updateTimes from "./plugins/updateTimes";
 
 @plugin(updateTimes)
 export class File {
-  @prop()
-  uri: string;
+  @prop({ required: true })
+  uri!: string;
 
   @prop()
-  thumbnailUrl: string;
+  thumbnailUrl?: string;
 
-  @prop()
-  name: string;
+  @prop({ required: true })
+  name!: string;
 
   get url() {
     const uploadBase = process.env.UPLOAD_BASE;

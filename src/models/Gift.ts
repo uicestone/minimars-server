@@ -18,14 +18,14 @@ import {
 @plugin(autoPopulate, [{ path: "store", select: "-content" }])
 export class Gift {
   @prop({ required: true })
-  title: string;
+  title!: string;
 
   @prop({
     required: true,
     get: v => appendResizeImageUrl(v),
     set: v => removeResizeImageUrl(v)
   })
-  posterUrl: string;
+  posterUrl!: string;
 
   @prop({
     get: v => appendResizeHtmlImage(v),
@@ -34,25 +34,25 @@ export class Gift {
   content?: string;
 
   @prop({ type: Number, default: 0 })
-  quantity: number;
+  quantity: number = 0;
 
   @prop({ type: Number })
-  priceInPoints: number;
+  priceInPoints?: number;
 
   @prop({ type: Number })
   price?: number;
 
   @prop({ ref: "Store" })
-  store: DocumentType<Store>;
+  store?: DocumentType<Store>;
 
   @prop({ type: Number, default: 0 })
-  order: number;
+  order: number = 0;
 
   @prop({ type: Boolean, default: true })
-  useBalance: boolean;
+  useBalance: boolean = true;
 
   @prop()
-  tagCustomer: string; // push a tag to customer after purchased
+  tagCustomer?: string; // push a tag to customer after purchased
 
   @prop({ type: Number })
   maxQuantityPerCustomer?: number;

@@ -14,11 +14,9 @@ import Pospal from "../utils/pospal";
 
 @pre("validate", function (next) {
   const user = this as DocumentType<User>;
-  ["balanceDeposit", "balanceReward"].forEach(field => {
-    if (user[field]) {
-      user[field] = +user[field].toFixed(2);
-    }
-  });
+  if (user.balanceDeposit)
+    user.balanceDeposit = +user.balanceDeposit.toFixed(2);
+  if (user.balanceReward) user.balanceReward = +user.balanceReward.toFixed(2);
   if (user.role === "customer" && user.points === undefined) {
     user.points = 0;
   }
@@ -32,7 +30,7 @@ import Pospal from "../utils/pospal";
 @index({ name: "text", mobile: "text", cardNo: "text", tags: "text" })
 export class User {
   @prop({ default: "customer" })
-  role: string;
+  role: string = "customer";
 
   @prop({ unique: true, sparse: true })
   login?: string;
@@ -40,13 +38,13 @@ export class User {
   @prop({ select: false })
   password?: string;
 
-  @prop({ type: String })
+  @prop()
   name?: string;
 
-  @prop({ type: String })
+  @prop()
   childName?: string;
 
-  @prop({ type: String })
+  @prop()
   childBirthday?: string;
 
   @prop()
@@ -116,15 +114,15 @@ export class User {
   @prop({ ref: "Store" }) // manager only
   store?: DocumentType<Store>;
 
-  @prop({ default: 0 }) // below for customer only
+  @prop({ type: Number }) // below for customer only
   balanceDeposit?: number;
 
-  @prop({ default: 0 })
+  @prop({ type: Number })
   balanceReward?: number;
 
   get balance() {
     if (this.balanceDeposit === undefined && this.balanceReward === undefined) {
-      return undefined;
+      return NaN;
     }
     return +((this.balanceDeposit || 0) + (this.balanceReward || 0)).toFixed(2);
   }
@@ -165,6 +163,7 @@ export class User {
     if (save) {
       await this.updateOne({ $inc: { points: amount * r } }).exec();
       const u = await UserModel.findById(this._id);
+      if (!u) throw new Error("invalid_user");
       this.points = u.points;
     } else {
       if (!this.points) this.points = 0;
@@ -180,6 +179,9 @@ export class User {
   ) {
     const balanceDepositWas = this.balanceDeposit,
       balanceRewardWas = this.balanceReward;
+
+    if (this.balanceDeposit === undefined) this.balanceDeposit = 0;
+    if (this.balanceReward === undefined) this.balanceReward = 0;
 
     this.balanceDeposit = +(this.balanceDeposit + amountDeposit).toFixed(2);
     this.balanceReward = +(
@@ -207,6 +209,9 @@ export class User {
     save = true,
     syncToPospal = true
   ) {
+    if (this.balanceDeposit === undefined || this.balanceReward === undefined) {
+      throw new Error("invalid_balance");
+    }
     if (this.balance < amount) {
       console.log(
         `[USR] Insufficient balance ${this.balance}, trying to write-off ${amount}.`

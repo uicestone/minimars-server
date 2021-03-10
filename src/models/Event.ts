@@ -40,17 +40,17 @@ import moment from "moment";
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Event {
   @prop({ required: true })
-  title: string;
+  title!: string;
 
   @prop({ type: String })
-  tags: string[];
+  tags!: string[];
 
   @prop({
     required: true,
     get: v => appendResizeImageUrl(v),
     set: v => removeResizeImageUrl(v)
   })
-  posterUrl: string;
+  posterUrl!: string;
 
   @prop({
     get: v => appendResizeHtmlImage(v),
@@ -68,16 +68,19 @@ export class Event {
       } else return +v;
     }
   })
-  kidsCountMax: number | null;
+  kidsCountMax!: number | null;
 
-  @prop()
-  kidsCountLeft: number | null;
+  @prop({
+    type: Schema.Types.Mixed,
+    default: null
+  })
+  kidsCountLeft!: number | null;
 
   @prop({ type: Object })
   props?: Object;
 
   @prop()
-  priceInPoints: number;
+  priceInPoints?: number;
 
   @prop()
   price?: number;
@@ -98,10 +101,10 @@ export class Event {
   store?: DocumentType<Store>;
 
   @prop({ type: Number, default: 0 })
-  order: number;
+  order: number = 0;
 
   @prop({ type: String })
-  kidAgeRange: string;
+  kidAgeRange?: string;
 }
 
 const EventModel = getModelForClass(Event, {

@@ -34,10 +34,10 @@ import moment from "moment";
 })
 export class CardType {
   @prop({ required: true })
-  title: string;
+  title!: string;
 
   @prop({ required: true, unique: true })
-  slug: string;
+  slug!: string;
 
   @prop()
   couponSlug?: string;
@@ -46,58 +46,58 @@ export class CardType {
     enum: ["times", "period", "balance", "coupon", "partner"],
     required: true
   })
-  type: "times" | "period" | "balance" | "coupon" | "partner";
+  type!: "times" | "period" | "balance" | "coupon" | "partner";
 
   @prop({ default: false })
-  isGift: boolean;
+  isGift: boolean = false;
 
-  @prop({ ref: "Store", required: true })
-  stores: DocumentType<Store>[];
-
-  @prop()
-  posterUrl: string;
+  @prop({ ref: "Store" })
+  stores!: DocumentType<Store>[];
 
   @prop()
-  content: string;
+  posterUrl?: string;
+
+  @prop()
+  content?: string;
 
   @prop({ type: Number })
-  times: number;
+  times?: number;
 
   @prop({ type: Date })
-  start: Date;
+  start?: Date;
 
   @prop({ type: Date })
-  end: Date;
+  end?: Date;
 
   @prop()
   dayType?: "onDaysOnly" | "offDaysOnly";
 
   @prop({ type: Number })
-  expiresInDays: number;
+  expiresInDays?: number;
 
   @prop({ type: Number })
-  balance: number;
+  balance?: number;
 
   @prop({ type: Number, required: true })
-  price: number;
+  price!: number;
 
   @prop({ type: Number })
-  maxKids: number;
+  maxKids?: number;
 
   @prop({ type: Number, default: 1 })
   minKids = 1;
 
   @prop({ type: Number, default: 2 })
-  freeParentsPerKid: number;
+  freeParentsPerKid: number = 2;
 
   @prop({ type: Boolean, default: false })
-  openForClient: boolean;
+  openForClient: boolean = false;
 
   @prop({ type: Boolean, default: false })
-  openForReception: boolean;
+  openForReception: boolean = false;
 
   @prop({ type: String })
-  customerTags: string[];
+  customerTags!: string[];
 
   @prop({ type: Number })
   maxPerCustomer?: number;
@@ -132,7 +132,7 @@ export class CardType {
       card.stores = this.stores.map(s => s.id);
     }
 
-    Object.keys(this.toObject())
+    (Object.keys(this.toObject()) as Array<keyof CardType>)
       .filter(
         key => !["_id", "__v", "createdAt", "updatedAt", "store"].includes(key)
       )

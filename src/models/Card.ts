@@ -48,7 +48,8 @@ export const userVisibleCardStatus = [
       this.status = CardStatus.EXPIRED;
     } else if (
       this.status === CardStatus.EXPIRED &&
-      ((this.timesLeft > 0 &&
+      ((this.timesLeft &&
+        this.timesLeft > 0 &&
         (!this.expiresAt || this.expiresAt >= new Date())) ||
         (this.type === "period" && this.expiresAt >= new Date()))
     ) {
@@ -58,7 +59,8 @@ export const userVisibleCardStatus = [
   if (
     this.type === "balance" &&
     this.isModified("status") &&
-    this.status === CardStatus.ACTIVATED
+    this.status === CardStatus.ACTIVATED &&
+    this.balance !== undefined
   ) {
     if (!this.populated("customer")) {
       await this.populate("customer").execPopulate();
@@ -78,7 +80,7 @@ export class Card {
   customer: Ref<User>;
 
   @prop({ type: Number })
-  timesLeft: number;
+  timesLeft?: number;
 
   @prop({ type: String })
   num?: string;
@@ -88,22 +90,22 @@ export class Card {
     enum: Object.values(CardStatus),
     default: CardStatus.PENDING
   })
-  status: CardStatus;
+  status: CardStatus = CardStatus.PENDING;
 
   @prop({ ref: "Payment" })
-  payments?: DocumentType<Payment>[];
+  payments!: DocumentType<Payment>[];
 
   @prop({ type: Date })
-  expiresAt: Date;
+  expiresAt?: Date;
 
   @prop({ type: Date })
-  expiresAtWas: Date;
+  expiresAtWas?: Date;
 
   @prop({ type: String, required: true })
-  title: string;
+  title!: string;
 
-  @prop({ type: String, required: true })
-  slug: string;
+  @prop({ type: String })
+  slug?: string;
 
   @prop()
   couponSlug?: string;
@@ -113,46 +115,46 @@ export class Card {
     enum: ["times", "period", "balance", "coupon", "partner"],
     required: true
   })
-  type: "times" | "period" | "balance" | "coupon" | "partner";
+  type!: "times" | "period" | "balance" | "coupon" | "partner";
 
   @prop({ type: Boolean, default: false })
-  isGift: boolean;
+  isGift: boolean = false;
 
   @prop({ ref: "Store" })
-  stores: Ref<Store>[];
+  stores!: Ref<Store>[];
 
   @prop()
-  posterUrl: string;
+  posterUrl?: string;
 
   @prop()
-  content: string;
+  content?: string;
 
   @prop({ type: Number })
-  times: number;
+  times?: number;
 
   @prop({ type: Date })
-  start: Date;
+  start?: Date;
 
   @prop({ type: Date })
-  end: Date;
+  end?: Date;
 
   @prop()
   dayType?: "onDaysOnly" | "offDaysOnly";
 
   @prop({ type: Number })
-  balance: number;
+  balance?: number;
 
   @prop({ type: Number, required: true })
-  price: number;
+  price!: number;
 
   @prop({ type: Number })
-  maxKids: number;
+  maxKids?: number;
 
   @prop({ type: Number, default: 0 })
   minKids = 0;
 
   @prop({ type: Number })
-  freeParentsPerKid: number;
+  freeParentsPerKid?: number;
 
   @prop({ type: Number })
   overPrice?: number;
@@ -178,12 +180,16 @@ export class Card {
   get giftCode(): string | undefined {
     const card = (this as unknown) as DocumentType<Card>;
     if (!card.isGift || card.status !== CardStatus.VALID) return undefined;
-    const code = sign(card.customer + " " + card.id, process.env.APP_SECRET);
+    const code = sign(
+      card.customer + " " + card.id,
+      process.env.APP_SECRET || ""
+    );
     // console.log("Hash giftCode:", card.customer, card.id, code);
     return code;
   }
 
   get balanceReward(): number {
+    if (this.balance === undefined) return NaN;
     return +(this.balance - this.price).toFixed(2);
   }
 
@@ -191,7 +197,7 @@ export class Card {
     this: DocumentType<Card>,
     {
       paymentGateway,
-      atReceptionStore = null
+      atReceptionStore = undefined
     }: {
       paymentGateway: PaymentGateway;
       atReceptionStore?: DocumentType<Store>;
@@ -216,7 +222,7 @@ export class Card {
         gateway: paymentGateway
       });
 
-      if (card.type === "times") {
+      if (card.type === "times" && card.times !== undefined) {
         payment.times = -card.times;
       }
 
@@ -296,12 +302,12 @@ export class Card {
     if (this.type === "balance" && this.status === CardStatus.ACTIVATED) {
       const customer = await UserModel.findById(this.customer);
       if (
-        customer.balanceDeposit < this.price ||
-        customer.balanceReward < this.balanceReward
+        (customer?.balanceDeposit || 0) < this.price ||
+        (customer?.balanceReward || 0) < this.balanceReward
       ) {
         throw new HttpError(400, "用户余额已不足以退款本储值卡");
       }
-      await customer.depositBalance(-this.balance, -this.price);
+      await customer?.depositBalance(-(this.balance || 0), -this.price);
     }
 
     console.log(`[CRD] Refund card ${this.id}.`);

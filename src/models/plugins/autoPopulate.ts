@@ -1,7 +1,9 @@
-function autoPopulate(schema, options) {
+import { Schema, Document, ModelPopulateOptions } from "mongoose";
+
+function autoPopulate(schema: Schema, options: ModelPopulateOptions[]): void {
   const populates = options;
 
-  async function postFindOne(doc) {
+  async function postFindOne(doc: Document) {
     if (!doc) {
       return;
     }
@@ -12,13 +14,15 @@ function autoPopulate(schema, options) {
     );
   }
 
-  async function postFind(docs) {
+  async function postFind(docs: Document) {
     await Promise.all(
       populates.map(populate => {
+        // @ts-ignore
         if (this.options.skipAutoPopulationPaths?.includes(populate.path)) {
           return;
         }
         // console.log("Populate:", this.model, populate, docs.length);
+        // @ts-ignore
         return this.model.populate(docs, populate);
       })
     );
