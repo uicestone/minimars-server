@@ -49,7 +49,7 @@ class Door {
   ip!: string;
   @prop({ required: true })
   name!: string;
-  @prop({ required: true })
+  @prop()
   io!: "in" | "out";
   controller?: JxCtl;
 }
