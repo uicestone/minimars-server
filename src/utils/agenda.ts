@@ -19,6 +19,7 @@ import { saveContentImages, sleep } from "./helper";
 import importPrevData from "./importPrevData";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
 import Pospal from "./pospal";
+import BookingModel from "../models/Booking";
 
 const pospalTicketsSyncInterval = +(
   process.env.POSPAL_TICKETS_SYNC_INTERVAL || 10
@@ -401,8 +402,33 @@ export const initAgenda = async () => {
         if (!user || customer.customerUid.toString() === user.pospalId)
           continue;
         user.pospalId = customer.customerUid.toString();
-        console.log(`User ${user.mobile} pospal id set to ${user.pospalId}`);
+        console.log(
+          `[CRO] User ${user.mobile} pospal id set to ${user.pospalId}`
+        );
         await user.save();
+      }
+      // find bookings without customer, but has pospal customerUid
+      const bookings = await BookingModel.find({
+        customer: null,
+        "providerData.provider": "pospal",
+        "providerData.customerUid": { $exists: true }
+      });
+      for (const booking of bookings) {
+        const user = await UserModel.findOne({
+          pospalId: booking.providerData?.customerUid
+        });
+        if (!user) continue;
+        booking.customer = user;
+        await booking.save();
+        console.log(`[CRO] Booking ${booking.id} customer set to ${user.id}.`);
+        for (const payment of booking.payments) {
+          if (payment.customer) continue;
+          payment.customer = user;
+          await payment.save();
+          console.log(
+            `[CRO] Payment ${payment.id} customer set to ${user.id}.`
+          );
+        }
       }
       // upload balance customers to customer
       const users = await UserModel.find({
@@ -470,8 +496,8 @@ export const initAgenda = async () => {
     agenda.every("0 0 * * *", "set expired cards"); // run everyday at 0am
     agenda.every("1 day", "get wechat mp users");
     // agenda.every("0 20 * * *", "check balance reward cards"); // run everyday at 8pm
-    agenda.every("0 22 * * *", "verify user balance");
-    agenda.every("5 22 * * *", "sync pospal customers");
+    agenda.every("0 4 * * *", "verify user balance");
+    agenda.every("0 16,20,22 * * *", "sync pospal customers");
     agenda.every(`* * * * *`, "sync pospal tickets");
   });
 
