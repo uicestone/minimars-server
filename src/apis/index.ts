@@ -23,6 +23,7 @@ import detectUa from "../middlewares/detectUa";
 import agenda from "../utils/agenda";
 import { NextFunction, Request, Response, Router } from "express";
 import VisoRouter from "./VisoRouter";
+import YouzanRouter from "./YouzanRouter";
 
 export default (app, router: Router) => {
   // register routes
@@ -42,7 +43,8 @@ export default (app, router: Router) => {
     StoreRouter,
     UserRouter,
     VisoRouter,
-    WechatRouter
+    WechatRouter,
+    YouzanRouter
   ].forEach(R => {
     router = R(router);
   });
