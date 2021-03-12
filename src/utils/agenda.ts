@@ -368,7 +368,7 @@ export const initAgenda = async () => {
     })
       ? peakInterval
       : troughInterval;
-    console.log("interval:", interval);
+
     const timesInAMinute = Math.floor(60 / interval);
 
     for (let n = 0; n < timesInAMinute; n++) {

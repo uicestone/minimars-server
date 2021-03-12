@@ -1,7 +1,9 @@
+// @ts-nocheck
 import StoreModel from "../models/Store";
-import UserModel from "../models/User";
+import UserModel, { User } from "../models/User";
 import agenda from "./agenda";
 import Pospal from "./pospal";
+import { syncUserPoints } from "./youzan";
 
 export default async function playground() {
   console.log("Run playground...");
@@ -35,7 +37,8 @@ export default async function playground() {
     //     .map(m => `${m.code} ${m.name}`)
     //     .join("\n")
     // );
-    // agenda.now("sync pospal customers");
+    const user = await UserModel.findOne({ mobile: "13641926334" });
+    syncUserPoints(user);
   } catch (e) {
     console.error(e);
   }
