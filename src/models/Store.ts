@@ -240,9 +240,21 @@ export class Store {
           if (customer) {
             booking.customer = customer;
           } else {
-            console.error(
-              `[STR] Failed to find customer when sync booking from Pospal, booking ${booking.id} customerUid ${ticket.customerUid}.`
+            // find customer in pospal by customerUid, get mobile,
+            const member = await pospal.getMember(
+              ticket.customerUid.toString()
             );
+            // find user by mobile, save pospalId
+            const customer = await UserModel.findOne({ mobile: member.phone });
+            if (customer) {
+              customer.pospalId = ticket.customerUid.toString();
+              await customer.save();
+              booking.customer = customer;
+            } else {
+              console.error(
+                `[STR] Failed to find customer when sync booking from Pospal, booking ${booking.id} customerUid ${ticket.customerUid}.`
+              );
+            }
           }
         }
 

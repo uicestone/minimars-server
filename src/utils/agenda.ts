@@ -22,7 +22,7 @@ import Pospal from "./pospal";
 import BookingModel from "../models/Booking";
 
 const pospalTicketsSyncInterval = +(
-  process.env.POSPAL_TICKETS_SYNC_INTERVAL || 10
+  process.env.POSPAL_TICKETS_SYNC_INTERVAL || 1
 );
 
 const agenda: Agenda = new Agenda();
