@@ -211,8 +211,14 @@ export class Card {
     if (totalPayAmount < 0.01) {
       await card.paymentSuccess();
     } else {
+      const scene =
+        card.type === "balance"
+          ? Scene.BALANCE
+          : card.type === "period"
+          ? Scene.PERIOD
+          : Scene.CARD;
       const payment = new PaymentModel({
-        scene: Scene.CARD,
+        scene,
         customer: card.customer,
         store: atReceptionStore?.id,
         amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
