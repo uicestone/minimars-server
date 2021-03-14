@@ -1,12 +1,13 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import PostModel from "../models/Post";
+import PostModel, { Post } from "../models/Post";
 import { isValidHexObjectId } from "../utils/helper";
 import { PostQuery, PostPostBody, PostPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
+import { DocumentType } from "@typegoose/typegoose";
 
 export default (router: Router) => {
   // Post CURD
@@ -77,18 +78,20 @@ export default (router: Router) => {
     .route("/post/:postId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const post = isValidHexObjectId(req.params.postId)
-          ? await PostModel.findById(req.params.postId)
-          : await PostModel.findOne({ slug: req.params.postId });
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const post = isValidHexObjectId(req.params.postId)
+            ? await PostModel.findById(req.params.postId)
+            : await PostModel.findOne({ slug: req.params.postId });
 
-        if (!post) {
-          throw new HttpError(404, `Post not found: ${req.params.postId}`);
+          if (!post) {
+            throw new HttpError(404, `Post not found: ${req.params.postId}`);
+          }
+
+          req.item = post;
+          next();
         }
-
-        req.item = post;
-        next();
-      })
+      )
     )
 
     // get the post with that id
@@ -104,7 +107,7 @@ export default (router: Router) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const post = req.item;
+        const post = req.item as DocumentType<Post>;
         post.set(req.body as PostPutBody);
         await post.save();
         res.json(post);
@@ -117,7 +120,7 @@ export default (router: Router) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const post = req.item;
+        const post = req.item as DocumentType<Post>;
         await post.remove();
         res.end();
       })

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -42,7 +42,7 @@ export default (router: Router) => {
         query.select("-content");
 
         if (["manager", "eventManager"].includes(req.user.role)) {
-          query.find({ $or: [{ store: req.user.store.id }, { store: null }] });
+          query.find({ $or: [{ store: req.user.store?.id }, { store: null }] });
         }
 
         if (req.user.role === "customer") {
@@ -83,14 +83,16 @@ export default (router: Router) => {
     .route("/event/:eventId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const event = await EventModel.findById(req.params.eventId);
-        if (!event) {
-          throw new HttpError(404, `Event not found: ${req.params.eventId}`);
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const event = await EventModel.findById(req.params.eventId);
+          if (!event) {
+            throw new HttpError(404, `Event not found: ${req.params.eventId}`);
+          }
+          req.item = event;
+          next();
         }
-        req.item = event;
-        next();
-      })
+      )
     )
 
     // get the event with that id
@@ -117,7 +119,7 @@ export default (router: Router) => {
           event.kidsCountLeft =
             event.kidsCountMax -
             eventBookings.reduce(
-              (kidsCount, booking) => kidsCount + booking.kidsCount,
+              (kidsCount, booking) => kidsCount + (booking.kidsCount || 0),
               0
             );
           if (event.kidsCountLeft < 0) {

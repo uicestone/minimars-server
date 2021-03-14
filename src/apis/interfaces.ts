@@ -80,7 +80,7 @@ export interface CardTypeQuery extends ListQuery {
   type?: string;
   openForClient?: string;
   openForReception?: string;
-  store?: string;
+  stores?: string;
   title?: string;
 }
 
@@ -148,8 +148,9 @@ export interface UserPostBody extends User {}
 export interface UserPutBody extends User {}
 
 export interface UserQuery extends ListQuery {
-  keyword: string;
-  role: string;
-  membership: string[];
-  cardTypes: string[];
+  keyword?: string;
+  role?: string;
+  membership?: "deposit"[];
+  cardTypes?: string[];
+  mobile?: string;
 }

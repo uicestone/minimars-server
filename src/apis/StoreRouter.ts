@@ -1,10 +1,11 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import StoreModel from "../models/Store";
+import StoreModel, { Store } from "../models/Store";
 import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
+import { DocumentType } from "@typegoose/typegoose";
 
 export default (router: Router) => {
   // Store CURD
@@ -57,14 +58,16 @@ export default (router: Router) => {
     .route("/store/:storeId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const store = await StoreModel.findById(req.params.storeId);
-        if (!store) {
-          throw new HttpError(404, `Store not found: ${req.params.storeId}`);
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const store = await StoreModel.findById(req.params.storeId);
+          if (!store) {
+            throw new HttpError(404, `Store not found: ${req.params.storeId}`);
+          }
+          req.item = store;
+          next();
         }
-        req.item = store;
-        next();
-      })
+      )
     )
 
     // get the store with that id
@@ -80,7 +83,7 @@ export default (router: Router) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const store = req.item;
+        const store = req.item as DocumentType<Store>;
         store.set(req.body as StorePutBody);
         await store.save();
         res.json(store);
@@ -93,7 +96,7 @@ export default (router: Router) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const store = req.item;
+        const store = req.item as DocumentType<Store>;
         await store.remove();
         res.end();
       })

@@ -1,7 +1,8 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
+import { DocumentType } from "@typegoose/typegoose";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
-import ConfigModel, { config } from "../models/Config";
+import ConfigModel, { ConfigDocument, config } from "../models/Config";
 import HttpError from "../utils/HttpError";
 import reduceConfig from "../utils/reduceConfig";
 import initConfig from "../utils/initConfig";
@@ -37,19 +38,21 @@ export default (router: Router) => {
     .route("/config/:key")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        if (req.user.role !== "admin") {
-          throw new HttpError(403);
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          if (req.user.role !== "admin") {
+            throw new HttpError(403);
+          }
+          const config = await ConfigModel.findOne({
+            [req.params.key]: { $exists: true }
+          });
+          if (!config) {
+            throw new HttpError(404, `Config not found: ${req.params.key}`);
+          }
+          req.item = config;
+          next();
         }
-        const config = await ConfigModel.findOne({
-          [req.params.key]: { $exists: true }
-        });
-        if (!config) {
-          throw new HttpError(404, `Config not found: ${req.params.key}`);
-        }
-        req.item = config;
-        next();
-      })
+      )
     )
 
     // get the config with that id
@@ -62,7 +65,7 @@ export default (router: Router) => {
 
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        const configItem = req.item;
+        const configItem = req.item as DocumentType<ConfigDocument>;
         const set = req.body[req.params.key]
           ? req.body
           : { [req.params.key]: req.body };
@@ -76,7 +79,7 @@ export default (router: Router) => {
     // delete the config with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        const configItem = req.item;
+        const configItem = req.item as DocumentType<ConfigDocument>;
         await configItem.remove();
         res.end();
       })

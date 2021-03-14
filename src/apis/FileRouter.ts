@@ -1,10 +1,11 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import multer, { diskStorage } from "multer";
 import { createHash } from "crypto";
 import { renameSync } from "fs";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
-import FileModel from "../models/File";
+import FileModel, { File } from "../models/File";
 import HttpError from "../utils/HttpError";
+import { DocumentType } from "@typegoose/typegoose";
 
 const storage = diskStorage({
   destination: function (req, file, cb) {
@@ -12,7 +13,7 @@ const storage = diskStorage({
   },
   filename: function (req: any, file, cb) {
     const hash = createHash("sha1");
-    const extension = file.originalname.match(/^.*(\..*?)$/)[1];
+    const extension = file.originalname.match(/^.*(\..*?)$/)?.[1];
     // @ts-ignore/
     file.stream.on("data", data => {
       hash.update(data);
@@ -57,14 +58,16 @@ export default (router: Router) => {
     .route("/file/:fileId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const file = await FileModel.findById(req.params.fileId);
-        if (!file) {
-          throw new HttpError(404, `找不到文件：${req.params.fileId}`);
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const file = await FileModel.findById(req.params.fileId);
+          if (!file) {
+            throw new HttpError(404, `找不到文件：${req.params.fileId}`);
+          }
+          req.item = file;
+          next();
         }
-        req.item = file;
-        next();
-      })
+      )
     )
 
     // get the file with that id
@@ -78,7 +81,7 @@ export default (router: Router) => {
     // delete the file with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        const file = req.item;
+        const file = req.item as DocumentType<File>;
         await file.remove();
         // TODO unlink file
         res.end();

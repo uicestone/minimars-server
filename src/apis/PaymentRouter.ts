@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import moment from "moment";
 import xlsx from "xlsx";
 import paginatify from "../middlewares/paginatify";
@@ -49,7 +49,7 @@ export default (router: Router) => {
         if (req.user.role === "customer") {
           query.find({ customer: req.user });
         } else if (["manager", "eventManager"].includes(req.user.role)) {
-          query.find({ store: { $in: [req.user.store.id, null] } });
+          query.find({ store: { $in: [req.user.store?.id, null] } });
         } else if (!["admin", "accountant"].includes(req.user.role)) {
           throw new HttpError(403);
         }
@@ -105,7 +105,7 @@ export default (router: Router) => {
           });
         }
 
-        ["store", "customer"].forEach(field => {
+        (["store", "customer"] as Array<keyof PaymentQuery>).forEach(field => {
           if (queryParams[field]) {
             query.find({ [field]: queryParams[field] });
           }
@@ -167,7 +167,7 @@ export default (router: Router) => {
       const query = PaymentModel.find().sort({ _id: -1 });
 
       if (req.user.role === "manager") {
-        query.find({ store: req.user.store.id });
+        query.find({ store: req.user.store?.id });
       }
 
       if (queryParams.date) {
@@ -223,7 +223,7 @@ export default (router: Router) => {
         });
       }
 
-      ["store", "customer"].forEach(field => {
+      (["store", "customer"] as Array<keyof PaymentQuery>).forEach(field => {
         if (queryParams[field]) {
           query.find({ [field]: queryParams[field] });
         }
@@ -300,21 +300,23 @@ export default (router: Router) => {
     .route("/payment/:paymentId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        if (!["admin", "manager"].includes(req.user.role)) {
-          // TODO manager can operate payment of same store
-          throw new HttpError(403);
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          if (!["admin", "manager"].includes(req.user.role)) {
+            // TODO manager can operate payment of same store
+            throw new HttpError(403);
+          }
+          const payment = await PaymentModel.findById(req.params.paymentId);
+          if (!payment) {
+            throw new HttpError(
+              404,
+              `Payment not found: ${req.params.paymentId}`
+            );
+          }
+          req.item = payment;
+          next();
         }
-        const payment = await PaymentModel.findById(req.params.paymentId);
-        if (!payment) {
-          throw new HttpError(
-            404,
-            `Payment not found: ${req.params.paymentId}`
-          );
-        }
-        req.item = payment;
-        next();
-      })
+      )
     )
 
     // get the payment with that id
@@ -329,25 +331,25 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         const payment = req.item as DocumentType<Payment>;
         const body = req.body as PaymentPutBody;
-        let set: PaymentPutBody = {};
 
         if (
-          (req.user.role = "manager") &&
+          req.user.role === "manager" &&
           receptionGateways.includes(payment.gateway)
         ) {
-          ["paid", "gateway"].forEach(key => {
+          if (body.paid !== undefined) {
+          }
+          (["paid", "gateway"] as Array<keyof Payment>).forEach(key => {
             if (body[key] !== undefined) {
-              set[key] = body[key];
+              payment.set(key, body[key]);
             }
           });
         } else if (req.user.role === "admin") {
-          set = body;
+          payment.set(body);
         } else {
           throw new HttpError(403);
         }
-        payment.set(set);
+
         await payment.save();
-        // sendConfirmEmail(payment);
         res.json(payment);
       })
     )
@@ -355,7 +357,7 @@ export default (router: Router) => {
     // delete the payment with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        const payment = req.item;
+        const payment = req.item as DocumentType<Payment>;
         await payment.remove();
         res.end();
       })

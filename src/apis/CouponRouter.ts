@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -38,7 +38,7 @@ export default (router: Router) => {
         query.select("-content");
 
         if (req.user.role === "manager") {
-          query.find({ stores: { $in: [req.user.store.id, []] } });
+          query.find({ stores: { $in: [req.user.store?.id, []] } });
           query.find({ enabled: true });
         } else if (!["admin", "accountant"].includes(req.user.role)) {
           throw new HttpError(403);
@@ -68,14 +68,19 @@ export default (router: Router) => {
     .route("/coupon/:couponId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const coupon = await CouponModel.findById(req.params.couponId);
-        if (!coupon) {
-          throw new HttpError(404, `Coupon not found: ${req.params.couponId}`);
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const coupon = await CouponModel.findById(req.params.couponId);
+          if (!coupon) {
+            throw new HttpError(
+              404,
+              `Coupon not found: ${req.params.couponId}`
+            );
+          }
+          req.item = coupon;
+          next();
         }
-        req.item = coupon;
-        next();
-      })
+      )
     )
 
     // get the coupon with that id
@@ -105,7 +110,7 @@ export default (router: Router) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const coupon = req.item;
+        const coupon = req.item as DocumentType<Coupon>;
         await coupon.remove();
         res.end();
       })

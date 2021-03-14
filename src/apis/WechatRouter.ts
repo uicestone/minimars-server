@@ -116,6 +116,7 @@ export default (router: Router) => {
       if (!mobile) throw new HttpError(400, "数据解析异常");
       const oldCustomer = await UserModel.findOne({ mobile });
       const openIdUser = await UserModel.findOne({ openid });
+      if (!openIdUser) throw new Error("invalid_openid_user");
       if (oldCustomer && oldCustomer.id !== openIdUser.id) {
         console.log(`[WEC] Merge user ${openIdUser.id} to ${oldCustomer.id}.`);
         const { openid, unionid, avatarUrl, gender, region } = openIdUser;
@@ -208,7 +209,7 @@ export default (router: Router) => {
 
         payment.paid = true;
         if (payment.attach.match(/^booking /)) {
-          await payment.customer.addPoints(payment.amount);
+          await payment.customer?.addPoints(payment.amount);
         }
         Object.assign(payment.gatewayData, parsedData);
 

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -64,14 +64,14 @@ export default (router: Router) => {
           query.where({ title: new RegExp(queryParams.title) });
         }
 
-        [
+        ([
           "couponSlug",
           "slug",
           "openForClient",
           "openForReception",
           "type",
           "stores"
-        ].forEach(field => {
+        ] as Array<keyof CardTypeQuery>).forEach(field => {
           if (queryParams[field]) {
             if (queryParams[field] === "true") {
               query.find({ [field]: true });
@@ -103,17 +103,19 @@ export default (router: Router) => {
     .route("/card-type/:cardTypeId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const cardType = await CardTypeModel.findById(req.params.cardTypeId);
-        if (!cardType) {
-          throw new HttpError(
-            404,
-            `CardType not found: ${req.params.cardTypeId}`
-          );
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const cardType = await CardTypeModel.findById(req.params.cardTypeId);
+          if (!cardType) {
+            throw new HttpError(
+              404,
+              `CardType not found: ${req.params.cardTypeId}`
+            );
+          }
+          req.item = cardType;
+          next();
         }
-        req.item = cardType;
-        next();
-      })
+      )
     )
 
     // get the cardType with that id
@@ -151,7 +153,7 @@ export default (router: Router) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const cardType = req.item;
+        const cardType = req.item as DocumentType<CardType>;
         await cardType.remove();
         res.end();
       })

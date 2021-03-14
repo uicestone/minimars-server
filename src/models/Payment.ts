@@ -42,7 +42,10 @@ export const SceneLabel = {
   event: "活动",
   gift: "礼品",
   food: "餐饮",
-  card: "购卡"
+  card: "购卡",
+  balance: "充值",
+  period: "时效卡",
+  mall: "商城"
 };
 
 @pre("save", async function (next) {

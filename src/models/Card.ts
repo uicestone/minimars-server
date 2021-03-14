@@ -51,7 +51,9 @@ export const userVisibleCardStatus = [
       ((this.timesLeft &&
         this.timesLeft > 0 &&
         (!this.expiresAt || this.expiresAt >= new Date())) ||
-        (this.type === "period" && this.expiresAt >= new Date()))
+        (this.type === "period" &&
+          this.expiresAt &&
+          this.expiresAt >= new Date()))
     ) {
       this.status = CardStatus.ACTIVATED;
     }
@@ -199,7 +201,7 @@ export class Card {
       paymentGateway,
       atReceptionStore = undefined
     }: {
-      paymentGateway: PaymentGateway;
+      paymentGateway?: PaymentGateway;
       atReceptionStore?: DocumentType<Store>;
     }
   ) {

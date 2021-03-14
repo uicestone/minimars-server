@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -51,7 +51,7 @@ export default (router: Router) => {
           try {
             const [userId, cardId] = (verify(
               body.giftCode,
-              process.env.APP_SECRET
+              process.env.APP_SECRET || ""
             ) as string).split(" ");
 
             console.log(
@@ -59,12 +59,15 @@ export default (router: Router) => {
             );
 
             const card = await CardModel.findOne({ _id: cardId });
-            if (card.customer.toString() === userId) {
+            if (!card) throw new Error("invalid_card");
+            if (card.customer?.toString() === userId) {
               // verify success, now change owner
               const sender = await UserModel.findById(card.customer);
               const receiver = await UserModel.findById(
                 body.customer || req.user.id
               );
+              if (!sender || !receiver)
+                throw new Error("invalid_gift_card_sender_receiver");
               card.customer = body.customer || req.user.id;
               await card.save();
               console.log(
@@ -77,13 +80,13 @@ export default (router: Router) => {
                   `您分享的卡片已被${receiver.name || ""}领取`,
                   card.title,
                   card.balance ? `${card.balance.toFixed()}元` : "",
-                  receiver.mobile,
+                  receiver.mobile || "",
                   moment(card.expiresAt).format("YYYY-MM-DD"),
                   ""
                 ]
               );
               return res.json(card);
-            } else if (card.customer.toString() === req.user.id) {
+            } else if (card.customer?.toString() === req.user.id) {
               return res.json(card);
             } else {
               throw "";
@@ -124,7 +127,7 @@ export default (router: Router) => {
             atReceptionStore:
               req.user.role === "manager" && card.customer !== req.user.id
                 ? req.user.store
-                : null
+                : undefined
           });
         } catch (err) {
           switch (err.message) {
@@ -150,9 +153,8 @@ export default (router: Router) => {
             stores: { $all: card.stores },
             timesLeft: { $gt: 0 },
             type: "times",
-            expiresAt: { $lt: card.expiresAt },
-            end: null
-          });
+            expiresAt: { $lt: card.expiresAt }
+          }).where({ end: null });
           await Promise.all(
             expiredTimesCards.map(ec => {
               ec.expiresAtWas = ec.expiresAt;
@@ -192,7 +194,7 @@ export default (router: Router) => {
 
         query.select("-content");
 
-        ["customer"].forEach(field => {
+        (["customer"] as Array<keyof CardQuery>).forEach(field => {
           if (queryParams[field]) {
             query.find({ [field]: queryParams[field] });
           }
@@ -216,7 +218,7 @@ export default (router: Router) => {
         if (req.user.role === "customer") {
           query.find({ customer: req.user._id });
         } else if (req.user.role === "manager") {
-          query.find({ stores: { $in: [req.user.store.id, []] } });
+          query.find({ stores: { $in: [req.user.store?.id, []] } });
         } else if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
@@ -241,17 +243,22 @@ export default (router: Router) => {
     .route("/card/:cardId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const card = await CardModel.findById(req.params.cardId);
-        if (!card) {
-          throw new HttpError(404, `Card not found: ${req.params.cardId}`);
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const card = await CardModel.findById(req.params.cardId);
+          if (!card) {
+            throw new HttpError(404, `Card not found: ${req.params.cardId}`);
+          }
+          if (
+            req.user.role === "customer" &&
+            req.user.id !== card.customer?.toString()
+          ) {
+            throw new HttpError(403);
+          }
+          req.item = card;
+          next();
         }
-        if (req.user.role === "customer" && !req.user.equals(card.customer)) {
-          throw new HttpError(403);
-        }
-        req.item = card;
-        next();
-      })
+      )
     )
 
     // get the card with that id
@@ -307,10 +314,17 @@ export default (router: Router) => {
         if (usedCount) {
           throw new HttpError(400, "该卡已使用，请撤销订单后再删除卡");
         }
-        if (card.type === "balance" && card.status === CardStatus.ACTIVATED) {
+        if (
+          card.type === "balance" &&
+          card.balance &&
+          card.status === CardStatus.ACTIVATED
+        ) {
           const customer = await UserModel.findById(card.customer);
+          if (!customer) throw new Error("invalid_customer");
           if (
+            !customer.balanceDeposit ||
             customer.balanceDeposit < card.price ||
+            !customer.balanceReward ||
             customer.balanceReward < card.balanceReward
           ) {
             throw new HttpError(400, "用户余额已不足以删除本储值卡");

@@ -1,10 +1,11 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
 import UserModel, { User } from "../models/User";
 import { hashPwd, isValidHexObjectId } from "../utils/helper";
+// @ts-ignore
 import idCard from "idcard";
 import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
@@ -21,7 +22,7 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPostBody;
         if (req.user.role !== "admin") {
-          [
+          ([
             "role",
             "openid",
             "cardType",
@@ -30,7 +31,7 @@ export default (router: Router) => {
             "balanceReward",
             "tags",
             "points"
-          ].forEach(f => {
+          ] as Array<keyof User>).forEach(f => {
             delete body[f];
           });
         }
@@ -98,40 +99,34 @@ export default (router: Router) => {
           createdAt: -1
         };
 
-        const $and = []; // combine all $or conditions into one $and
-
         if (queryParams.keyword) {
           if (isValidHexObjectId(queryParams.keyword)) {
-            $and.push({ _id: queryParams.keyword });
+            query.where({ _id: queryParams.keyword });
           } else {
-            $and.push({
+            query.where({
               $text: { $search: queryParams.keyword }
             });
           }
         }
 
         if (queryParams.role) {
-          query.find({ role: queryParams.role });
+          query.where({ role: queryParams.role });
         }
 
         if (queryParams.membership) {
           const membershipConditions = {
             deposit: { balanceDeposit: { $gt: 0 } }
           };
-          $and.push({
+          query.where({
             $or: queryParams.membership.map(type => membershipConditions[type])
           });
         }
 
         if (queryParams.cardTypes) {
-          query.find({ cardType: { $in: queryParams.cardTypes } });
+          query.where({ cardType: { $in: queryParams.cardTypes } });
         }
 
-        if ($and.length) {
-          query.find({ $and });
-        }
-
-        ["mobile"].forEach(field => {
+        (["mobile"] as Array<keyof UserQuery>).forEach(field => {
           if (queryParams[field]) {
             query.where({ [field]: queryParams[field] });
           }
@@ -163,21 +158,23 @@ export default (router: Router) => {
     .route("/user/:userId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const user = await UserModel.findById(req.params.userId);
-        if (
-          !["admin", "manager", "eventManager"].includes(req.user.role) &&
-          req.user.id !== req.params.userId
-        ) {
-          throw new HttpError(403);
-        }
-        if (!user) {
-          throw new HttpError(404, `User not found: ${req.params.userId}`);
-        }
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const user = await UserModel.findById(req.params.userId);
+          if (
+            !["admin", "manager", "eventManager"].includes(req.user.role) &&
+            req.user.id !== req.params.userId
+          ) {
+            throw new HttpError(403);
+          }
+          if (!user) {
+            throw new HttpError(404, `User not found: ${req.params.userId}`);
+          }
 
-        req.item = user;
-        next();
-      })
+          req.item = user;
+          next();
+        }
+      )
     )
 
     // get the user with that id
@@ -192,7 +189,7 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPutBody;
         if (req.user.role !== "admin") {
-          [
+          ([
             "role",
             "openid",
             "cardType",
@@ -200,12 +197,12 @@ export default (router: Router) => {
             "balanceReward",
             "tags",
             "points"
-          ].forEach(f => {
+          ] as Array<keyof User>).forEach(f => {
             delete body[f];
           });
         }
         if (!["admin", "manager"].includes(req.user.role)) {
-          ["cardNo"].forEach(f => {
+          (["cardNo"] as Array<keyof User>).forEach(f => {
             delete body[f];
           });
         }
@@ -277,7 +274,7 @@ export default (router: Router) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const user = req.item;
+        const user = req.item as DocumentType<User>;
         await user.remove();
         res.end();
       })

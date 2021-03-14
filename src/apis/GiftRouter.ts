@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
@@ -42,7 +42,7 @@ export default (router: Router) => {
         query.select("-content");
 
         if (req.user.role === "manager") {
-          query.find({ $or: [{ store: req.user.store.id }, { store: null }] });
+          query.find({ $or: [{ store: req.user.store?.id }, { store: null }] });
         }
 
         if (req.user.role === "customer") {
@@ -55,7 +55,7 @@ export default (router: Router) => {
           });
         }
 
-        ["store"].forEach(field => {
+        (["store"] as Array<keyof GiftQuery>).forEach(field => {
           if (queryParams[field]) {
             query.find({ [field]: queryParams[field] });
           }
@@ -81,14 +81,16 @@ export default (router: Router) => {
     .route("/gift/:giftId")
 
     .all(
-      handleAsyncErrors(async (req, res, next) => {
-        const gift = await GiftModel.findById(req.params.giftId);
-        if (!gift) {
-          throw new HttpError(404, `Gift not found: ${req.params.giftId}`);
+      handleAsyncErrors(
+        async (req: Request, res: Response, next: NextFunction) => {
+          const gift = await GiftModel.findById(req.params.giftId);
+          if (!gift) {
+            throw new HttpError(404, `Gift not found: ${req.params.giftId}`);
+          }
+          req.item = gift;
+          next();
         }
-        req.item = gift;
-        next();
-      })
+      )
     )
 
     // get the gift with that id
@@ -104,7 +106,7 @@ export default (router: Router) => {
         if (req.user.role !== "admin") {
           throw new HttpError(403);
         }
-        const gift = req.item;
+        const gift = req.item as DocumentType<Gift>;
         gift.set(req.body as GiftPutBody);
         await gift.save();
         res.json(gift);
