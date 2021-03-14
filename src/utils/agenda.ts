@@ -278,13 +278,17 @@ export const initAgenda = async () => {
       _id: { $in: Object.keys(userBalanceMap) }
     });
     users.forEach(u => {
+      const storedBalanceDeposit = u.balanceDeposit || 0;
+      const storedBalance = u.balance || 0;
       userBalanceMap[u.id] = +userBalanceMap[u.id].toFixed(2);
       userBalanceDepositMap[u.id] = +userBalanceDepositMap[u.id].toFixed(2);
-      if (u.balance !== userBalanceMap[u.id]) {
+      if (storedBalance !== userBalanceMap[u.id]) {
         console.error(
           `[CRO] User balance mismatch: ${u.id} ${u.name} ${u.mobile} calc ${
             userBalanceDepositMap[u.id]
-          }/${userBalanceMap[u.id]}, stored ${u.balanceDeposit}/${u.balance}`
+          }/${
+            userBalanceMap[u.id]
+          }, stored ${storedBalanceDeposit}/${storedBalance}`
         );
       }
     });
