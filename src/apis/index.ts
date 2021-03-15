@@ -1,5 +1,6 @@
 import cors from "cors";
 import methodOverride from "method-override";
+// @ts-ignore
 import Agendash from "agendash2";
 import cookieSession from "cookie-session";
 import authenticate from "../middlewares/authenticate";
@@ -21,11 +22,11 @@ import WechatRouter from "./WechatRouter";
 import CardRouter from "./CardRouter";
 import detectUa from "../middlewares/detectUa";
 import agenda from "../utils/agenda";
-import { NextFunction, Request, Response, Router } from "express";
+import { Express, NextFunction, Request, Response, Router } from "express";
 import VisoRouter from "./VisoRouter";
 import YouzanRouter from "./YouzanRouter";
 
-export default (app, router: Router) => {
+export default (app: Express, router: Router) => {
   // register routes
   [
     AuthRouter,
@@ -72,7 +73,7 @@ export default (app, router: Router) => {
     "/agendash",
     cookieSession({
       name: "session",
-      keys: [process.env.APP_SECRET],
+      keys: [process.env.APP_SECRET || ""],
 
       // Cookie Options
       maxAge: 24 * 60 * 60 * 1000 // 24 hours

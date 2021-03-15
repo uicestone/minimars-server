@@ -1,15 +1,15 @@
-import Config, { Config as IConfig } from "../models/Config";
+import ConfigModel, { Config } from "../models/Config";
 import reduceConfig from "./reduceConfig";
 
 const { DEBUG } = process.env;
 
-export default async (config: IConfig) => {
-  const existingConfig = reduceConfig(await Config.find());
-  const initConfigItemsInsert = Object.keys(initConfig)
+export default async (config: Config) => {
+  const existingConfig = reduceConfig(await ConfigModel.find());
+  const initConfigItemsInsert = (Object.keys(initConfig) as Array<keyof Config>)
     .filter(key => existingConfig[key] === undefined)
     .map(initKey => ({ [initKey]: initConfig[initKey] }));
   if (initConfigItemsInsert.length) {
-    await Config.insertMany(initConfigItemsInsert);
+    await ConfigModel.insertMany(initConfigItemsInsert);
     console.log(
       `[CFG] ${initConfigItemsInsert.length} config items initialized.`
     );
@@ -20,7 +20,7 @@ export default async (config: IConfig) => {
   }
 };
 
-const initConfig: IConfig = {
+const initConfig: Config = {
   sockPrice: 0,
   kidFullDayPrice: 248,
   extraParentFullDayPrice: 50,

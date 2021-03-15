@@ -1,16 +1,15 @@
 import moment from "moment";
 import { Socket } from "net";
 import handleSocketData from "./handleSocketData";
-import { Store as IStore, storeServerSockets } from "../models/Store";
+import { Store, storeServerSockets } from "../models/Store";
 import { DocumentType } from "@typegoose/typegoose";
 
-const pingInterval = +process.env.DOOR_PING_INTERVAL || 10000;
+const pingInterval = +(process.env.DOOR_PING_INTERVAL || 10000);
 let connections = 0;
 
 export default function handleCreateServer() {
   return async (socket: Socket) => {
-    const client: { store: DocumentType<IStore>; connectedAt: Date } = {
-      store: null,
+    const client: { store?: DocumentType<Store>; connectedAt: Date } = {
       connectedAt: new Date()
     };
     connections++;
@@ -31,7 +30,7 @@ export default function handleCreateServer() {
     socket.on("close", async function () {
       clearInterval(heartBeatInterval);
       if (client.store) {
-        storeServerSockets[client.store.id] = null;
+        delete storeServerSockets[client.store.id];
       }
       connections--;
       console.log(

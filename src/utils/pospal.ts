@@ -78,11 +78,11 @@ export default class Pospal {
     this.appId =
       process.env[
         `POSPAL_APPID${storeCode ? "_" + storeCode.toUpperCase() : ""}`
-      ];
+      ] || "";
     this.appKey =
       process.env[
         `POSPAL_APPKEY${storeCode ? "_" + storeCode.toUpperCase() : ""}`
-      ];
+      ] || "";
     if (!this.appId || !this.appKey) throw new Error("pospal_store_not_found");
     this.api = axios.create({
       baseURL: "https://area35-win.pospal.cn:443/pospal-api2/openapi/v1/",
@@ -108,7 +108,7 @@ export default class Pospal {
     });
   }
 
-  handleError(data) {
+  handleError(data: { status: string; messages: string[]; data: any }) {
     if (data.status === "error") {
       console.error(`[PSP] ${data.messages.join("；")}`);
       throw new Error(`pospal_request_error`);
@@ -143,7 +143,7 @@ export default class Pospal {
         await this.incrementMemberBalancePoints(
           user,
           +(user.balance - customer.balance).toFixed(2),
-          +(user.points - customer.point).toFixed(2)
+          +((user.points || 0) - customer.point).toFixed(2)
         );
         // console.log(user.mobile, user.balance, customer.balance);
         // console.log(user.mobile, user.points, customer.point);
@@ -152,7 +152,7 @@ export default class Pospal {
             user.mobile
           } with balance/points offset, fixed (${+(
             user.balance - customer.balance
-          ).toFixed(2)}, ${+(user.points - customer.point).toFixed(2)}).`
+          ).toFixed(2)}, ${+((user.points || 0) - customer.point).toFixed(2)}).`
         );
       }
       return;
@@ -287,7 +287,7 @@ export default class Pospal {
 
   async queryMultiDateTickets(dateStart: string, dateEnd?: string) {
     const end = moment(dateEnd).startOf("day").valueOf();
-    let result = [];
+    let result: Ticket[] = [];
     for (
       let d = moment(dateStart).startOf("day");
       d.valueOf() <= end;
@@ -303,7 +303,7 @@ export default class Pospal {
     console.log(result);
   }
 
-  async updatePushUrl(pushUrl) {
+  async updatePushUrl(pushUrl: string) {
     const result = await this.post("openNotificationOpenApi/updatePushUrl", {
       pushUrl
     });

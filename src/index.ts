@@ -25,9 +25,9 @@ const router = express.Router();
 const httpServer = http.createServer(app);
 const socketServer = net.createServer(handleCreateServer());
 
-const portHttp: string = process.env.PORT_HTTP;
-const portSocket: string = process.env.PORT_SOCKET;
-const portWebSocket: string = process.env.PORT_WEBSOCKET;
+const portHttp: string = process.env.PORT_HTTP || "";
+const portSocket: string = process.env.PORT_SOCKET || "";
+const portWebSocket: string = process.env.PORT_WEBSOCKET || "";
 
 console.log(`[SYS] System time is ${new Date()}`);
 

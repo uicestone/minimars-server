@@ -6,7 +6,7 @@ import { parseRemoteServerData } from "jingxing-doors";
 
 export default function handleSocketData(
   socket: Socket,
-  client: { store: DocumentType<Store>; connectedAt: Date }
+  client: { store?: DocumentType<Store>; connectedAt: Date }
 ) {
   return async (data: Buffer | string) => {
     console.log(
@@ -24,7 +24,9 @@ export default function handleSocketData(
       // store identity message
       if (matchStore && matchStore[1]) {
         try {
-          client.store = await storeModel.findById(matchStore[1]);
+          const store = await storeModel.findById(matchStore[1]);
+          if (!store) throw new Error("invalid_store");
+          client.store = store;
         } catch (e) {
           socket.destroy(new Error("CANNOT FIND STORE"));
           return;
@@ -40,6 +42,7 @@ export default function handleSocketData(
         );
         client.store.ip = socket.remoteAddress;
         client.store.save();
+        if (!client.store.doors) return;
         storeDoors[client.store.id] = client.store.doors.map(d => {
           d.controller = new JxCtl(socket, d.ip);
           return d;

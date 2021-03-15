@@ -1,6 +1,6 @@
 export default class HttpError extends Error {
   status: number;
-  constructor(status: number, message?: string) {
+  constructor(status: keyof typeof defaultMessages, message?: string) {
     super(message || defaultMessages[status]);
     // Set the prototype explicitly.
     Object.setPrototypeOf(this, HttpError.prototype);

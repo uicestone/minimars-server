@@ -1,6 +1,5 @@
 import { sign, verify } from "jsonwebtoken";
 import { hash, compare } from "bcryptjs";
-import * as _ from "lodash";
 import { User } from "../models/User";
 import { DocumentType } from "@typegoose/typegoose";
 import { getExtension } from "mime";
@@ -52,7 +51,7 @@ export const saveContentImages = (content: string) => {
   const srcs = content.match(/src="data:image(.*?)"/g);
   if (!srcs) return;
   srcs.map(src => {
-    const [, mime, base64] = src.match(/^src="data:(.*?);base64,(.*?)"$/);
+    const [, mime, base64] = src.match(/^src="data:(.*?);base64,(.*?)"$/) || [];
     console.log(`[HLP] Found base64 of ${mime}.`);
     const ext = getExtension(mime);
     const data = Buffer.from(base64, "base64");
@@ -69,10 +68,10 @@ export const saveContentImages = (content: string) => {
 };
 
 export const isOffDay = (date: string) => {
-  if (config.offWeekdays.includes(date)) {
+  if (config.offWeekdays?.includes(date)) {
     return true;
   }
-  if (config.onWeekends.includes(date)) {
+  if (config.onWeekends?.includes(date)) {
     return false;
   }
   return [0, 6].includes(moment(date).day());

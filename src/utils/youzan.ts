@@ -1,5 +1,6 @@
 // @ts-ignore
 import { DocumentType } from "@typegoose/typegoose";
+// @ts-ignore
 import { token, client } from "youzanyun-sdk";
 import { User } from "../models/User";
 const tokenExpireOffset = 3e5; // 5 minutes

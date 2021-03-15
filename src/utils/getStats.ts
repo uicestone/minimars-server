@@ -84,7 +84,8 @@ export default async (
   const customerCount = bookingsPaid
     .filter(b => b.type === Scene.PLAY)
     .reduce(
-      (count, booking) => count + booking.adultsCount + booking.kidsCount,
+      (count, booking) =>
+        count + (booking.adultsCount || 0) + (booking.kidsCount || 0),
       0
     );
 
@@ -99,14 +100,14 @@ export default async (
     .reduce(
       (acc, booking) => {
         if (booking.card) {
-          acc.card.adultsCount += booking.adultsCount;
-          acc.card.kidsCount += booking.kidsCount;
+          acc.card.adultsCount += booking.adultsCount || 0;
+          acc.card.kidsCount += booking.kidsCount || 0;
         } else if (booking.coupon) {
-          acc.coupon.adultsCount += booking.adultsCount;
-          acc.coupon.kidsCount += booking.kidsCount;
+          acc.coupon.adultsCount += booking.adultsCount || 0;
+          acc.coupon.kidsCount += booking.kidsCount || 0;
         } else {
-          acc.guest.adultsCount += booking.adultsCount;
-          acc.guest.kidsCount += booking.kidsCount;
+          acc.guest.adultsCount += booking.adultsCount || 0;
+          acc.guest.kidsCount += booking.kidsCount || 0;
         }
         return acc;
       },
@@ -125,7 +126,7 @@ export default async (
       }
       acc[payment.gateway] += payment.amount;
       return acc;
-    }, {});
+    }, {} as Record<PaymentGateway, number>);
 
   const flowAmountByScenes: { [gateway: string]: number } = payments
     .filter(p => flowGateways.includes(p.gateway))
@@ -135,7 +136,7 @@ export default async (
       }
       acc[payment.scene] += payment.amount;
       return acc;
-    }, {});
+    }, {} as Record<Scene, number>);
 
   const flowAmountByStores: { [storeId: string]: number } = payments
     .filter(p => flowGateways.includes(p.gateway))
@@ -147,20 +148,15 @@ export default async (
       }
       acc[storeId] += payment.amount;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
-  const couponsCount: {
-    slug: string;
-    name: string;
-    count: number;
-    kidsPerCoupon: number;
-    amount: number;
-  }[] = bookingsPaid
+  const couponsCount = bookingsPaid
     .filter(b => b.type === Scene.PLAY)
     .filter(b => b.coupon)
     .reduce((acc, booking) => {
-      let item = acc.find(c => c.name === booking.coupon.title);
       const coupon = booking.coupon;
+      if (!coupon) return acc;
+      let item = acc.find(c => c.name === coupon.title);
       if (!item) {
         item = {
           name: coupon.title,
@@ -172,10 +168,10 @@ export default async (
         };
         acc.push(item);
       }
-      item.adultsCount += booking.adultsCount;
-      item.kidsCount += booking.kidsCount;
+      item.adultsCount += booking.adultsCount || 0;
+      item.kidsCount += booking.kidsCount || 0;
       return acc;
-    }, [])
+    }, [] as { name: string; price: number; kidsCount: number; adultsCount: number; amount: number; kidsPerCoupon: number }[])
     .map(item => {
       item.amount = (item.price * item.kidsCount) / item.kidsPerCoupon;
       // couponsCount kidsCount is used as coupon count
@@ -187,11 +183,14 @@ export default async (
     .filter(b => b.type === Scene.PLAY)
     .filter(b => b.card)
     .reduce((acc, booking) => {
-      let item = acc.find(i => i.name === booking.card.title);
+      const card = booking.card;
+      if (!card) return acc;
+
+      let item = acc.find(i => i.name === card.title);
 
       if (!item) {
         item = {
-          name: booking.card.title,
+          name: card.title,
           adultsCount: 0,
           kidsCount: 0,
           amount: 0
@@ -199,20 +198,20 @@ export default async (
         acc.push(item);
       }
 
-      item.adultsCount += booking.adultsCount;
-      item.kidsCount += booking.kidsCount;
+      item.adultsCount += booking.adultsCount || 0;
+      item.kidsCount += booking.kidsCount || 0;
       item.amount +=
         (booking.amountPaidInCard || 0) + (booking.amountPaidInDeposit || 0);
       return acc;
-    }, []);
+    }, [] as { name: string; adultsCount: number; kidsCount: number; amount: number }[]);
 
   const balanceCount = bookingsPaid
     .filter(b => b.type === Scene.PLAY)
     .filter(b => b.amountPaidInBalance)
     .reduce(
       (acc, booking) => {
-        acc.adultsCount += booking.adultsCount;
-        acc.kidsCount += booking.kidsCount;
+        acc.adultsCount += booking.adultsCount || 0;
+        acc.kidsCount += booking.kidsCount || 0;
         return acc;
       },
       {
@@ -225,7 +224,7 @@ export default async (
 
   balanceCount.amount = payments
     .filter(p => p.gateway === PaymentGateway.Balance)
-    .reduce((acc, p) => acc + p.amountDeposit || p.amount, 0);
+    .reduce((acc, p) => acc + (p.amountDeposit || p.amount), 0);
   // console.log("[DEBUG] Groups calculated:", Date.now() - starts);
 
   const dailyCustomers = await Booking.aggregate([

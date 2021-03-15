@@ -4,6 +4,18 @@ import { Store, FaceDevice } from "../models/Store";
 
 type Target = WebSocket | FaceDevice | Store;
 
+export interface Face {
+  userId: string;
+  name: string;
+  score: string;
+  similarity: string;
+  temperature: string;
+  timestamp: string;
+  image?: string;
+  irimg?: string;
+  orgimg?: string;
+}
+
 function isFaceDevice(t: Target): t is FaceDevice {
   return (t as FaceDevice).mac !== undefined;
 }
@@ -19,10 +31,10 @@ export default class Viso {
   init(wss: Server, stores: Store[]) {
     stores.forEach(store => {
       this.devices = this.devices.concat(
-        store.faceDevices.map(d => {
+        store.faceDevices?.map(d => {
           d.storeCode = store.code;
           return d;
-        })
+        }) || []
       );
     });
     this.stores = stores;
@@ -55,7 +67,7 @@ export default class Viso {
       devices.push(target);
     } else if (isStore(target)) {
       const store = this.stores.find(s => s.code === target.code);
-      store.faceDevices.forEach(device => {
+      store?.faceDevices?.forEach(device => {
         if (!device.ws) {
           console.error(
             `[VSO] Store ${target.code} face device ${device.name} websocket not connected.`
@@ -73,7 +85,7 @@ export default class Viso {
         console.error(
           `[VSO] Face device ${device.name} websocket not connected.`
         );
-      device.ws.send(
+      device.ws?.send(
         JSON.stringify({
           command: "http_request",
           timeStamp: (Date.now() / 1000).toFixed(),
@@ -90,6 +102,7 @@ export default class Viso {
   onReturn(ws: WebSocket, command: Command, payload: any = {}) {
     console.log(
       "[VSO] On return",
+      // @ts-ignore
       Command[command] || command,
       JSON.stringify(payload)
     );
@@ -100,6 +113,7 @@ export default class Viso {
           console.error(
             `[VSO] Face device ${payload.mac} is not registered under store.`
           );
+          return;
         }
         device.ws = ws;
         console.log(

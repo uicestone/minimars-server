@@ -1,4 +1,10 @@
-export default async function (req, res, next) {
+import { NextFunction, Request, Response } from "express";
+
+export default async function (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   req.pagination = { limit: 20, skip: 0 };
 
   if (req.query.skip) {
@@ -15,9 +21,9 @@ export default async function (req, res, next) {
 
     this.set("accept-range", "items")
       .set("content-range", `items ${from}-${to}/${total}`)
-      .set("items-start", from)
-      .set("items-end", to)
-      .set("items-total", total);
+      .set("items-start", from.toString())
+      .set("items-end", to.toString())
+      .set("items-total", total.toString());
 
     return this;
   };

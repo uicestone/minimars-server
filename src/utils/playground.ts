@@ -1,4 +1,3 @@
-// @ts-nocheck
 import StoreModel from "../models/Store";
 import UserModel, { User } from "../models/User";
 import agenda from "./agenda";
@@ -38,7 +37,7 @@ export default async function playground() {
     //     .join("\n")
     // );
     const user = await UserModel.findOne({ mobile: "13641926334" });
-    syncUserPoints(user);
+    if (user) syncUserPoints(user);
   } catch (e) {
     console.error(e);
   }

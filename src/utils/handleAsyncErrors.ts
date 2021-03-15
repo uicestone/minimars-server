@@ -1,4 +1,10 @@
-const handleAsyncErrors = fn => (req, res, next) => {
+import { Request, Response, NextFunction } from "express";
+
+const handleAsyncErrors = (fn: Function) => (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 

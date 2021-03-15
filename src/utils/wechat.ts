@@ -1,3 +1,4 @@
+// @ts-ignore
 import WXOauth from "@xinglu/wxapp-oauth";
 import { Pay, SignType, utils } from "@sigodenjs/wechatpay";
 import fs from "fs";
@@ -5,29 +6,27 @@ import Axios, { AxiosRequestConfig } from "axios";
 import { User } from "../models/User";
 import { DocumentType } from "@typegoose/typegoose";
 
-const {
-  WEIXIN_APPID,
-  WEIXIN_SECRET,
-  WEIXIN_MCH_ID,
-  WEIXIN_MCH_KEY,
-  WEIXIN_MCH_CERT_PATH,
-  WEIXIN_APPID_MP,
-  WEIXIN_SECRET_MP,
-  API_ROOT
-} = process.env;
+const appId = process.env.WEIXIN_APPID || "";
+const secret = process.env.WEIXIN_SECRET || "";
+const mchId = process.env.WEIXIN_MCH_ID || "";
+const mchKey = process.env.WEIXIN_ || "";
+const mchCertPath = process.env.WEIXIN_ || "";
+const appIdMp = process.env.WEIXIN_ || "";
+const secretMp = process.env.WEIXIN_ || "";
+const apiRoot = process.env.WEIXIN_ || "";
 const accessToken = { token: "", expiresAt: 0 };
 const accessTokenMp = { token: "", expiresAt: 0 };
 
-const pfx = WEIXIN_MCH_CERT_PATH ? fs.readFileSync(WEIXIN_MCH_CERT_PATH) : null;
+const pfx = mchCertPath ? fs.readFileSync(mchCertPath) : Buffer.alloc(0);
 
 export const oAuth = WXOauth({
-  appid: WEIXIN_APPID,
-  secret: WEIXIN_SECRET
+  appid: appId,
+  secret: secret
 });
 export const pay = new Pay({
-  appId: WEIXIN_APPID,
-  mchId: WEIXIN_MCH_ID,
-  key: WEIXIN_MCH_KEY,
+  appId: appId,
+  mchId: mchId,
+  key: mchKey,
   pfx
 });
 
@@ -74,8 +73,8 @@ export async function getAccessToken(isMp = false): Promise<string> {
   const data = await request(isMp, "token", null, {
     params: {
       grant_type: "client_credential",
-      appid: isMp ? WEIXIN_APPID_MP : WEIXIN_APPID,
-      secret: isMp ? WEIXIN_SECRET_MP : WEIXIN_SECRET
+      appid: isMp ? appIdMp : appId,
+      secret: isMp ? secretMp : secretMp
     }
   });
   if (!data?.access_token) throw new Error("invalid_access_token");
@@ -118,14 +117,46 @@ export async function getMpUserOpenids() {
   return openids;
 }
 
+enum SubscribeScene {
+  ADD_SCENE_SEARCH = "ADD_SCENE_SEARCH",
+  ADD_SCENE_ACCOUNT_MIGRATION = "ADD_SCENE_ACCOUNT_MIGRATION",
+  ADD_SCENE_PROFILE_CARD = "ADD_SCENE_PROFILE_CARD",
+  ADD_SCENE_QR_CODE = "ADD_SCENE_QR_CODE",
+  ADD_SCENE_PROFILE_LINK = "ADD_SCENE_PROFILE_LINK",
+  ADD_SCENE_PROFILE_ITEM = "ADD_SCENE_PROFILE_ITEM",
+  ADD_SCENE_PAID = "ADD_SCENE_PAID",
+  ADD_SCENE_WECHAT_ADVERTISEMENT = "ADD_SCENE_WECHAT_ADVERTISEMENT",
+  ADD_SCENE_OTHERS = "ADD_SCENE_OTHERS"
+}
+
+interface UserInfo {
+  subscribe: 0 | 1;
+  openid: string;
+  nickname: string;
+  sex: 0 | 1 | 2;
+  language: string;
+  city: string;
+  province: string;
+  country: string;
+  headimgurl: string;
+  subscribe_time: number; // timestamp second
+  unionid: string;
+  remark: string;
+  groupid: number;
+  tagid_list: number[];
+  subscribe_scene: SubscribeScene;
+  qr_scene: number;
+  qr_scene_str: string;
+}
+
 export async function getUsersInfo(openids: string[]) {
-  const { user_info_list: usersInfo } = await request(
+  const { user_info_list: usersInfo } = (await request(
     true,
     "user/info/batchget",
     {
       user_list: openids.map(openid => ({ openid, lang: "zh_CN" }))
     }
-  );
+  )) as { user_info_list: UserInfo[] };
   return usersInfo;
 }
 
@@ -154,7 +185,9 @@ export async function sendTemplateMessage(
   }
   const templates = Object.values(TemplateMessageType).reduce(
     (templates, type) => {
-      templates[type] = process.env["WEIXIN_TEMPLATE_ID_" + type];
+      const template = process.env["WEIXIN_TEMPLATE_ID_" + type];
+      if (!template) return templates;
+      templates[type] = template;
       return templates;
     },
     {} as Record<TemplateMessageType, string>
@@ -176,7 +209,7 @@ export async function sendTemplateMessage(
     template_id: templates[type],
     // url: "http://weixin.qq.com/download",
     miniprogram: {
-      appid: WEIXIN_APPID,
+      appid: appId,
       pagepath: "/pages/index/index"
     },
     data: messageData
@@ -199,7 +232,7 @@ export const unifiedOrder = async (
     total_fee: Math.max(Math.round(totalFee * 100), 1),
     trade_type: "JSAPI",
     openid,
-    notify_url: `${API_ROOT}wechat/pay/notify`,
+    notify_url: `${apiRoot}wechat/pay/notify`,
     spbill_create_ip: "8.8.8.8"
   });
   if (!pay.verifySign(orderData)) throw new Error("WechatPay sign error.");
@@ -240,13 +273,13 @@ export const payArgs = (gatewayData: {
     paySign: utils.sign(
       "MD5" as SignType,
       {
-        appId: WEIXIN_APPID,
+        appId: appId,
         timeStamp,
         nonceStr,
         package: _package,
         signType: "MD5"
       },
-      WEIXIN_MCH_KEY
+      mchKey
     )
   };
 };

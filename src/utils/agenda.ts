@@ -16,7 +16,6 @@ import CardTypeModel from "../models/CardType";
 import StoreModel from "../models/Store";
 import paymentModel, { PaymentGateway } from "../models/Payment";
 import { saveContentImages, sleep } from "./helper";
-import importPrevData from "./importPrevData";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
 import Pospal from "./pospal";
 import BookingModel from "../models/Booking";
@@ -25,10 +24,12 @@ const pospalTicketsSyncInterval = +(
   process.env.POSPAL_TICKETS_SYNC_INTERVAL || 1
 );
 
+const mongodbUrl = process.env.MONGODB_URL || "";
+
 const agenda: Agenda = new Agenda();
 
 export const initAgenda = async () => {
-  const client = new MongoClient(process.env.MONGODB_URL, {
+  const client = new MongoClient(mongodbUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   });
@@ -114,12 +115,6 @@ export const initAgenda = async () => {
     done();
   });
 
-  agenda.define("import prev data", async (job, done) => {
-    await importPrevData(job.attrs.data.database, job.attrs.data.storeKey);
-    console.log("[CRO] Previous data imported.");
-    done();
-  });
-
   agenda.define("create indexes", async (job, done) => {
     UserModel.createIndexes();
     console.log("[CRO] Index created.");
@@ -172,7 +167,7 @@ export const initAgenda = async () => {
       userMap.set(u.id, Object.assign(u, { cards: [] }));
     });
     cards.forEach(c => {
-      const u = userMap.get(c.customer.toString());
+      const u = userMap.get(c.customer?.toString() || "");
       if (!u) return;
       u.cards.push(c);
     });
@@ -182,7 +177,7 @@ export const initAgenda = async () => {
     });
     for (const cardType of cardTypes) {
       const rewardCardTypes = await CardTypeModel.find({
-        slug: { $in: cardType.rewardCardTypes.split(" ") }
+        slug: { $in: cardType.rewardCardTypes?.split(" ") }
       });
 
       for (const [, user] of userMap) {
@@ -227,9 +222,9 @@ export const initAgenda = async () => {
     const conf = days.reduce(
       (conf: Config, day) => {
         if (day.isOffDay && [1, 2, 3, 4, 5].includes(moment(day.date).day())) {
-          conf.offWeekdays.push(day.date);
+          conf.offWeekdays?.push(day.date);
         } else if (!day.isOffDay && [0, 7].includes(moment(day.date).day())) {
-          conf.onWeekends.push(day.date);
+          conf.onWeekends?.push(day.date);
         }
         return conf;
       },
@@ -239,11 +234,11 @@ export const initAgenda = async () => {
       configModel.findOne({ onWeekends: { $exists: true } }),
       configModel.findOne({ offWeekdays: { $exists: true } })
     ]);
-    configItemOnWeekends.set("onWeekends", conf.onWeekends);
-    configItemOffWeekdays.set("offWeekdays", conf.offWeekdays);
+    configItemOnWeekends?.set("onWeekends", conf.onWeekends);
+    configItemOffWeekdays?.set("offWeekdays", conf.offWeekdays);
     await Promise.all([
-      configItemOnWeekends.save(),
-      configItemOffWeekdays.save()
+      configItemOnWeekends?.save(),
+      configItemOffWeekdays?.save()
     ]);
     console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
@@ -258,8 +253,9 @@ export const initAgenda = async () => {
       status: CardStatus.ACTIVATED
     });
     balanceCards.forEach(c => {
+      if (!c.customer) return;
       userBalanceMap[c.customer.toString()] =
-        c.balance + (userBalanceMap[c.customer.toString()] || 0);
+        (c.balance || 0) + (userBalanceMap[c.customer.toString()] || 0);
       userBalanceDepositMap[c.customer.toString()] =
         c.price + (userBalanceDepositMap[c.customer.toString()] || 0);
     });
@@ -269,10 +265,11 @@ export const initAgenda = async () => {
       paid: true
     });
     balancePayments.forEach(p => {
+      if (!p.customer) return;
       userBalanceMap[p.customer.id] =
         (userBalanceMap[p.customer.id] || 0) - p.amount;
       userBalanceDepositMap[p.customer.id] =
-        (userBalanceDepositMap[p.customer.id] || 0) - p.amountDeposit;
+        (userBalanceDepositMap[p.customer.id] || 0) - (p.amountDeposit || 0);
     });
     const users = await UserModel.find({
       _id: { $in: Object.keys(userBalanceMap) }
@@ -316,9 +313,8 @@ export const initAgenda = async () => {
       const usersInfo = await getUsersInfo(chunk);
       console.log(`[CRO] Got users info ${start} +100.`);
       const usersExists = await UserModel.find({
-        openidMp: null,
         unionid: { $in: usersInfo.filter(u => u.unionid).map(u => u.unionid) }
-      });
+      }).where({ openidMp: null });
       if (usersExists.length) {
         console.log(
           `[CRO] ${usersExists.length} users matching unionid without openidMp.`
@@ -326,6 +322,7 @@ export const initAgenda = async () => {
       }
       for (const user of usersExists) {
         const userInfo = usersInfo.find(u => u.unionid === user.unionid);
+        if (!userInfo) continue;
         await UserModel.updateOne(
           { _id: user.id },
           { openidMp: userInfo.openid }
@@ -344,7 +341,7 @@ export const initAgenda = async () => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { code, dateStart, dateEnd } = job.attrs.data;
     const store = await StoreModel.findOne({ code });
-    await store.syncPospalTickets(dateStart, dateEnd);
+    await store?.syncPospalTickets(dateStart, dateEnd);
     console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
   });
@@ -413,10 +410,9 @@ export const initAgenda = async () => {
       }
       // find bookings without customer, but has pospal customerUid
       const bookings = await BookingModel.find({
-        customer: null,
         "providerData.provider": "pospal",
         "providerData.customerUid": { $exists: true }
-      });
+      }).where({ customer: null });
       for (const booking of bookings) {
         const user = await UserModel.findOne({
           pospalId: booking.providerData?.customerUid

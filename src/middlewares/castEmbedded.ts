@@ -1,4 +1,10 @@
-export default async function (req, res, next) {
+import { NextFunction, Request, Response } from "express";
+
+export default async function (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   const objectKeys = [
     "card",
     "store",
@@ -27,7 +33,7 @@ export default async function (req, res, next) {
       ["payments", "cards", "stores"].includes(key) &&
       Array.isArray(req.body[key])
     ) {
-      req.body[key] = req.body[key].map(item => item.id || item);
+      req.body[key] = req.body[key].map((item: any) => item.id || item);
     }
   }
   next();
