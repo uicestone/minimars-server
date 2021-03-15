@@ -11,6 +11,7 @@ import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 import Pospal from "../utils/pospal";
+import { syncUserPoints } from "../utils/youzan";
 
 @pre("validate", function (next) {
   const user = this as DocumentType<User>;
@@ -169,6 +170,7 @@ export class User {
       if (!this.points) this.points = 0;
       this.points = +(this.points + r * amount).toFixed(2);
     }
+    syncUserPoints(this);
   }
 
   async depositBalance(
