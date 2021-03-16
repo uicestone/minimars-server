@@ -13,11 +13,28 @@ import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
 import moment from "moment";
 
+class BalancePriceGroup {
+  @prop({ type: Number, required: true })
+  balance!: number;
+
+  @prop({ type: Number, required: true })
+  price!: number;
+}
+
 @plugin(updateTimes)
 @plugin(autoPopulate, [{ path: "stores", select: "name code" }])
 @pre("validate", async function (this: DocumentType<CardType>, next) {
   if (this.customerTags) {
     this.customerTags = this.customerTags.map(t => t.toLowerCase());
+  }
+  if (this.type === "balance") {
+    if (this.balance === undefined || this.price === undefined)
+      throw new HttpError(400, "面值，价格必填");
+    if (this.balancePriceGroups) {
+      this.balancePriceGroups = this.balancePriceGroups.filter(
+        g => g.price !== undefined && g.balance !== undefined
+      );
+    }
   }
   if (this.rewardCardTypes) {
     for (const slug of this.rewardCardTypes.split(" ")) {
@@ -57,6 +74,9 @@ export class CardType {
   @prop()
   posterUrl?: string;
 
+  @prop({ type: String, default: [] })
+  posterUrls: string[] = [];
+
   @prop()
   content?: string;
 
@@ -80,6 +100,9 @@ export class CardType {
 
   @prop({ type: Number, required: true })
   price!: number;
+
+  @prop({ type: BalancePriceGroup })
+  balancePriceGroups?: BalancePriceGroup[];
 
   @prop({ type: Number })
   maxKids?: number;
