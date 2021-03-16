@@ -193,19 +193,25 @@ export default (router: Router) => {
         }
 
         if (body.type === Scene.GIFT) {
-          if (booking.quantity === undefined)
-            throw new Error("invalid_quantity");
           if (!booking.populated("gift")) {
             await booking.populate("gift").execPopulate();
           }
           if (!booking.gift) {
             throw new HttpError(400, "礼品信息错误");
           }
+          if (!booking.quantity) {
+            booking.quantity = 1;
+          }
           if (
-            booking.gift.quantity >= 0 &&
-            booking.gift.quantity < booking.quantity
+            booking.gift.quantity !== undefined &&
+            booking.gift.quantity !== null
           ) {
-            throw new HttpError(400, "礼品库存不足");
+            if (
+              booking.gift.quantity >= 0 &&
+              booking.gift.quantity < booking.quantity
+            ) {
+              throw new HttpError(400, "礼品库存不足");
+            }
           }
           if (booking.gift.maxQuantityPerCustomer) {
             const historyGiftBookings = await BookingModel.find({
@@ -215,15 +221,21 @@ export default (router: Router) => {
               customer: booking.customer
             });
             const historyQuantity = historyGiftBookings.reduce(
-              (quantity, booking) => quantity + (booking.quantity || 0),
+              (quantity, booking) => quantity + (booking.quantity || 1),
               0
             );
             if (
-              historyQuantity + booking.quantity >
+              historyQuantity + (booking.quantity || 1) >
               booking.gift.maxQuantityPerCustomer
             ) {
               throw new HttpError(400, "超过客户礼品限制兑换数");
             }
+          }
+          if (
+            booking.gift.isProfileCover &&
+            booking.customer.covers.map(c => c.id).includes(booking.gift.id)
+          ) {
+            throw new HttpError(400, "客户已经拥有这个封面");
           }
         }
 

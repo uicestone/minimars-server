@@ -56,6 +56,9 @@ export class Gift {
 
   @prop({ type: Number })
   maxQuantityPerCustomer?: number;
+
+  @prop({ type: Boolean })
+  isProfileCover?: boolean; // custom cover in weapp 'my' page
 }
 
 const GiftModel = getModelForClass(Gift, {

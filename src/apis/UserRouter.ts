@@ -10,6 +10,7 @@ import idCard from "idcard";
 import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { Permission } from "../models/Role";
+import GiftModel from "../models/Gift";
 
 const { DEBUG } = process.env;
 
@@ -214,7 +215,8 @@ export default (router: Router) => {
             "balanceDeposit",
             "balanceReward",
             "tags",
-            "points"
+            "points",
+            "covers"
           ] as Array<keyof User>).forEach(f => {
             delete body[f];
           });
@@ -260,6 +262,17 @@ export default (router: Router) => {
         if (body.isForeigner) {
           if (!body.country) {
             throw new HttpError(400, "外籍用户必须录入国籍");
+          }
+        }
+        if (body.currentCover) {
+          const cover = await GiftModel.findById(
+            body.currentCover.id || body.currentCover
+          );
+          if (!cover || !cover.isProfileCover) {
+            throw new HttpError(400, "不是有效的封面");
+          }
+          if (!req.user.covers.map(c => c.id).includes(cover.id)) {
+            throw new HttpError(400, "客户还未兑换这个封面");
           }
         }
 

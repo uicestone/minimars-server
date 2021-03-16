@@ -114,6 +114,7 @@ export interface GiftPutBody extends Partial<Gift> {}
 export interface GiftQuery extends ListQuery {
   keyword?: string;
   store?: string;
+  isCover?: string;
 }
 
 export interface PaymentPostBody extends Partial<Payment> {}

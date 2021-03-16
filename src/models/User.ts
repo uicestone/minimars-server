@@ -13,6 +13,7 @@ import autoPopulate from "./plugins/autoPopulate";
 import Pospal from "../utils/pospal";
 import { syncUserPoints } from "../utils/youzan";
 import { Role, Permission } from "./Role";
+import { Gift } from "./Gift";
 
 @pre("validate", function (next) {
   const user = this as DocumentType<User>;
@@ -28,7 +29,13 @@ import { Role, Permission } from "./Role";
   next();
 })
 @plugin(updateTimes)
-@plugin(autoPopulate, [{ path: "store", select: "-content" }, { path: "role" }])
+@plugin(autoPopulate, [
+  { path: "store", select: "-content" },
+  { path: "role" },
+  { path: "covers", select: "title posterUrl" },
+  ,
+  { path: "currentCover", select: "title posterUrl" }
+])
 @index({ name: "text", mobile: "text", cardNo: "text", tags: "text" })
 export class User {
   @prop({ ref: Role })
@@ -161,6 +168,12 @@ export class User {
     get: v => v
   })
   remarks?: string;
+
+  @prop({ ref: Gift, default: [] })
+  covers: DocumentType<Gift>[] = [];
+
+  @prop({ ref: Gift })
+  currentCover?: DocumentType<Gift>;
 
   can(...ps: Permission[]) {
     return ps.every(p => this.role?.can(p));

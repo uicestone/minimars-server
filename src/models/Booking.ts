@@ -276,7 +276,7 @@ export class Booking {
       }
     } else if (this.type === "gift") {
       if (this.quantity === undefined) {
-        throw new Error("undefined_gift_quantity");
+        this.quantity = 1;
       }
       if (!this.populated("gift")) {
         await this.populate("gift").execPopulate();
@@ -429,10 +429,9 @@ export class Booking {
     }
 
     if (
-      totalPayAmount >= 0.01 &&
+      (totalPayAmount >= 0.01 || (amountInPoints && amountInPoints > 0)) &&
       useBalance &&
-      booking.customer?.balance &&
-      paymentGateway !== PaymentGateway.Points
+      booking.customer?.balance
     ) {
       balancePayAmount = Math.min(totalPayAmount, booking.customer.balance);
       const balancePayment = new PaymentModel({
@@ -459,12 +458,9 @@ export class Booking {
     const extraPayAmount = totalPayAmount - balancePayAmount;
     // console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
-    if (extraPayAmount < 0.01) {
+    if (extraPayAmount < 0.01 && !amountInPoints) {
       await booking.paymentSuccess(atReception);
-    } else if (
-      extraPayAmount >= 0.01 &&
-      paymentGateway !== PaymentGateway.Points
-    ) {
+    } else if (extraPayAmount >= 0.01) {
       if (!paymentGateway) {
         // TODO possible create balance payment before failed
         throw new Error("missing_gateway");
@@ -490,7 +486,7 @@ export class Booking {
         await booking.paymentSuccess(atReception);
       }
     }
-    if (amountInPoints && paymentGateway === PaymentGateway.Points) {
+    if (amountInPoints) {
       const pointsPayment = new PaymentModel({
         scene: booking.type,
         customer: booking.customer,
@@ -500,7 +496,7 @@ export class Booking {
         title,
         attach,
         booking: booking.id,
-        gateway: paymentGateway,
+        gateway: PaymentGateway.Points,
         gatewayData: {
           atReception
         }
@@ -563,12 +559,16 @@ export class Booking {
       if (!this.gift || !this.quantity) {
         throw new Error("invalid_gift");
       }
-      if (this.gift.quantity) {
+      if (this.gift.quantity !== undefined && this.gift.quantity !== null) {
         this.gift.quantity -= this.quantity;
         console.log(
           `[BOK] Gift ${this.gift.id} quantity left ${this.gift.quantity}, ${this.quantity} occupied by booking ${this.id}.`
         );
         await this.gift.save();
+      }
+      if (this.gift.isProfileCover) {
+        this.customer?.covers.push(this.gift);
+        await this.customer?.save();
       }
     }
 

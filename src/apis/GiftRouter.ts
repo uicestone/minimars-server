@@ -62,6 +62,10 @@ export default (router: Router) => {
           }
         });
 
+        if (queryParams.isCover) {
+          query.where({ isProfileCover: true });
+        }
+
         let total = await query.countDocuments();
         const page = await query
           .find()
