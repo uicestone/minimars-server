@@ -9,11 +9,11 @@ import { DocumentType } from "@typegoose/typegoose";
 const appId = process.env.WEIXIN_APPID || "";
 const secret = process.env.WEIXIN_SECRET || "";
 const mchId = process.env.WEIXIN_MCH_ID || "";
-const mchKey = process.env.WEIXIN_ || "";
-const mchCertPath = process.env.WEIXIN_ || "";
-const appIdMp = process.env.WEIXIN_ || "";
-const secretMp = process.env.WEIXIN_ || "";
-const apiRoot = process.env.WEIXIN_ || "";
+const mchKey = process.env.WEIXIN_MCH_KEY || "";
+const mchCertPath = process.env.WEIXIN_MCH_CERT_PATH || "";
+const appIdMp = process.env.WEIXIN_APPID_MP || "";
+const secretMp = process.env.WEIXIN_SECRET_MP || "";
+const apiRoot = process.env.API_ROOT || "";
 const accessToken = { token: "", expiresAt: 0 };
 const accessTokenMp = { token: "", expiresAt: 0 };
 

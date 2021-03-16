@@ -53,12 +53,12 @@ export default async (
     skipAutoPopulationPaths: ["customer", "store", "payments", "event", "gift"]
   });
   paymentsQuery.setOptions({ skipAutoPopulationPaths: ["customer"] });
-  console.time("[STATS] Queries took:");
+  console.time("[STATS] Queries took");
   const [bookingsPaid, payments] = await Promise.all([
     bookingsPaidQuery.exec(),
     paymentsQuery.exec()
   ]);
-  console.timeEnd("[STATS] Queries took:");
+  console.timeEnd("[STATS] Queries took");
   // console.log("[DEBUG] Bookings & payments queried:", Date.now() - starts);
 
   const flowAmount = payments
