@@ -181,6 +181,31 @@ export class Booking {
   @prop({ type: Object })
   providerData?: Record<string, any>;
 
+  get title() {
+    let title = "";
+
+    if (this.type === Scene.GIFT) {
+      if (!this.gift) throw new Error("undefined_gift");
+      title = `${this.gift.title} ${this.quantity}份 ${
+        this.store?.name || "门店通用"
+      } `;
+    } else if (this.type === Scene.EVENT) {
+      if (!this.event || !this.store) throw new Error("undefined_event_store");
+      title = `${this.event.title} ${this.kidsCount}人 ${this.store.name} `;
+    } else if (this.type === Scene.PARTY) {
+      title = "派对消费";
+    } else if (this.type === Scene.FOOD) {
+      title = `餐饮消费`;
+    } else {
+      if (!this.store) throw new Error("undefined_play_store");
+      title = `${this.store.name} ${this.adultsCount}大${
+        this.kidsCount
+      }小 ${this.date.substr(5)} ${this.checkInAt.substr(0, 5)}前入场`;
+    }
+
+    return title;
+  }
+
   async calculatePrice(this: DocumentType<Booking>): Promise<BookingPrice> {
     const bookingPrice = new BookingPrice();
 
@@ -338,28 +363,6 @@ export class Booking {
     let totalPayAmount = amount;
     let balancePayAmount = 0;
     let attach = `booking ${booking._id}`;
-    let title = "";
-
-    if (booking.type === Scene.GIFT) {
-      if (!booking.gift) throw new Error("undefined_gift");
-      title = `${booking.gift.title} ${booking.quantity}份 ${
-        booking.store?.name || "门店通用"
-      } `;
-    } else if (booking.type === Scene.PARTY) {
-      title = "派对消费";
-    } else if (booking.type === Scene.EVENT) {
-      if (!booking.event || !booking.store)
-        throw new Error("undefined_event_store");
-      title = `${booking.event.title} ${booking.kidsCount}人 ${booking.store.name} `;
-    } else if (booking.type === Scene.FOOD) {
-      title = `餐饮消费`;
-    } else {
-      if (!booking.store) throw new Error("undefined_play_store");
-      title = `${booking.store.name} ${booking.adultsCount}大${
-        booking.kidsCount
-      }小 ${booking.date.substr(5)} ${booking.checkInAt.substr(0, 5)}前入场`;
-    }
-
     if (booking.card && ["times", "coupon"].includes(booking.card.type)) {
       if (booking.card.times === undefined)
         throw new Error("invalid_times_coupon_card");
@@ -387,7 +390,7 @@ export class Booking {
         customer: booking.customer,
         store: booking.store,
         amount: (booking.card.price / booking.card.times) * cardTimes,
-        title,
+        title: this.title,
         attach,
         booking: booking.id,
         gateway: PaymentGateway.Card,
@@ -406,7 +409,6 @@ export class Booking {
       if ((booking.kidsCount || 0) % booking.coupon.kidsCount) {
         throw new Error("coupon_kids_count_not_match");
       }
-      title = booking.coupon.title + " " + title;
       const couponPayment = new PaymentModel({
         scene: booking.type,
         customer: booking.customer,
@@ -414,7 +416,7 @@ export class Booking {
         amount:
           (booking.coupon.priceThirdParty * (booking.kidsCount || 1)) /
           booking.coupon.kidsCount,
-        title,
+        title: booking.coupon.title + " " + this.title,
         attach,
         booking: booking.id,
         gateway: PaymentGateway.Coupon,
@@ -441,7 +443,7 @@ export class Booking {
         amount: balancePayAmount,
         amountForceDeposit:
           (booking.socksCount || 0) * (config.sockPrice || 0) || 0,
-        title,
+        title: this.title,
         attach,
         booking: booking.id,
         gateway: PaymentGateway.Balance,
@@ -471,7 +473,7 @@ export class Booking {
         customer: booking.customer,
         store: booking.store?.id,
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
-        title,
+        title: this.title,
         attach,
         booking: booking.id,
         gateway: paymentGateway,
@@ -493,7 +495,7 @@ export class Booking {
         store: booking.store,
         amount: 0,
         amountInPoints,
-        title,
+        title: this.title,
         attach,
         booking: booking.id,
         gateway: PaymentGateway.Points,

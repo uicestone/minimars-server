@@ -11,8 +11,7 @@ import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { Permission } from "../models/Role";
 import GiftModel from "../models/Gift";
-
-const { DEBUG } = process.env;
+import QRCode from "qrcode";
 
 export default (router: Router) => {
   // User CURD
@@ -310,6 +309,19 @@ export default (router: Router) => {
         res.end();
       })
     );
+
+  router.route("/qrcode-image/:text").get(
+    handleAsyncErrors(async (req: Request, res: Response) => {
+      const base64 = await QRCode.toDataURL(req.params.text, {
+        type: "image/png"
+      });
+      const img = Buffer.from(base64.split(",")[1], "base64");
+      res.writeHead(200, {
+        "Content-Type": "image/png"
+      });
+      res.end(img);
+    })
+  );
 
   return router;
 };
