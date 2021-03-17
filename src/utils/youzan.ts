@@ -255,22 +255,24 @@ async function createCard(trade: any) {
     if (!order.outer_item_id.match(/^card-/)) continue;
     const slug = order.outer_item_id.replace(/^card-/, "");
     const num = order.num;
-    const storeNames = JSON.parse(order.sku_properties_name).map(
-      (p: any) => p.v
-    );
+    const storeNames = JSON.parse(order.sku_properties_name)
+      .filter((p: any) => p.k && p.k.includes("门店"))
+      .map((p: any) => p.v);
     const price = order.discount_price;
     console.log(
-      `[YZN] Try create card ${slug}×${num}@${storeNames.join(",")} for user ${
-        user.mobile
-      } ${user.id}.`
+      `[YZN] Try create card ${slug} × ${num} @ ${
+        storeNames.join(",") || "all"
+      } for user ${user.mobile} ${user.id}.`
     );
     const cardType = await CardTypeModel.findOne({ slug });
     if (!cardType) continue;
     for (let n = 0; n < num; n++) {
       const card = cardType.issue(user);
-      card.stores = stores.filter(store =>
-        storeNames.some((s: string) => store.name.includes(s.substr(0, 2)))
-      );
+      if (storeNames.length) {
+        card.stores = stores.filter(store =>
+          storeNames.some((s: string) => store.name.includes(s.substr(0, 2)))
+        );
+      }
       card.providerData = {
         provider: "youzan",
         sn: orders.oid,
