@@ -44,16 +44,16 @@ export default async function playground() {
     // );
     // const user = await UserModel.findOne({ mobile: "13641926334" });
     // syncUserPoints(user);
-    const trade = await getTrade("E20210313010129071404117");
-    console.log("trade:", trade.full_order_info);
-    if (trade.full_order_info.order_info.order_tags.is_virtual) {
-      await virtualCodeApply(trade.full_order_info.order_info.tid);
-    }
-    console.log(
-      JSON.parse(trade.full_order_info.orders[0].sku_properties_name).map(
-        (p: any) => p.v
-      )
-    );
+    // const trade = await getTrade("E20210313010129071404117");
+    // console.log("trade:", trade.full_order_info);
+    // if (trade.full_order_info.order_info.order_tags.is_virtual) {
+    //   await virtualCodeApply(trade.full_order_info.order_info.tid);
+    // }
+    // console.log(
+    //   JSON.parse(trade.full_order_info.orders[0].sku_properties_name).map(
+    //     (p: any) => p.v
+    //   )
+    // );
     // const cardInfos = trade.full_order_info.orders.map(o => ({
     //   slug: o.outer_item_id,
     //   count: o.num

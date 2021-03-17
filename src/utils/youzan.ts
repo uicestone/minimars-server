@@ -3,7 +3,8 @@ import { md5 } from "@sigodenjs/wechatpay/dist/utils";
 import { DocumentType } from "@typegoose/typegoose";
 // @ts-ignore
 import { token, client } from "youzanyun-sdk";
-import { User } from "../models/User";
+import CardTypeModel from "../models/CardType";
+import UserModel, { User } from "../models/User";
 const tokenExpireOffset = 3e5; // 5 minutes
 
 export const accessToken = {
@@ -88,7 +89,7 @@ export async function syncUserPoints(
   });
   if (result.is_success) {
     console.log(
-      `[YZN] User points synded, ${user.points} ${user.mobile} ${user.id}`
+      `[YZN] User points synded, ${user.points} ${user.mobile} ${user.id}.`
     );
   }
 }
@@ -117,4 +118,60 @@ export async function virtualCodeApply(code: string) {
     code
   });
   return result;
+}
+
+export async function handleAuthMobile(message: {
+  mobile: string;
+  yz_open_id: string;
+}) {
+  let user = await UserModel.findOne({ mobile: message.mobile });
+  if (!user) {
+    user = new UserModel();
+    user.mobile = message.mobile;
+  }
+  user.youzanId = message.yz_open_id;
+  console.log(
+    `[YZN] User ${user.mobile} is ${
+      user.isNew ? "created" : "updated"
+    } from Youzan.`
+  );
+  await user.save();
+  if (user.points) {
+    syncUserPoints(user);
+  }
+}
+
+export async function handleTradePaid(trade: any) {
+  const mobile = trade.full_order_info.buyer_info.buyer_phone;
+  let user = await UserModel.findOne({ mobile });
+  if (!user) {
+    user = new UserModel({ mobile });
+    await user.save();
+  }
+  const slugNums = trade.full_order_info.orders.map((order: any) => [
+    order.outer_item_id,
+    order.num,
+    JSON.parse(order.sku_properties_name).map((p: any) => p.v)
+  ]);
+  for (const [slug, num, storeNames] of slugNums) {
+    console.log(
+      `[YZN] Try create card ${slug}×${num}@${storeNames.join(",")} for user ${
+        user.mobile
+      } ${user.id}.`
+    );
+    const cardType = await CardTypeModel.findOne({ slug });
+    if (!cardType) continue;
+    for (let n = 0; n < num; n++) {
+      const card = cardType.issue(user);
+      await card.save();
+      // TODO, payment, store, cancel
+      console.log(
+        `[YZN] Auto created card ${slug} ${card.title} ${card.id} for user ${user.mobile} ${user.id}.`
+      );
+    }
+  }
+  if (trade.full_order_info.order_info.order_tags.is_virtual) {
+    await virtualCodeApply(trade.full_order_info.order_info.tid);
+  }
+  console.log("[YZN] Code applied:", trade.full_order_info.order_info.tid);
 }

@@ -112,6 +112,9 @@ export class User {
   @prop()
   pospalId?: string;
 
+  @prop()
+  youzanId?: string;
+
   @prop({ ref: "Store" }) // manager only
   store?: DocumentType<Store>;
 
