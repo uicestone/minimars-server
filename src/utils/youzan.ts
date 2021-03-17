@@ -231,7 +231,6 @@ async function createBooking(trade: any) {
   payment.set({
     scene: Scene.MALL,
     customer: user,
-    paid: true,
     gateway: PaymentGateway.Mall,
     booking,
     title: orders.map((o: any) => o.title).join(", "),

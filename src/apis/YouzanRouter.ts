@@ -33,9 +33,6 @@ export default (router: Router) => {
             handleTradePaid(message);
             break;
           }
-          case "trade_TradePaid": {
-            break;
-          }
           case "trade_TradeSuccess": {
             const message = JSON.parse(decodeURIComponent(req.body.msg)) as any;
             handleTradeSuccess(message);
