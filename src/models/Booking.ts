@@ -567,8 +567,11 @@ export class Booking {
         await this.gift.save();
       }
       if (this.gift.isProfileCover) {
-        this.customer?.covers.push(this.gift);
-        await this.customer?.save();
+        if (this.customer) {
+          this.customer.covers.push(this.gift);
+          this.customer.currentCover = this.gift;
+          await this.customer.save();
+        }
       }
     }
 
