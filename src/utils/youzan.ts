@@ -170,8 +170,7 @@ export async function handleTradeSuccess(message: { tid: string }) {
     "providerData.sn": message.tid
   });
   if (!booking) return;
-  booking.refundSuccess();
-  await booking.save();
+  await booking.finish();
 }
 
 export async function handleTradeClose(message: {
