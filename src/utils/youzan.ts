@@ -164,6 +164,16 @@ export async function handleTradePaid(trade: any) {
   }
 }
 
+export async function handleTradeSuccess(message: { tid: string }) {
+  const booking = await BookingModel.findOne({
+    "providerData.provider": "youzan",
+    "providerData.sn": message.tid
+  });
+  if (!booking) return;
+  booking.refundSuccess();
+  await booking.save();
+}
+
 export async function handleTradeClose(message: {
   tid: string;
   close_type: number;

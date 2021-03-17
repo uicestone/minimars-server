@@ -7,6 +7,7 @@ import {
   handleAuthMobile,
   handleTradeClose,
   handleTradePaid,
+  handleTradeSuccess,
   verifyPush
 } from "../utils/youzan";
 
@@ -29,7 +30,7 @@ export default (router: Router) => {
         switch (eventType) {
           case "trade_TradePaid": {
             const message = JSON.parse(decodeURIComponent(req.body.msg));
-            await handleTradePaid(message);
+            handleTradePaid(message);
             break;
           }
           case "trade_TradePaid": {
@@ -37,7 +38,7 @@ export default (router: Router) => {
           }
           case "trade_TradeSuccess": {
             const message = JSON.parse(decodeURIComponent(req.body.msg)) as any;
-            console.log(`[YZN] Trade success:`, message.tid);
+            handleTradeSuccess(message);
             break;
           }
           case "trade_TradeClose": {
@@ -46,7 +47,7 @@ export default (router: Router) => {
             break;
           }
           case "OPEN_PUSH_SCRM_CUSTOMER_AUTH_MOBILE": {
-            await handleAuthMobile(req.body);
+            handleAuthMobile(req.body);
             break;
           }
         }
