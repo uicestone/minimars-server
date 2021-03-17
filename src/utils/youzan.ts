@@ -1,10 +1,16 @@
 // @ts-ignore
 import { md5 } from "@sigodenjs/wechatpay/dist/utils";
 import { DocumentType } from "@typegoose/typegoose";
+import moment from "moment";
 // @ts-ignore
 import { token, client } from "youzanyun-sdk";
+import BookingModel, { BookingStatus } from "../models/Booking";
+import CardModel from "../models/Card";
 import CardTypeModel from "../models/CardType";
+import PaymentModel, { PaymentGateway, Scene } from "../models/Payment";
+import StoreModel from "../models/Store";
 import UserModel, { User } from "../models/User";
+import { sleep } from "./helper";
 const tokenExpireOffset = 3e5; // 5 minutes
 
 export const accessToken = {
@@ -142,18 +148,117 @@ export async function handleAuthMobile(message: {
 }
 
 export async function handleTradePaid(trade: any) {
+  const {
+    full_order_info: {
+      orders,
+      order_info: { tid }
+    }
+  } = trade;
+  if (orders.every((o: any) => o.outer_item_id.match(/^card-/))) {
+    await createCard(trade);
+  } else if (orders.every((o: any) => !o.outer_item_id.match(/^card-/))) {
+    await createBooking(trade);
+  } else {
+    console.error(`[YZN] Mix order received, tid: ${tid}.`);
+  }
+}
+
+export async function handleTradeClose(message: {
+  tid: string;
+  close_type: number;
+  update_time: string;
+}) {
+  const { tid, close_type, update_time } = message;
+
+  if (close_type !== 2) return;
+
+  const booking = await BookingModel.findOne({
+    "providerData.provider": "youzan",
+    "providerData.sn": tid
+  });
+  if (booking) {
+    await booking.createRefundPayment();
+  } else {
+    const cards = await CardModel.find({
+      "providerData.provider": "youzan",
+      "providerData.tid": tid
+    });
+    console.log(`[YZN] Try refund card ${cards.map(c => c.id).join(", ")}.`);
+    for (const card of cards) {
+      await card.createRefundPayment();
+      await card.save();
+    }
+  }
+}
+
+async function createBooking(trade: any) {
+  const booking = new BookingModel();
+  const payment = new PaymentModel();
+  const {
+    full_order_info: {
+      buyer_info: { buyer_phone: mobile },
+      order_info: { created, tid },
+      pay_info: { total_fee: totalFee },
+      orders
+    }
+  } = trade;
+  let user = await UserModel.findOne({ mobile });
+  if (!user) {
+    user = new UserModel();
+    user.mobile = mobile;
+    await user.save();
+  }
+  booking.set({
+    type: Scene.MALL,
+    date: created.substr(0, 10),
+    checkInAt: parseDateStr(created).format("YYYY-MM-DD HH:mm:ss"),
+    customer: user,
+    providerData: { provider: "youzan", sn: tid, ...trade },
+    status: BookingStatus.BOOKED
+  });
+  payment.set({
+    scene: Scene.MALL,
+    customer: user,
+    paid: true,
+    gateway: PaymentGateway.Mall,
+    booking,
+    title: orders.map((o: any) => o.title).join(", "),
+    amount: totalFee
+  });
+  booking.payments = [payment];
+  try {
+    await booking.save();
+    await payment.save();
+  } catch (err) {
+    if (err.code === 11000) {
+      // silent on dup provider order
+    }
+  }
+}
+
+async function createCard(trade: any) {
+  const {
+    full_order_info: {
+      order_info: { tid },
+      orders
+    }
+  } = trade;
+  const stores = await StoreModel.find();
   const mobile = trade.full_order_info.buyer_info.buyer_phone;
   let user = await UserModel.findOne({ mobile });
   if (!user) {
     user = new UserModel({ mobile });
     await user.save();
   }
-  const slugNums = trade.full_order_info.orders.map((order: any) => [
-    order.outer_item_id,
-    order.num,
-    JSON.parse(order.sku_properties_name).map((p: any) => p.v)
-  ]);
-  for (const [slug, num, storeNames] of slugNums) {
+
+  for (const order of orders) {
+    if (!order.outer_item_id.match(/^card-/)) continue;
+    const slug = order.outer_item_id.replace(/^card-/, "");
+    const num = order.num;
+    const storeNames = JSON.parse(order.sku_properties_name).map(
+      (p: any) => p.v
+    );
+    const price = order.discount_price;
     console.log(
       `[YZN] Try create card ${slug}×${num}@${storeNames.join(",")} for user ${
         user.mobile
@@ -163,15 +268,29 @@ export async function handleTradePaid(trade: any) {
     if (!cardType) continue;
     for (let n = 0; n < num; n++) {
       const card = cardType.issue(user);
+      card.stores = stores.filter(store =>
+        storeNames.some((s: string) => store.name.includes(s.substr(0, 2)))
+      );
+      card.providerData = {
+        provider: "youzan",
+        sn: orders.oid,
+        tid,
+        ...order
+      };
+      await card.createPayment({ paymentGateway: PaymentGateway.Mall }, price);
       await card.save();
-      // TODO, payment, store, cancel
+
       console.log(
         `[YZN] Auto created card ${slug} ${card.title} ${card.id} for user ${user.mobile} ${user.id}.`
       );
     }
   }
-  if (trade.full_order_info.order_info.order_tags.is_virtual) {
-    await virtualCodeApply(trade.full_order_info.order_info.tid);
-  }
-  console.log("[YZN] Code applied:", trade.full_order_info.order_info.tid);
+  sleep(5000).then(() => {
+    virtualCodeApply(tid);
+    console.log("[YZN] Code applied:", tid);
+  });
+}
+
+function parseDateStr(str: string) {
+  return moment.utc(str).local();
 }

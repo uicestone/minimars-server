@@ -204,6 +204,13 @@ export const SceneLabel = {
         await payment.customer?.addPoints(payment.amount);
       }
       break;
+    case PaymentGateway.Mall:
+      payment.paid = true;
+      // await payment.paidSuccess();
+      if (payment.booking) {
+        await payment.customer?.addPoints(payment.amount);
+      }
+      break;
     case PaymentGateway.Points:
       if (payment.amountInPoints === undefined) {
         throw new Error("invalid_points_payment");
@@ -267,8 +274,8 @@ export class Payment {
   @prop({ default: " " })
   title: string = " ";
 
-  @prop({ type: String, required: true })
-  attach!: string;
+  @prop({ type: String, default: "" })
+  attach: string = "";
 
   @prop({ ref: "Booking" })
   booking?: Ref<Booking>;
@@ -367,6 +374,7 @@ export enum PaymentGateway {
   Shouqianba = "shouqianba",
   Dianping = "dianping",
   WechatPay = "wechatpay",
+  Mall = "mall",
   Pr = "pr",
   Internal = "internal",
   Alipay = "alipay",
@@ -384,6 +392,7 @@ export const gatewayNames = {
   [PaymentGateway.Shouqianba]: "收钱吧",
   [PaymentGateway.Dianping]: "点评POS",
   [PaymentGateway.WechatPay]: "微信支付",
+  [PaymentGateway.Mall]: "线上商城",
   [PaymentGateway.Pr]: "市场公关",
   [PaymentGateway.Internal]: "内部消费",
   [PaymentGateway.Alipay]: "支付宝",

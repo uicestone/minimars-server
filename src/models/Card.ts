@@ -4,7 +4,9 @@ import {
   plugin,
   Ref,
   DocumentType,
-  pre
+  pre,
+  modelOptions,
+  Severity
 } from "@typegoose/typegoose";
 import { sign } from "jsonwebtoken";
 import updateTimes from "./plugins/updateTimes";
@@ -77,6 +79,7 @@ export const userVisibleCardStatus = [
   }
   next();
 })
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Card {
   @prop({ ref: "User", required: true, index: true })
   customer: Ref<User>;
@@ -179,6 +182,9 @@ export class Card {
   @prop({ ref: "Booking" })
   rewardedFromBooking?: Ref<Booking>;
 
+  @prop({ type: Object })
+  providerData?: Record<string, any>;
+
   get giftCode(): string | undefined {
     const card = (this as unknown) as DocumentType<Card>;
     if (!card.isGift || card.status !== CardStatus.VALID) return undefined;
@@ -203,7 +209,8 @@ export class Card {
     }: {
       paymentGateway?: PaymentGateway;
       atReceptionStore?: DocumentType<Store>;
-    }
+    },
+    amount?: number
   ) {
     const card = this as DocumentType<Card>;
     let totalPayAmount = card.price;
@@ -214,7 +221,9 @@ export class Card {
       await card.paymentSuccess();
     } else {
       const scene =
-        card.type === "balance"
+        paymentGateway == PaymentGateway.Mall
+          ? Scene.MALL
+          : card.type === "balance"
           ? Scene.BALANCE
           : card.type === "period"
           ? Scene.PERIOD
@@ -223,7 +232,12 @@ export class Card {
         scene,
         customer: card.customer,
         store: atReceptionStore?.id,
-        amount: DEBUG ? totalPayAmount / 1e4 : totalPayAmount,
+        amount:
+          amount === undefined
+            ? DEBUG
+              ? totalPayAmount / 1e4
+              : totalPayAmount
+            : amount,
         title,
         attach,
         card,
@@ -287,6 +301,7 @@ export class Card {
 
   async refundSuccess(this: DocumentType<Card>) {
     this.status = CardStatus.CANCELED;
+    console.log(`[CRD] Refund success ${this.id}.`);
     // send user notification
   }
 

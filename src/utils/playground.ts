@@ -1,4 +1,7 @@
+import moment from "moment";
+import BookingModel, { BookingStatus } from "../models/Booking";
 import CardTypeModel from "../models/CardType";
+import PaymentModel, { PaymentGateway, Scene } from "../models/Payment";
 import StoreModel from "../models/Store";
 import UserModel, { User } from "../models/User";
 import agenda from "./agenda";
@@ -45,7 +48,7 @@ export default async function playground() {
     // const user = await UserModel.findOne({ mobile: "13641926334" });
     // syncUserPoints(user);
     // const trade = await getTrade("E20210313010129071404117");
-    // console.log("trade:", trade.full_order_info);
+    // console.log("trade:", JSON.stringify(trade));
     // if (trade.full_order_info.order_info.order_tags.is_virtual) {
     //   await virtualCodeApply(trade.full_order_info.order_info.tid);
     // }
@@ -63,6 +66,6 @@ export default async function playground() {
     // }
     // searchTrade();
   } catch (e) {
-    console.error(e);
+    console.error(e.code);
   }
 }

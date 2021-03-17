@@ -5,6 +5,7 @@ import handleAsyncErrors from "../utils/handleAsyncErrors";
 import HttpError from "../utils/HttpError";
 import {
   handleAuthMobile,
+  handleTradeClose,
   handleTradePaid,
   syncUserPoints,
   verifyPush,
@@ -23,18 +24,33 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         const eventSign = req.header("event-sign") || "";
         const eventType = req.header("event-type") || "";
-        console.log("[YZN] Push", eventType, req.body);
+        console.log("[YZN] Push", eventType, JSON.stringify(req.body));
         if (!verifyPush(eventSign, JSON.stringify(req.body))) {
           throw new HttpError(400);
         }
-        if (eventType === "trade_TradePaid") {
-          const message = JSON.parse(decodeURIComponent(req.body.msg));
-          await handleTradePaid(message);
-        } else if (eventType === "trade_TradeSuccess") {
-          const message = JSON.parse(decodeURIComponent(req.body.msg)) as any;
-          console.log(`[YZN] Trade success:`, message.tid);
-        } else if (eventType === "OPEN_PUSH_SCRM_CUSTOMER_AUTH_MOBILE") {
-          await handleAuthMobile(req.body);
+        switch (eventType) {
+          case "trade_TradePaid": {
+            const message = JSON.parse(decodeURIComponent(req.body.msg));
+            await handleTradePaid(message);
+            break;
+          }
+          case "trade_TradePaid": {
+            break;
+          }
+          case "trade_TradeSuccess": {
+            const message = JSON.parse(decodeURIComponent(req.body.msg)) as any;
+            console.log(`[YZN] Trade success:`, message.tid);
+            break;
+          }
+          case "trade_TradeClose": {
+            const message = JSON.parse(decodeURIComponent(req.body.msg)) as any;
+            handleTradeClose(message);
+            break;
+          }
+          case "OPEN_PUSH_SCRM_CUSTOMER_AUTH_MOBILE": {
+            await handleAuthMobile(req.body);
+            break;
+          }
         }
         res.json({ code: 0, msg: "success" });
       })
