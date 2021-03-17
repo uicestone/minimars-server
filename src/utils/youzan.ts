@@ -296,5 +296,6 @@ async function createCard(trade: any) {
 }
 
 function parseDateStr(str: string) {
-  return moment.utc(str).local();
+  str = str.replace("+", " ");
+  return moment(str);
 }
