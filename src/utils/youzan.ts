@@ -214,7 +214,8 @@ async function createBooking(trade: any) {
     checkInAt: parseDateStr(created).format("YYYY-MM-DD HH:mm:ss"),
     customer: user,
     providerData: { provider: "youzan", sn: tid, ...trade },
-    status: BookingStatus.BOOKED
+    status: BookingStatus.BOOKED,
+    remarks: orders.map((o: any) => `${o.title}×${o.num}`).join("、")
   });
   payment.set({
     scene: Scene.MALL,
