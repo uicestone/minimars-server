@@ -7,9 +7,7 @@ import {
   handleAuthMobile,
   handleTradeClose,
   handleTradePaid,
-  syncUserPoints,
-  verifyPush,
-  virtualCodeApply
+  verifyPush
 } from "../utils/youzan";
 
 export default (router: Router) => {

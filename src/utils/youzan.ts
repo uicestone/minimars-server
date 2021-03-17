@@ -85,6 +85,7 @@ export async function syncUserPoints(
   user: DocumentType<User>,
   reason = "积分同步"
 ) {
+  if (!user.youzanId) return;
   const result = await call("youzan.crm.customer.points.sync", "4.0.0", {
     points: user.points,
     user: {
@@ -93,7 +94,7 @@ export async function syncUserPoints(
     },
     reason
   });
-  if (result.is_success) {
+  if (result?.is_success) {
     console.log(
       `[YZN] User points synded, ${user.points} ${user.mobile} ${user.id}.`
     );
