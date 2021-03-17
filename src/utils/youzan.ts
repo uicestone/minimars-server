@@ -179,6 +179,7 @@ export async function handleTradeClose(message: {
   });
   if (booking) {
     await booking.createRefundPayment();
+    await booking.save();
   } else {
     const cards = await CardModel.find({
       "providerData.provider": "youzan",
