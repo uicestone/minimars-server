@@ -42,6 +42,10 @@ export default (router: Router) => {
           // throw new HttpError(403, "Only admin can set status directly.");
         }
 
+        if (!body.card && body.card !== undefined) {
+          delete body.card;
+        }
+
         const booking = new BookingModel(body);
 
         if (!booking.customer) {
