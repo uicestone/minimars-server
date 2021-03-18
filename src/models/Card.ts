@@ -33,6 +33,17 @@ export const userVisibleCardStatus = [
   CardStatus.EXPIRED
 ];
 
+export class BalanceGroup {
+  @prop({ type: Number, required: true })
+  balance!: number;
+
+  @prop({ type: Number, required: true })
+  price!: number;
+
+  @prop({ type: Number, required: true })
+  count!: number;
+}
+
 @plugin(updateTimes)
 @plugin(autoPopulate, [
   {
@@ -92,6 +103,9 @@ export class Card {
 
   @prop({ type: Number })
   quantity?: number;
+
+  @prop({ type: BalanceGroup })
+  balanceGroups?: BalanceGroup[];
 
   @prop({
     type: String,
@@ -223,7 +237,7 @@ export class Card {
     amount?: number
   ) {
     const card = this as DocumentType<Card>;
-    let totalPayAmount = card.price * (card.quantity || 1);
+    let totalPayAmount = card.price;
     let attach = `card ${card.id}`;
     let title = `${card.title}`;
 

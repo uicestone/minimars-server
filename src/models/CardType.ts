@@ -8,7 +8,7 @@ import {
 import updateTimes from "./plugins/updateTimes";
 import { Store } from "./Store";
 import { User } from "./User";
-import CardModel from "./Card";
+import CardModel, { BalanceGroup } from "./Card";
 import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
 import moment from "moment";
@@ -146,7 +146,14 @@ export class CardType {
   @prop()
   rewardCardTypes?: string;
 
-  issue(this: DocumentType<CardType>, customer: DocumentType<User>) {
+  issue(
+    this: DocumentType<CardType>,
+    customer: DocumentType<User>,
+    {
+      quantity = undefined,
+      balanceGroups = undefined
+    }: { quantity?: number; balanceGroups?: BalanceGroup[] } = {}
+  ) {
     const card = new CardModel({
       customer: customer.id
     });
@@ -157,17 +164,47 @@ export class CardType {
 
     (Object.keys(this.toObject()) as Array<keyof CardType>)
       .filter(
-        key => !["_id", "__v", "createdAt", "updatedAt", "store"].includes(key)
+        key =>
+          ![
+            "_id",
+            "__v",
+            "createdAt",
+            "updatedAt",
+            "store",
+            "quantity"
+          ].includes(key)
       )
       .forEach(key => {
         card.set(key, this[key]);
       });
 
     if (this.times) {
-      if (this.quantity) {
-        this.times = this.times * this.quantity;
+      if (quantity) {
+        card.quantity = quantity;
+        card.times = this.times * quantity;
+        card.price = this.price * quantity;
       }
-      card.timesLeft = this.times;
+      card.timesLeft = card.times;
+    }
+
+    if (balanceGroups) {
+      balanceGroups.forEach(g => {
+        const balancePriceGroup = this.balancePriceGroups?.find(
+          pg => pg.balance === g.balance
+        );
+        if (!balancePriceGroup) {
+          throw new Error("invalid_balance_price_group");
+        }
+        g.price = balancePriceGroup.price;
+      });
+      card.price = balanceGroups.reduce(
+        (price, group) => +(price + group.price).toFixed(10),
+        0
+      );
+      card.balance = balanceGroups.reduce(
+        (price, group) => +(price + group.balance).toFixed(10),
+        0
+      );
     }
 
     if (this.end) {
