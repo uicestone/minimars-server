@@ -5,7 +5,7 @@ import moment from "moment";
 import JSONBigInt from "json-bigint";
 import userModel, { User } from "../models/User";
 
-export type Ticket = {
+export interface Ticket {
   cashierUid: string;
   cashier: {
     jobNumber: string;
@@ -24,9 +24,9 @@ export type Ticket = {
   invalid: number;
   items: Item[];
   payments: Payment[];
-};
+}
 
-type Item = {
+interface Item {
   name: string;
   buyPrice: number;
   sellPrice: number;
@@ -43,14 +43,14 @@ type Item = {
   ticketitemattributes: [];
   discountDetails: [];
   saleGuiderList: [];
-};
+}
 
-type Payment = {
+interface Payment {
   code: string;
   amount: number;
-};
+}
 
-type Member = {
+interface Member {
   customerUid: number | string;
   categoryName: string;
   number: string;
@@ -67,7 +67,40 @@ type Member = {
   password: string;
   onAccount: number;
   enable: number;
-};
+}
+
+interface Category {
+  uid: string;
+  parentUid: number;
+  name: string;
+}
+
+interface ProductImage {
+  productUid: string;
+  productName: string;
+  productBarcode: string;
+  imageUrl: string;
+}
+
+interface Product {
+  uid: string;
+  categoryUid: number;
+  name: string;
+  barcode: string;
+  buyPrice: number;
+  sellPrice: number;
+  stock: number;
+  pinyin: string;
+  customerPrice: number;
+  isCustomerDiscount: number;
+  description: string;
+  attribute1: string;
+  attribute2: string;
+  attribute3: string;
+  attribute4: string;
+}
+
+type ProductWithImage = Product & Partial<ProductImage>;
 
 export default class Pospal {
   api: AxiosInstance;
@@ -308,5 +341,105 @@ export default class Pospal {
       pushUrl
     });
     console.log(result);
+  }
+
+  async queryAllProductCategories(postBackParameter?: {
+    parameterType: string;
+    parameterValue: string;
+  }): Promise<Category[]> {
+    console.log(`[PSP] Query all product categories.`);
+    const data: {
+      postBackParameter: {
+        parameterType: string;
+        parameterValue: string;
+      };
+      result: Category[];
+      pageSize: number;
+    } = await this.post("productOpenApi/queryProductCategoryPages", {
+      postBackParameter
+    });
+    data.result = data.result.map(i => ({ ...i }));
+    let categories = data.result;
+    if (data.result.length >= data.pageSize) {
+      const nextPageResult = await this.queryAllProductCategories(
+        data.postBackParameter
+      );
+      categories = categories.concat(nextPageResult);
+    }
+    return categories;
+  }
+
+  async queryAllProductImages(postBackParameter?: {
+    parameterType: string;
+    parameterValue: string;
+  }): Promise<ProductImage[]> {
+    console.log(`[PSP] Query all product images.`);
+    const data: {
+      postBackParameter: {
+        parameterType: string;
+        parameterValue: string;
+      };
+      result: ProductImage[];
+      pageSize: number;
+    } = await this.post("productOpenApi/queryProductImagePages", {
+      postBackParameter
+    });
+    data.result = data.result.map(i => ({ ...i }));
+    let productImages = data.result;
+    if (data.result.length >= data.pageSize) {
+      const nextPageResult = await this.queryAllProductImages(
+        data.postBackParameter
+      );
+      productImages = productImages.concat(nextPageResult);
+    }
+    return productImages;
+  }
+
+  async queryAllProducts(postBackParameter?: {
+    parameterType: string;
+    parameterValue: string;
+  }): Promise<Product[]> {
+    console.log(`[PSP] Query all products.`);
+    const data: {
+      postBackParameter: {
+        parameterType: string;
+        parameterValue: string;
+      };
+      result: Product[];
+      pageSize: number;
+    } = await this.post("productOpenApi/queryProductPages", {
+      postBackParameter
+    });
+    data.result = data.result.map(i => ({ ...i }));
+    let products = data.result;
+    if (data.result.length >= data.pageSize) {
+      const nextPageResult = await this.queryAllProducts(
+        data.postBackParameter
+      );
+      products = products.concat(nextPageResult);
+    }
+    return products;
+  }
+
+  async getMenu() {
+    const [categories, productImages, products] = await Promise.all([
+      this.queryAllProductCategories(),
+      this.queryAllProductImages(),
+      this.queryAllProducts()
+    ]);
+    const menu = categories.map(c => ({
+      ...c,
+      products: [] as ProductWithImage[]
+    }));
+    menu.forEach(cat => {
+      cat.products = products.filter(p => p.categoryUid.toString() === cat.uid);
+      cat.products.forEach(p => {
+        const pi = productImages.find(pi => pi.productUid === p.uid);
+        if (!pi) return;
+        p.imageUrl = pi.imageUrl;
+        p.barcode = pi.productBarcode;
+      });
+    });
+    return menu;
   }
 }

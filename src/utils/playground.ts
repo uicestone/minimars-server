@@ -17,7 +17,11 @@ export default async function playground() {
   console.log("Run playground...");
   try {
     // const user = await UserModel.findOne({ mobile: "13601881283" });
-    // const pospal = new Pospal("TS");
+    const pospal = new Pospal("TS");
+    // const cats = await pospal.queryAllProductCategories();
+    // const products = await pospal.queryAllProducts();
+    const menu = await pospal.getMenu();
+    console.log(menu[0].products[0]);
     // pospal.addMember(user);
     // console.log(user.pospalId);
     // const customer = await pospal.getMember(user.pospalId);
@@ -49,6 +53,7 @@ export default async function playground() {
     // syncUserPoints(user);
     // const trade = await getTrade("E20210313010129071404117");
     // console.log("trade:", JSON.stringify(trade));
+    // console.log("trade:", trade.full_order_info);
     // if (trade.full_order_info.order_info.order_tags.is_virtual) {
     //   await virtualCodeApply(trade.full_order_info.order_info.tid);
     // }
