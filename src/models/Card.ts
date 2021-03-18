@@ -90,6 +90,9 @@ export class Card {
   @prop({ type: String })
   num?: string;
 
+  @prop({ type: Number })
+  quantity?: number;
+
   @prop({
     type: String,
     enum: Object.values(CardStatus),
@@ -220,9 +223,13 @@ export class Card {
     amount?: number
   ) {
     const card = this as DocumentType<Card>;
-    let totalPayAmount = card.price;
+    let totalPayAmount = card.price * (card.quantity || 1);
     let attach = `card ${card.id}`;
-    const title = `${card.title}`;
+    let title = `${card.title}`;
+
+    if (card.quantity && card.quantity > 1) {
+      title = title + "×" + card.quantity;
+    }
 
     if (totalPayAmount < 0.01) {
       await card.paymentSuccess();

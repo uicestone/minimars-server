@@ -102,18 +102,25 @@ export default (router: Router) => {
           throw new HttpError(404, `CardType '${body.slug}' not exists.`);
         }
 
+        if (body.quantity && body.quantity > 1 && cardType.type !== "times") {
+          throw new HttpError(400, "只有次卡支持一次购买多张");
+        }
+
         if (cardType.maxPerCustomer) {
           const cardsOfSlug = await CardModel.find({
             slug: cardType.slug,
             status: { $in: userVisibleCardStatus },
             customer
           });
-          if (cardsOfSlug.length + 1 > cardType.maxPerCustomer) {
+          if (
+            cardsOfSlug.length + (body.quantity || 1) >
+            cardType.maxPerCustomer
+          ) {
             throw new HttpError(400, "超过该会员卡限制购买数");
           }
         }
 
-        if (cardType.quantity === 0) {
+        if (cardType.quantity && cardType.quantity < (body.quantity || 1)) {
           throw new HttpError(400, "抱歉，该卡券已售罄");
         }
 

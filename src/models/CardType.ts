@@ -164,6 +164,9 @@ export class CardType {
       });
 
     if (this.times) {
+      if (this.quantity) {
+        this.times = this.times * this.quantity;
+      }
       card.timesLeft = this.times;
     }
 
