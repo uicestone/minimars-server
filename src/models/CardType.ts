@@ -188,21 +188,19 @@ export class CardType {
     }
 
     if (balanceGroups) {
-      balanceGroups.forEach(g => {
+      card.price = balanceGroups.reduce((price, group) => {
         const balancePriceGroup = this.balancePriceGroups?.find(
-          pg => pg.balance === g.balance
+          pg => pg.balance === group.balance
         );
         if (!balancePriceGroup) {
-          throw new Error("invalid_balance_price_group");
+          throw new HttpError(400, `不支持这个金额：${group.balance}`);
         }
-        g.price = balancePriceGroup.price;
-      });
-      card.price = balanceGroups.reduce(
-        (price, group) => +(price + group.price).toFixed(10),
-        0
-      );
+        return +(price + (balancePriceGroup.price || 0) * group.count).toFixed(
+          10
+        );
+      }, 0);
       card.balance = balanceGroups.reduce(
-        (price, group) => +(price + group.balance).toFixed(10),
+        (price, group) => +(price + group.balance * group.count).toFixed(10),
         0
       );
     }

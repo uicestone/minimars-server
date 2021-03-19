@@ -37,11 +37,8 @@ export class BalanceGroup {
   @prop({ type: Number, required: true })
   balance!: number;
 
-  @prop({ type: Number, required: true })
-  price!: number;
-
-  @prop({ type: Number, required: true })
-  count!: number;
+  @prop({ type: Number, default: 1 })
+  count = 1;
 }
 
 @plugin(updateTimes)
