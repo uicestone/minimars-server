@@ -102,7 +102,7 @@ interface Product {
 
 type ProductWithImage = Product & Partial<ProductImage>;
 
-type Menu = (Category & { products: ProductWithImage[] })[];
+export type Menu = (Category & { products: ProductWithImage[] })[];
 
 export default class Pospal {
   api: AxiosInstance;

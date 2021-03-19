@@ -18,7 +18,7 @@ import {
 } from "../utils/imageResize";
 import { sleep } from "../utils/helper";
 import BookingModel, { BookingStatus } from "./Booking";
-import Pospal, { Ticket } from "../utils/pospal";
+import Pospal, { Ticket, Menu } from "../utils/pospal";
 import PaymentModel, { PaymentGateway, Scene } from "./Payment";
 import UserModel from "./User";
 import WebSocket from "ws";
@@ -117,6 +117,9 @@ export class Store {
 
   @prop({ type: Object })
   pospalPaymentMethodMap?: Record<string, PaymentGateway>;
+
+  @prop({ type: Object })
+  foodMenu?: Menu;
 
   async authDoors(this: DocumentType<Store>, no: number) {
     if (no >= Math.pow(2, 32) || no <= 0) {

@@ -103,15 +103,20 @@ export default (router: Router) => {
         res.end();
       })
     );
+
   router.route("/store/:storeId/food-menu").get(
     handleAsyncErrors(async (req: Request, res: Response) => {
       const store = await StoreModel.findById(req.params.storeId);
       if (!store) {
         throw new HttpError(404, `Store not found: ${req.params.storeId}`);
       }
-      const pospal = new Pospal(store.code);
-      const menu = await pospal.getMenu();
-      return menu;
+      if (!store.foodMenu) {
+        const pospal = new Pospal(store.code);
+        const menu = await pospal.getMenu();
+        store.foodMenu = menu;
+        await store.save();
+      }
+      res.json(store.foodMenu);
     })
   );
 
