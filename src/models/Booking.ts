@@ -73,6 +73,14 @@ type Amounts = Required<
   >
 >;
 
+class FoodItem {
+  @prop({ type: String, required: true })
+  productUid!: string;
+
+  @prop({ type: Number, default: 1 })
+  quantity = 1;
+}
+
 @plugin(autoPopulate, [
   { path: "customer", select: "name avatarUrl mobile tags" },
   { path: "store", select: "name code" },
@@ -180,6 +188,12 @@ export class Booking {
 
   @prop({ type: Object })
   providerData?: Record<string, any>;
+
+  @prop({ type: String })
+  tableId?: string;
+
+  @prop({ type: FoodItem })
+  items?: FoodItem[];
 
   get title() {
     let title = "";
@@ -335,6 +349,9 @@ export class Booking {
         }
         if (this.card.type === "coupon" && this.card.fixedPrice) {
           bookingPrice.price = this.card.fixedPrice;
+        }
+        if (this.tableId && this.items) {
+          bookingPrice.price = 0.02;
         }
       }
     } else if (this.type === "party") {

@@ -253,7 +253,11 @@ export default (router: Router) => {
               throw new HttpError(400, "请填写收款金额");
             }
           }
-          if (process.env.DISABLE_FOOD_BALANCE && !booking.card) {
+          if (
+            !(booking.tableId && booking.items) &&
+            process.env.DISABLE_FOOD_BALANCE &&
+            !booking.card
+          ) {
             throw new HttpError(
               400,
               "禁止在本系统创建餐饮订单，请使用银豹系统，订单会在10分钟内自动同步至本系统"

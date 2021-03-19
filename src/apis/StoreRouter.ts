@@ -130,7 +130,6 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         const qr = req.query.qr as string;
         const match = qr.match(/^.*?:\/\/(.*?)-.*qrc=(.*)$/);
-        console.log(match);
         if (!match) {
           throw new HttpError(400, "二维码信息错误");
         }
