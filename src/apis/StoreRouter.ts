@@ -106,7 +106,9 @@ export default (router: Router) => {
 
   router.route("/store/:storeId/food-menu").get(
     handleAsyncErrors(async (req: Request, res: Response) => {
-      const store = await StoreModel.findById(req.params.storeId);
+      const store = await StoreModel.findById(req.params.storeId).select(
+        "foodMenu"
+      );
       if (!store) {
         throw new HttpError(404, `Store not found: ${req.params.storeId}`);
       }

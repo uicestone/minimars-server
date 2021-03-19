@@ -118,7 +118,7 @@ export class Store {
   @prop({ type: Object })
   pospalPaymentMethodMap?: Record<string, PaymentGateway>;
 
-  @prop({ type: Object })
+  @prop({ type: Object, select: false })
   foodMenu?: Menu;
 
   async authDoors(this: DocumentType<Store>, no: number) {
