@@ -7,6 +7,7 @@ import StoreModel, { Store } from "../models/Store";
 import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { Permission } from "../models/Role";
+import Pospal from "../utils/pospal";
 
 export default (router: Router) => {
   // Store CURD
@@ -102,6 +103,17 @@ export default (router: Router) => {
         res.end();
       })
     );
+  router.route("/store/:storeId/food-menu").get(
+    handleAsyncErrors(async (req: Request, res: Response) => {
+      const store = await StoreModel.findById(req.params.storeId);
+      if (!store) {
+        throw new HttpError(404, `Store not found: ${req.params.storeId}`);
+      }
+      const pospal = new Pospal(store.code);
+      const menu = await pospal.getMenu();
+      return menu;
+    })
+  );
 
   return router;
 };

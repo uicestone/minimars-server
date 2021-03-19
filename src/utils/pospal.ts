@@ -102,11 +102,14 @@ interface Product {
 
 type ProductWithImage = Product & Partial<ProductImage>;
 
+type Menu = (Category & { products: ProductWithImage[] })[];
+
 export default class Pospal {
   api: AxiosInstance;
   appId: string;
   appKey: string;
   customers?: Member[];
+  menu?: Menu;
   constructor(storeCode?: string) {
     this.appId =
       process.env[
@@ -421,7 +424,8 @@ export default class Pospal {
     return products;
   }
 
-  async getMenu() {
+  async getMenu(): Promise<Menu> {
+    if (this.menu) return this.menu;
     const [categories, productImages, products] = await Promise.all([
       this.queryAllProductCategories(),
       this.queryAllProductImages(),
@@ -440,6 +444,7 @@ export default class Pospal {
         p.barcode = pi.productBarcode;
       });
     });
+    this.menu = menu;
     return menu;
   }
 }
