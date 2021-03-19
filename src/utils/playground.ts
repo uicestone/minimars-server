@@ -20,7 +20,7 @@ export default async function playground() {
     const pospal = new Pospal("TS");
     // const cats = await pospal.queryAllProductCategories();
     // const products = await pospal.queryAllProducts();
-    const menu = await pospal.getMenu();
+    // const menu = await pospal.getMenu();
     // console.log(JSON.stringify(menu));
     // pospal.addMember(user);
     // console.log(user.pospalId);

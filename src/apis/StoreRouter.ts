@@ -122,5 +122,42 @@ export default (router: Router) => {
     })
   );
 
+  router
+    .route("/store-menu")
+
+    // create a store
+    .get(
+      handleAsyncErrors(async (req: Request, res: Response) => {
+        const qr = req.query.qr as string;
+        const match = qr.match(/^.*?:\/\/(.*?)-.*qrc=(.*)$/);
+        console.log(match);
+        if (!match) {
+          throw new HttpError(400, "二维码信息错误");
+        }
+        const [, pospalCode, tableIdEncoded] = match;
+        const tableId = decodeURIComponent(tableIdEncoded);
+        const store = await StoreModel.findOne({ pospalCode }).select(
+          "name phone address posterUrl foodMenu"
+        );
+        if (!store) {
+          throw new HttpError(404, `Store not found: ${req.params.storeId}`);
+        }
+        if (!store.foodMenu) {
+          const pospal = new Pospal(store.code);
+          const menu = await pospal.getMenu();
+          store.foodMenu = menu;
+          await store.save();
+        }
+        const menu = store.foodMenu;
+        const storeObject = store.toJSON();
+        delete storeObject.foodMenu;
+        res.json({
+          store: storeObject,
+          tableId,
+          menu
+        });
+      })
+    );
+
   return router;
 };
