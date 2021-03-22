@@ -157,7 +157,11 @@ export const SceneLabel = {
         card.timesLeft -= payment.times;
         await card.save();
         console.log(
-          `[PAY] Card ${card.id} used in ${payment.gatewayData.bookingId}, times left: ${card.timesLeft}.`
+          `[PAY] Card ${
+            card.id
+          } used in ${payment.booking?.toString()}, times left: ${
+            card.timesLeft
+          }.`
         );
       }
       payment.paid = true;

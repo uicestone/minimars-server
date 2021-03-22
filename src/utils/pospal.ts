@@ -1,5 +1,5 @@
 import md5 from "md5";
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { DocumentType } from "@typegoose/typegoose";
 import moment from "moment";
 import JSONBigInt from "json-bigint";

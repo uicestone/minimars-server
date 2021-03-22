@@ -34,12 +34,12 @@ export default (router: Router) => {
             break;
           }
           case "trade_TradeSuccess": {
-            const message = JSON.parse(decodeURIComponent(req.body.msg)) as any;
+            const message = JSON.parse(decodeURIComponent(req.body.msg));
             handleTradeSuccess(message);
             break;
           }
           case "trade_TradeClose": {
-            const message = JSON.parse(decodeURIComponent(req.body.msg)) as any;
+            const message = JSON.parse(decodeURIComponent(req.body.msg));
             handleTradeClose(message);
             break;
           }
