@@ -4,7 +4,7 @@ import moment from "moment";
 import getStats from "../utils/getStats";
 import UserModel from "../models/User";
 import CardModel, { CardStatus } from "../models/Card";
-import StoreModel, { store } from "../models/Store";
+import { storeMap } from "../models/Store";
 
 moment.locale("zh-cn");
 
@@ -110,8 +110,9 @@ export default (router: Router) => {
         })
         .map(storeGroup => {
           const storeNames =
-            storeGroup._id.map(id => store[id].name.substr(0, 2)).join("，") ||
-            "通用";
+            storeGroup._id
+              .map(id => storeMap[id].name.substr(0, 2))
+              .join("，") || "通用";
           return {
             storeNames,
             customersCount: storeGroup.customersCount,

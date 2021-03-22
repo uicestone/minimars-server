@@ -35,11 +35,10 @@ console.log(`[SYS] System time is ${new Date()}`);
 app.use(bodyParser.json({ limit: "100mb" }));
 app.use(bodyParser.raw({ type: "text/xml" }));
 app.use("/uploads/", express.static(`${process.cwd()}/uploads`));
-app.use(handleError);
-
 app.set("trust proxy", "loopback");
 
 applyRoutes(app, router);
+app.use(handleError);
 
 (async () => {
   await Promise.all([

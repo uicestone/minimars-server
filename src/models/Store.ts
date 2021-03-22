@@ -23,7 +23,7 @@ import PaymentModel, { PaymentGateway, Scene } from "./Payment";
 import UserModel from "./User";
 import WebSocket from "ws";
 
-export const store: { [id: string]: DocumentType<Store> } = {};
+export const storeMap: { [id: string]: DocumentType<Store> } = {};
 export const storeDoors: { [storeId: string]: Door[] } = {};
 export const storeServerSockets: { [storeId: string]: Socket } = {};
 
@@ -311,9 +311,9 @@ const StoreModel = getModelForClass(Store, {
 });
 
 export async function loadStoreMap() {
-  const stores = await StoreModel.find();
+  const stores = await StoreModel.find().select("+foodMenu");
   stores.forEach(s => {
-    store[s.id] = s;
+    storeMap[s.id] = s;
   });
   console.log(`[STR] Store map loaded.`);
 }

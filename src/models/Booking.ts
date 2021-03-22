@@ -4,7 +4,8 @@ import {
   plugin,
   DocumentType,
   modelOptions,
-  Severity
+  Severity,
+  pre
 } from "@typegoose/typegoose";
 import moment from "moment";
 import updateTimes from "./plugins/updateTimes";
@@ -12,13 +13,14 @@ import autoPopulate from "./plugins/autoPopulate";
 import { config } from "../models/Config";
 import PaymentModel, { Payment, PaymentGateway, Scene } from "./Payment";
 import { User } from "./User";
-import { Store } from "./Store";
+import { storeMap, Store } from "./Store";
 import { Card } from "./Card";
 import { Event } from "./Event";
 import { Gift } from "./Gift";
 import { Coupon } from "./Coupon";
 import { sendTemplateMessage, TemplateMessageType } from "../utils/wechat";
 import CardTypeModel from "./CardType";
+import HttpError from "../utils/HttpError";
 
 const { DEBUG } = process.env;
 
@@ -79,6 +81,15 @@ class FoodItem {
 
   @prop({ type: Number, default: 1 })
   quantity = 1;
+
+  @prop({ type: String })
+  productCategory?: string;
+
+  @prop({ type: String })
+  productName?: string;
+
+  @prop({ type: String })
+  productImageUrl?: string;
 }
 
 @plugin(autoPopulate, [
@@ -93,6 +104,29 @@ class FoodItem {
 @plugin(updateTimes)
 // @index({ date: 1, checkInAt: 1, customer: 1 }, { unique: true })
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
+@pre("validate", function (this: DocumentType<Booking>) {
+  if (this.type === Scene.FOOD && this.items) {
+    const store = storeMap[this.store?.id || ""];
+    if (!store || !store.foodMenu)
+      throw new Error("invalid_food_booking_store_menu");
+    const menu = store.foodMenu;
+    this.items.forEach(item => {
+      const matchCategory = menu.find(cat => {
+        const product = cat.products.find(p => p.uid === item.productUid);
+        if (product) {
+          item.productName = product.name;
+          item.productImageUrl = product.imageUrl;
+          item.productCategory = cat.name;
+          return true;
+        }
+        return false;
+      });
+      if (!matchCategory) {
+        throw new HttpError(404, `未找到餐品编号：${item.productUid}`);
+      }
+    });
+  }
+})
 export class Booking {
   @prop({ ref: "User" })
   customer?: DocumentType<User>;
