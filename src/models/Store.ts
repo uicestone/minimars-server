@@ -23,6 +23,7 @@ import PaymentModel, { PaymentGateway, Scene } from "./Payment";
 import UserModel from "./User";
 import WebSocket from "ws";
 
+export const store: { [id: string]: DocumentType<Store> } = {};
 export const storeDoors: { [storeId: string]: Door[] } = {};
 export const storeServerSockets: { [storeId: string]: Socket } = {};
 
@@ -308,5 +309,13 @@ const StoreModel = getModelForClass(Store, {
     }
   }
 });
+
+export async function loadStoreMap() {
+  const stores = await StoreModel.find();
+  stores.forEach(s => {
+    store[s.id] = s;
+  });
+  console.log(`[STR] Store map loaded.`);
+}
 
 export default StoreModel;

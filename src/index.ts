@@ -17,8 +17,9 @@ import { initAgenda } from "./utils/agenda";
 import { config } from "./models/Config";
 import initConfig from "./utils/initConfig";
 import { initMongoose } from "./utils/mongoose";
-import playground from "./utils/playground";
+import { loadStoreMap } from "./models/Store";
 import initViso from "./utils/initViso";
+import playground from "./utils/playground";
 
 const app = express();
 const router = express.Router();
@@ -31,43 +32,46 @@ const portWebSocket: string = process.env.PORT_WEBSOCKET || "";
 
 console.log(`[SYS] System time is ${new Date()}`);
 
-initMongoose();
-initConfig(config);
-initAgenda();
-
 app.use(bodyParser.json({ limit: "100mb" }));
 app.use(bodyParser.raw({ type: "text/xml" }));
 app.use("/uploads/", express.static(`${process.cwd()}/uploads`));
-
-app.set("trust proxy", "loopback");
-applyRoutes(app, router);
-
 app.use(handleError);
 
-httpServer.listen(portHttp, () => {
-  console.log(`[SYS] HTTP server listening port: ${portHttp}.`);
-});
+app.set("trust proxy", "loopback");
 
-if (portSocket) {
-  socketServer.listen(portSocket, () => {
-    console.log(`[SYS] Socket server listening port: ${portSocket}.`);
+applyRoutes(app, router);
+
+(async () => {
+  await Promise.all([
+    initMongoose(),
+    initConfig(config),
+    loadStoreMap(),
+    initAgenda()
+  ]);
+
+  httpServer.listen(portHttp, () => {
+    console.log(`[SYS] HTTP server listening port: ${portHttp}.`);
   });
-}
 
-let wss: WebSocketServer;
+  if (portSocket) {
+    socketServer.listen(portSocket, () => {
+      console.log(`[SYS] Socket server listening port: ${portSocket}.`);
+    });
+  }
 
-if (portWebSocket) {
-  wss = new WebSocketServer({
-    port: +portWebSocket
-  });
-  wss.on("listening", () => {
-    console.log(`[SYS] Websocket server listening port: ${portWebSocket}.`);
-  });
-  initViso(wss);
-}
+  let wss: WebSocketServer;
 
-if (process.env.PLAYGROUND) {
-  setTimeout(() => {
+  if (portWebSocket) {
+    wss = new WebSocketServer({
+      port: +portWebSocket
+    });
+    wss.on("listening", () => {
+      console.log(`[SYS] Websocket server listening port: ${portWebSocket}.`);
+    });
+    initViso(wss);
+  }
+
+  if (process.env.PLAYGROUND) {
     playground();
-  }, 1e3);
-}
+  }
+})();

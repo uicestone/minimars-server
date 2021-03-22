@@ -13,7 +13,7 @@ import PaymentModel, {
   Scene,
   SceneLabel
 } from "../models/Payment";
-import StoreModel from "../models/Store";
+import StoreModel, { store } from "../models/Store";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
 import { DocumentType } from "@typegoose/typegoose";
@@ -319,8 +319,6 @@ export default (router: Router) => {
         ]
       ];
 
-      const stores = await StoreModel.find();
-
       payments.forEach(payment => {
         const row = [
           payment.customer?.mobile || "",
@@ -333,7 +331,7 @@ export default (router: Router) => {
           payment.gatewayData.cardTitle || "-",
           payment.gatewayData.couponTitle || "-",
           (
-            stores.find(s => s.id === (payment.store || "").toString()) || {
+            store[(payment.store || "").toString()] || {
               name: "-"
             }
           ).name,

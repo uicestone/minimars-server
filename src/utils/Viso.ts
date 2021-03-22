@@ -29,6 +29,7 @@ export default class Viso {
   devices: FaceDevice[] = [];
   stores: Store[] = [];
   init(wss: Server, stores: Store[]) {
+    // console.log(`[VSO] Init store: ${stores.map(s => s.code).join(", ")}`);
     stores.forEach(store => {
       this.devices = this.devices.concat(
         store.faceDevices?.map(d => {

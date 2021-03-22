@@ -14,7 +14,7 @@ import {
 } from "./youzan";
 
 export default async function playground() {
-  console.log("Run playground...");
+  console.log("[DEV] Run playground...");
   try {
     // const user = await UserModel.findOne({ mobile: "13601881283" });
     const pospal = new Pospal("TS");

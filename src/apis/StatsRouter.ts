@@ -4,7 +4,7 @@ import moment from "moment";
 import getStats from "../utils/getStats";
 import UserModel from "../models/User";
 import CardModel, { CardStatus } from "../models/Card";
-import StoreModel from "../models/Store";
+import StoreModel, { store } from "../models/Store";
 
 moment.locale("zh-cn");
 
@@ -104,18 +104,14 @@ export default (router: Router) => {
         }
       ]);
 
-      const stores = await StoreModel.find();
-
       const result = totalTimesCardByStore
         .sort((a, b) => {
           return JSON.stringify(a._id) > JSON.stringify(b._id) ? 1 : -1;
         })
         .map(storeGroup => {
           const storeNames =
-            stores
-              .filter(s => storeGroup._id.map(i => i.toString()).includes(s.id))
-              .map(s => s.name.substr(0, 2))
-              .join("，") || "通用";
+            storeGroup._id.map(id => store[id].name.substr(0, 2)).join("，") ||
+            "通用";
           return {
             storeNames,
             customersCount: storeGroup.customersCount,
