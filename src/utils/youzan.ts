@@ -152,9 +152,18 @@ export async function handleTradePaid(trade: any) {
   const {
     full_order_info: {
       orders,
+      buyer_info: { buyer_phone: mobile, yz_open_id: youzanId },
       order_info: { tid }
     }
   } = trade;
+  const user = await UserModel.findOne({ mobile });
+  if (user && !user.youzanId) {
+    user.youzanId = youzanId;
+    await user.save();
+    console.log(
+      `[YZN] User ${user.id} missing youzanId, set to ${user.youzanId}.`
+    );
+  }
   if (orders.every((o: any) => o.outer_item_id.match(/^card-/))) {
     await createCard(trade);
   } else if (orders.every((o: any) => !o.outer_item_id.match(/^card-/))) {
@@ -251,11 +260,11 @@ async function createCard(trade: any) {
   const {
     full_order_info: {
       order_info: { tid },
+      buyer_info: { buyer_phone: mobile },
       orders
     }
   } = trade;
   const stores = await StoreModel.find();
-  const mobile = trade.full_order_info.buyer_info.buyer_phone;
   let user = await UserModel.findOne({ mobile });
   if (!user) {
     user = new UserModel({ mobile });
