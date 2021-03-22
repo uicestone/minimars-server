@@ -48,6 +48,7 @@ export class Config {
   playHint?: string;
   offWeekdays?: string[];
   onWeekends?: string[];
+  bookableDays?: number;
 }
 
 export const config: Config = {};

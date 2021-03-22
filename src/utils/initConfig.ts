@@ -29,5 +29,6 @@ const initConfig: Config = {
   eventHint: "",
   playHint: "",
   offWeekdays: [],
-  onWeekends: []
+  onWeekends: [],
+  bookableDays: 15
 };
