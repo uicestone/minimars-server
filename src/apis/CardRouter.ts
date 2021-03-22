@@ -200,8 +200,6 @@ export default (router: Router) => {
           createdAt: -1
         };
 
-        query.select("-content");
-
         (["customer", "slug", "stores", "type"] as Array<
           keyof CardQuery
         >).forEach(field => {

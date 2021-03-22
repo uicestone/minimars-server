@@ -38,8 +38,6 @@ export default (router: Router) => {
           price: 1
         };
 
-        query.select("-content");
-
         if (!req.user.role) {
           query.where({
             $or: [
