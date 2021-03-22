@@ -13,7 +13,7 @@ import PaymentModel, {
   Scene,
   SceneLabel
 } from "../models/Payment";
-import StoreModel, { store } from "../models/Store";
+import StoreModel, { storeMap } from "../models/Store";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
 import { DocumentType } from "@typegoose/typegoose";
@@ -331,7 +331,7 @@ export default (router: Router) => {
           payment.gatewayData.cardTitle || "-",
           payment.gatewayData.couponTitle || "-",
           (
-            store[(payment.store || "").toString()] || {
+            storeMap[(payment.store || "").toString()] || {
               name: "-"
             }
           ).name,
