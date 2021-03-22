@@ -15,7 +15,6 @@ const tokenExpireOffset = 3e5; // 5 minutes
 
 export const accessToken = {
   token: "",
-  refreshToken: "",
   expiresAt: new Date()
 };
 
@@ -23,8 +22,9 @@ const clientId = process.env.YOUZAN_CLIENT_ID;
 const clientSecret = process.env.YOUZAN_CLIENT_SECRET;
 const grantId = process.env.YOUZAN_GRANT_ID;
 
-export async function getAccessToken() {
+export async function getAccessToken(forceRefresh = false) {
   if (
+    !forceRefresh &&
     accessToken.token &&
     accessToken.expiresAt.valueOf() - Date.now() >= tokenExpireOffset
   ) {
@@ -35,19 +35,22 @@ export async function getAccessToken() {
     client_id: clientId,
     client_secret: clientSecret,
     grant_id: grantId,
-    refresh: true
+    refresh: false
   });
   if (!data.success) {
     throw new Error(data.message);
   }
   accessToken.token = data.data.access_token;
   accessToken.expiresAt = new Date(data.data.expires);
-  accessToken.refreshToken = data.data.refresh_token;
-  console.log("[YZN] Got access token.");
+  console.log(`[YZN] Got access token, expires at ${accessToken.expiresAt}.`);
   return accessToken.token;
 }
 
-async function call(api: string, version: string, params: Record<string, any>) {
+async function call(
+  api: string,
+  version: string,
+  params: Record<string, any>
+): Promise<Record<string, any>> {
   const token = await getAccessToken();
   try {
     const { data } = await client.call({
@@ -56,11 +59,16 @@ async function call(api: string, version: string, params: Record<string, any>) {
       token,
       params
     });
-    // console.log(data);
-    if (version >= "4.0.0") {
-      if (data.gw_err_resp) {
-        throw new Error(data.gw_err_resp.err_msg);
+    if (data.gw_err_resp) {
+      if (data.gw_err_resp.err_code === 4203) {
+        console.error(`[YZN] Token invalid, refresh and retry in 5 seconds...`);
+        await sleep(5000);
+        await getAccessToken(true);
+        return await call(api, version, params);
       }
+      throw new Error(data.gw_err_resp.err_msg);
+    }
+    if (version >= "4.0.0") {
       if (!data.success) {
         throw new Error(data.message);
       }
@@ -70,7 +78,7 @@ async function call(api: string, version: string, params: Record<string, any>) {
         throw new Error(data.error_response.msg);
       }
       return data.response;
-    } else if (version >= "1.0.0") {
+    } else {
       if (!data.success) {
         throw new Error(data.message);
       }
@@ -78,6 +86,7 @@ async function call(api: string, version: string, params: Record<string, any>) {
     }
   } catch (err) {
     console.error(`[YZN] API Error:`, err.message);
+    throw new Error("youzan_api_error");
   }
 }
 
@@ -85,7 +94,9 @@ export async function syncUserPoints(
   user: DocumentType<User>,
   reason = "积分同步"
 ) {
-  if (!user.youzanId) return;
+  if (!user.youzanId) {
+    return;
+  }
   const result = await call("youzan.crm.customer.points.sync", "4.0.0", {
     points: user.points,
     user: {
@@ -94,7 +105,7 @@ export async function syncUserPoints(
     },
     reason
   });
-  if (result?.is_success) {
+  if (result.is_success) {
     console.log(
       `[YZN] User points synded, ${user.points} ${user.mobile} ${user.id}.`
     );
@@ -124,6 +135,9 @@ export async function virtualCodeApply(code: string) {
   const result = await call("youzan.trade.virtualcode.apply", "3.0.0", {
     code
   });
+  if (!result.is_success) {
+    console.log(`[YZN] Code apply failed: ${code}.`);
+  }
   return result;
 }
 
