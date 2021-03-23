@@ -124,7 +124,10 @@ export default (router: Router) => {
           throw new HttpError(400, "抱歉，该卡券已售罄");
         }
 
-        const card = cardType.issue(customer);
+        const card = cardType.issue(customer, {
+          quantity: body.quantity,
+          balanceGroups: body.balanceGroups
+        });
 
         try {
           await card.createPayment({
