@@ -187,16 +187,17 @@ export class CardType {
       card.timesLeft = card.times;
     }
 
-    if (balanceGroups) {
+    balanceGroups = balanceGroups?.filter(
+      g => g.count >= 1 && g.count % 1 === 0
+    );
+
+    if (balanceGroups && balanceGroups.length) {
       card.price = balanceGroups.reduce((price, group) => {
         const balancePriceGroup = this.balancePriceGroups?.find(
           pg => pg.balance === group.balance
         );
         if (!balancePriceGroup) {
           throw new HttpError(400, `不支持这个金额：${group.balance}`);
-        }
-        if (group.count < 1 || group.count % 1 !== 0) {
-          return price;
         }
         return +(price + (balancePriceGroup.price || 0) * group.count).toFixed(
           10
@@ -206,6 +207,8 @@ export class CardType {
         (price, group) => +(price + group.balance * group.count).toFixed(10),
         0
       );
+    } else if (this.balancePriceGroups && this.balancePriceGroups.length) {
+      throw new HttpError(400, `没有选择面额组合`);
     }
 
     if (this.end) {
