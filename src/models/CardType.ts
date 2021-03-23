@@ -195,6 +195,9 @@ export class CardType {
         if (!balancePriceGroup) {
           throw new HttpError(400, `不支持这个金额：${group.balance}`);
         }
+        if (group.count < 1 || group.count % 1 !== 0) {
+          return price;
+        }
         return +(price + (balancePriceGroup.price || 0) * group.count).toFixed(
           10
         );
