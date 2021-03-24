@@ -26,6 +26,7 @@ import { Express, NextFunction, Request, Response, Router } from "express";
 import VisoRouter from "./VisoRouter";
 import YouzanRouter from "./YouzanRouter";
 import { Permission } from "../models/Role";
+import RoleRouter from "./RoleRouter";
 
 export default (app: Express, router: Router) => {
   // register routes
@@ -41,6 +42,7 @@ export default (app: Express, router: Router) => {
     GiftRouter,
     PaymentRouter,
     PostRouter,
+    RoleRouter,
     StatsRouter,
     StoreRouter,
     UserRouter,

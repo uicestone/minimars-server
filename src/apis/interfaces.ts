@@ -8,6 +8,7 @@ import { Gift } from "../models/Gift";
 import { Post } from "../models/Post";
 import { Store } from "../models/Store";
 import { User } from "../models/User";
+import { Role } from "../models/Role";
 
 export interface AuthLoginPostBody {
   login: string;
@@ -136,6 +137,12 @@ export interface PostQuery extends ListQuery {
   slug?: string;
   tag?: string;
 }
+
+export interface RolePostBody extends Role {}
+
+export interface RolePutBody extends Role {}
+
+export interface RoleQuery extends ListQuery {}
 
 export interface StorePostBody extends Store {}
 
