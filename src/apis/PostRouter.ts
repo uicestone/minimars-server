@@ -8,6 +8,7 @@ import { isValidHexObjectId } from "../utils/helper";
 import { PostQuery, PostPostBody, PostPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
 import { DocumentType } from "@typegoose/typegoose";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // Post CURD
@@ -17,7 +18,7 @@ export default (router: Router) => {
     // create a post
     .post(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.POST)) {
           throw new HttpError(403);
         }
         const post = new PostModel(req.body as PostPostBody);
@@ -104,7 +105,7 @@ export default (router: Router) => {
 
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.POST)) {
           throw new HttpError(403);
         }
         const post = req.item as DocumentType<Post>;
@@ -117,7 +118,7 @@ export default (router: Router) => {
     // delete the post with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.POST)) {
           throw new HttpError(403);
         }
         const post = req.item as DocumentType<Post>;

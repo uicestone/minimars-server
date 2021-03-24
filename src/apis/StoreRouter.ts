@@ -6,6 +6,7 @@ import HttpError from "../utils/HttpError";
 import StoreModel, { Store } from "../models/Store";
 import { StoreQuery, StorePostBody, StorePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // Store CURD
@@ -15,7 +16,7 @@ export default (router: Router) => {
     // create a store
     .post(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.STORE)) {
           throw new HttpError(403);
         }
         const store = new StoreModel(req.body as StorePostBody);
@@ -80,7 +81,7 @@ export default (router: Router) => {
 
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.STORE)) {
           throw new HttpError(403);
         }
         const store = req.item as DocumentType<Store>;
@@ -93,7 +94,7 @@ export default (router: Router) => {
     // delete the store with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.STORE)) {
           throw new HttpError(403);
         }
         const store = req.item as DocumentType<Store>;

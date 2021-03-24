@@ -23,6 +23,7 @@ import { DocumentType } from "@typegoose/typegoose";
 import { verify } from "jsonwebtoken";
 import moment from "moment";
 import { sendTemplateMessage, TemplateMessageType } from "../utils/wechat";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // Card CURD
@@ -34,10 +35,9 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as CardPostBody;
 
-        const customer =
-          req.user.role === "customer"
-            ? req.user
-            : await UserModel.findById(body.customer);
+        const customer = !req.user.role
+          ? req.user
+          : await UserModel.findById(body.customer);
 
         if (!customer) {
           throw new HttpError(400, "购卡用户无效");
@@ -125,7 +125,8 @@ export default (router: Router) => {
               query.paymentGateway ||
               (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
             atReceptionStore:
-              req.user.role === "manager" && card.customer !== req.user.id
+              !req.user.can(Permission.BOOKING_ALL_STORE) &&
+              card.customer !== req.user.id
                 ? req.user.store
                 : undefined
           });
@@ -206,7 +207,7 @@ export default (router: Router) => {
               $in: queryParams.status.split(",") as CardStatus[]
             }
           });
-        } else if (req.user.role === "customer") {
+        } else if (!req.user.role) {
           query.find({
             status: {
               $in: [CardStatus.ACTIVATED, CardStatus.VALID, CardStatus.EXPIRED]
@@ -215,12 +216,10 @@ export default (router: Router) => {
         }
 
         // restrict self card for customers
-        if (req.user.role === "customer") {
+        if (!req.user.role) {
           query.find({ customer: req.user._id });
-        } else if (req.user.role === "manager") {
+        } else if (!req.user.can(Permission.BOOKING_ALL_STORE)) {
           query.find({ stores: { $in: [req.user.store?.id, []] } });
-        } else if (req.user.role !== "admin") {
-          throw new HttpError(403);
         }
 
         let total = await query.countDocuments();
@@ -249,10 +248,7 @@ export default (router: Router) => {
           if (!card) {
             throw new HttpError(404, `Card not found: ${req.params.cardId}`);
           }
-          if (
-            req.user.role === "customer" &&
-            req.user.id !== card.customer?.toString()
-          ) {
+          if (!req.user.role && req.user.id !== card.customer?.toString()) {
             throw new HttpError(403);
           }
           req.item = card;
@@ -277,7 +273,7 @@ export default (router: Router) => {
         const statusWas = card.status;
         card.set(body);
 
-        if (body.expiresAt && req.user.role === "admin") {
+        if (body.expiresAt && req.user.can(Permission.CARD_SELL_ALL)) {
           // extend card expire time
           card.expiresAtWas = card.expiresAt;
           card.expiresAt = moment(card.expiresAt).endOf("day").toDate();
@@ -286,7 +282,7 @@ export default (router: Router) => {
         if (
           body.status === CardStatus.CANCELED &&
           statusWas !== CardStatus.CANCELED &&
-          req.user.role === "admin"
+          req.user.can(Permission.CARD_SELL_ALL)
         ) {
           card.status = statusWas;
           await card.refund();
@@ -300,7 +296,7 @@ export default (router: Router) => {
     // delete the card with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (!["admin", "manager"].includes(req.user.role)) {
+        if (!req.user.can(Permission.CARD_SELL_ALL)) {
           throw new HttpError(403);
         }
         const card = req.item as DocumentType<Card>;

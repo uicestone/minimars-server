@@ -24,6 +24,7 @@ import {
 import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId, isOffDay } from "../utils/helper";
 import { viso } from "../utils/Viso";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // Booking CURD
@@ -36,7 +37,7 @@ export default (router: Router) => {
         const body = req.body as BookingPostBody;
         const query = req.query as BookingPostQuery;
 
-        if (body.status && req.user.role !== "admin") {
+        if (body.status && !req.user.can(Permission.BOOKING_ALL_STORE)) {
           delete body.status;
           // throw new HttpError(403, "Only admin can set status directly.");
         }
@@ -44,12 +45,12 @@ export default (router: Router) => {
         const booking = new BookingModel(body);
 
         if (!booking.customer) {
-          if (req.user.role === "customer") {
+          if (!req.user.role) {
             booking.customer = req.user._id;
           } else if (
             // create a user with mobile given before create booking
             query.customerKeyword &&
-            ["admin", "manager", "eventManager"].includes(req.user.role)
+            req.user.can(Permission.BOOKING_CREATE)
           ) {
             booking.customer = new UserModel({
               role: "customer",
@@ -87,10 +88,7 @@ export default (router: Router) => {
           booking.checkInAt = config.appointmentDeadline || "16:00:00";
         }
 
-        if (
-          req.user.role === "customer" &&
-          !booking.customer.equals(req.user)
-        ) {
+        if (!req.user.role && !booking.customer.equals(req.user)) {
           throw new HttpError(403, "只能为自己预订");
         }
 
@@ -123,7 +121,7 @@ export default (router: Router) => {
             if (
               booking.card.maxKids &&
               kidsCountToday > booking.card.maxKids &&
-              req.user.role !== "admin"
+              !req.user.can(Permission.BOOKING_ALL_STORE)
             ) {
               throw new HttpError(400, "客户会员卡当日预约已到达最大孩子数量");
             }
@@ -257,7 +255,7 @@ export default (router: Router) => {
                 (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
               useBalance: query.useBalance !== "false",
               atReception:
-                ["manager", "eventManager"].includes(req.user.role) &&
+                !req.user.can(Permission.BOOKING_ALL_STORE) &&
                 booking.customer.id !== req.user.id
             },
             bookingPrice.price,
@@ -310,12 +308,10 @@ export default (router: Router) => {
         };
 
         // restrict self bookings for customers
-        if (req.user.role === "customer") {
+        if (!req.user.role) {
           query.find({ customer: req.user._id });
-        } else if (["manager", "eventManager"].includes(req.user.role)) {
-          query.find({ store: { $in: [req.user.store?.id, null] } });
-        } else if (req.user.role !== "admin") {
-          throw new HttpError(403);
+        } else if (!req.user.can(Permission.BOOKING_ALL_STORE)) {
+          query.find({ store: { $in: [req.user.store?.id] } });
         }
 
         if (queryParams.status) {
@@ -398,7 +394,7 @@ export default (router: Router) => {
               `Booking not found: ${req.params.bookingId}`
             );
           }
-          if (req.user.role === "customer") {
+          if (!req.user.role) {
             if (!booking.customer?.equals(req.user)) {
               throw new HttpError(403);
             }
@@ -434,16 +430,12 @@ export default (router: Router) => {
         if (
           statusWas !== BookingStatus.CANCELED &&
           booking.status === BookingStatus.CANCELED
-          // req.user.role !== "admin"
         ) {
           // TODO refund permission should be restricted
           // TODO IN_SERVICE refund
 
           booking.status = statusWas;
-          if (
-            req.user.role === "customer" &&
-            statusWas !== BookingStatus.PENDING
-          ) {
+          if (!req.user.role && statusWas !== BookingStatus.PENDING) {
             booking.statusWas = booking.status;
             booking.status = BookingStatus.PENDING_REFUND;
             booking.remarks =
@@ -452,14 +444,17 @@ export default (router: Router) => {
                 `\n${moment().format("YYYY-MM-DD HH:mm")} 客户申请取消，原因：${
                   req.query.reason
                 }。*小程序端可见*`;
-          } else if (req.user.role === "manager") {
+          } else if (
+            req.user.can(Permission.BOOKING_CREATE) &&
+            !req.user.can(Permission.BOOKING_CANCEL_REVIEW)
+          ) {
             booking.statusWas = booking.status;
             booking.status = BookingStatus.PENDING_REFUND;
             await CardModel.updateMany(
               { rewardedFromBooking: booking, status: CardStatus.ACTIVATED },
               { status: CardStatus.PENDING }
             );
-          } else {
+          } else if (req.user.can(Permission.BOOKING_CANCEL_REVIEW)) {
             try {
               await CardModel.updateMany(
                 {
@@ -472,7 +467,7 @@ export default (router: Router) => {
             } catch (e) {
               if (
                 e.message === "wechat_account_insufficient_balance" &&
-                req.user.role === "admin"
+                req.user.can(Permission.BOOKING_ALL_STORE)
               ) {
                 throw new HttpError(400, "微信商户余额不足，退款失败");
               }
@@ -547,7 +542,7 @@ export default (router: Router) => {
     // delete the booking with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.BOOKING_CANCEL_REVIEW)) {
           throw new HttpError(403);
         }
 

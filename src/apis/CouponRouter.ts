@@ -6,6 +6,7 @@ import HttpError from "../utils/HttpError";
 import CouponModel, { Coupon } from "../models/Coupon";
 import { CouponQuery, CouponPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // Coupon CURD
@@ -15,7 +16,7 @@ export default (router: Router) => {
     // create a coupon
     .post(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.COUPON)) {
           throw new HttpError(403);
         }
         const coupon = new CouponModel(req.body);
@@ -37,11 +38,9 @@ export default (router: Router) => {
 
         query.select("-content");
 
-        if (req.user.role === "manager") {
+        if (!req.user.can(Permission.BOOKING_ALL_STORE)) {
           query.find({ stores: { $in: [req.user.store?.id, []] } });
           query.find({ enabled: true });
-        } else if (!["admin", "accountant"].includes(req.user.role)) {
-          throw new HttpError(403);
         }
 
         if (queryParams.enabled) {
@@ -93,7 +92,7 @@ export default (router: Router) => {
 
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.COUPON)) {
           throw new HttpError(403);
         }
         const coupon = req.item as DocumentType<Coupon>;
@@ -107,7 +106,7 @@ export default (router: Router) => {
     // delete the coupon with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.COUPON)) {
           throw new HttpError(403);
         }
         const coupon = req.item as DocumentType<Coupon>;

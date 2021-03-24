@@ -8,6 +8,7 @@ import GiftModel, { Gift } from "../models/Gift";
 import { GiftQuery, GiftPostBody, GiftPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import escapeStringRegexp from "escape-string-regexp";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // Gift CURD
@@ -17,7 +18,7 @@ export default (router: Router) => {
     // create a gift
     .post(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.GIFT)) {
           throw new HttpError(403);
         }
         const gift = new GiftModel(req.body as GiftPostBody);
@@ -41,11 +42,11 @@ export default (router: Router) => {
         };
         query.select("-content");
 
-        if (req.user.role === "manager") {
+        if (!req.user.can(Permission.BOOKING_ALL_STORE)) {
           query.find({ $or: [{ store: req.user.store?.id }, { store: null }] });
         }
 
-        if (req.user.role === "customer") {
+        if (!req.user.role) {
           query.find({ order: { $gte: 0 } });
         }
 
@@ -103,7 +104,7 @@ export default (router: Router) => {
 
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.COUPON)) {
           throw new HttpError(403);
         }
         const gift = req.item as DocumentType<Gift>;
@@ -116,7 +117,7 @@ export default (router: Router) => {
     // delete the gift with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.COUPON)) {
           throw new HttpError(403);
         }
         const gift = req.item as DocumentType<Gift>;

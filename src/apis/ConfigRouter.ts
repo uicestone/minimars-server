@@ -6,6 +6,7 @@ import ConfigModel, { ConfigDocument, config } from "../models/Config";
 import HttpError from "../utils/HttpError";
 import reduceConfig from "../utils/reduceConfig";
 import initConfig from "../utils/initConfig";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // Config CURD
@@ -15,7 +16,7 @@ export default (router: Router) => {
     // create a config
     .post(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.CONFIG)) {
           throw new HttpError(403);
         }
         const configItem = new ConfigModel(req.body);
@@ -40,7 +41,7 @@ export default (router: Router) => {
     .all(
       handleAsyncErrors(
         async (req: Request, res: Response, next: NextFunction) => {
-          if (req.user.role !== "admin") {
+          if (!req.user.can(Permission.CONFIG)) {
             throw new HttpError(403);
           }
           const config = await ConfigModel.findOne({

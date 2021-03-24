@@ -8,6 +8,7 @@ import {
   AuthLoginResponseBody,
   AuthTokenUserIdResponseBody
 } from "./interfaces";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   router.route("/auth/login").post(
@@ -79,7 +80,7 @@ export default (router: Router) => {
 
   router.route("/auth/token/:userId").get(
     handleAsyncErrors(async (req: Request, res: Response) => {
-      if (req.user.role !== "admin") {
+      if (req.user.can(Permission.BOSSBOARD)) {
         throw new HttpError(403);
       }
       const user = await UserModel.findOne({ _id: req.params.userId });

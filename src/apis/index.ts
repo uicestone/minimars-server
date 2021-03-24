@@ -25,6 +25,7 @@ import agenda from "../utils/agenda";
 import { Express, NextFunction, Request, Response, Router } from "express";
 import VisoRouter from "./VisoRouter";
 import YouzanRouter from "./YouzanRouter";
+import { Permission } from "../models/Role";
 
 export default (app: Express, router: Router) => {
   // register routes
@@ -82,7 +83,7 @@ export default (app: Express, router: Router) => {
     function (req: Request, res: Response, next: NextFunction) {
       if (req.session?.userRole === "admin") {
         next();
-      } else if (req.user?.role === "admin") {
+      } else if (req.user.can(Permission.BOSSBOARD)) {
         next();
         req.session = { userId: req.user.id, userRole: req.user.role };
       } else {

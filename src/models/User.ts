@@ -12,13 +12,14 @@ import { Store } from "./Store";
 import autoPopulate from "./plugins/autoPopulate";
 import Pospal from "../utils/pospal";
 import { syncUserPoints } from "../utils/youzan";
+import { Role, Permission } from "./Role";
 
 @pre("validate", function (next) {
   const user = this as DocumentType<User>;
   if (user.balanceDeposit)
     user.balanceDeposit = +user.balanceDeposit.toFixed(2);
   if (user.balanceReward) user.balanceReward = +user.balanceReward.toFixed(2);
-  if (user.role === "customer" && user.points === undefined) {
+  if (!user.role && user.points === undefined) {
     user.points = 0;
   }
   if (user.tags) {
@@ -27,11 +28,11 @@ import { syncUserPoints } from "../utils/youzan";
   next();
 })
 @plugin(updateTimes)
-@plugin(autoPopulate, [{ path: "store", select: "-content" }])
+@plugin(autoPopulate, [{ path: "store", select: "-content" }, { path: "role" }])
 @index({ name: "text", mobile: "text", cardNo: "text", tags: "text" })
 export class User {
-  @prop({ default: "customer" })
-  role: string = "customer";
+  @prop({ ref: Role })
+  role?: DocumentType<Role>;
 
   @prop({ unique: true, sparse: true })
   login?: string;
@@ -160,6 +161,10 @@ export class User {
     get: v => v
   })
   remarks?: string;
+
+  can(...ps: Permission[]) {
+    return ps.every(p => this.role?.can(p));
+  }
 
   async addPoints(this: DocumentType<User>, amount: number, save = true) {
     const r = 1;

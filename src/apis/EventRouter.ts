@@ -8,6 +8,7 @@ import EventModel, { Event } from "../models/Event";
 import { EventPostBody, EventPutBody, EventQuery } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import escapeStringRegexp from "escape-string-regexp";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // Event CURD
@@ -17,7 +18,7 @@ export default (router: Router) => {
     // create an event
     .post(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.EVENT)) {
           throw new HttpError(403);
         }
         const event = new EventModel(req.body as EventPostBody);
@@ -41,11 +42,11 @@ export default (router: Router) => {
         };
         query.select("-content");
 
-        if (["manager", "eventManager"].includes(req.user.role)) {
+        if (!req.user.can(Permission.BOOKING_ALL_STORE)) {
           query.find({ $or: [{ store: req.user.store?.id }, { store: null }] });
         }
 
-        if (req.user.role === "customer") {
+        if (!req.user.role) {
           query.find({ order: { $gte: 0 } });
         }
 
@@ -105,7 +106,7 @@ export default (router: Router) => {
 
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.EVENT)) {
           throw new HttpError(403);
         }
         const event = req.item as DocumentType<Event>;
@@ -134,7 +135,7 @@ export default (router: Router) => {
     // delete the event with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.EVENT)) {
           throw new HttpError(403);
         }
         const event = req.item as DocumentType<Event>;

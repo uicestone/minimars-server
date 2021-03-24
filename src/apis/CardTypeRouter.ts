@@ -7,6 +7,7 @@ import CardTypeModel, { CardType } from "../models/CardType";
 import { CardTypeQuery, CardTypePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId } from "../utils/helper";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // CardType CURD
@@ -16,7 +17,7 @@ export default (router: Router) => {
     // create a cardType
     .post(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.CARD_TYPE)) {
           throw new HttpError(403);
         }
         const cardType = new CardTypeModel(req.body);
@@ -39,7 +40,7 @@ export default (router: Router) => {
 
         query.select("-content");
 
-        if (req.user.role === "customer") {
+        if (!req.user.role) {
           query.where({
             $or: [
               { customerTags: { $in: req.user.tags || [] } },
@@ -47,7 +48,7 @@ export default (router: Router) => {
               { customerTags: [] }
             ]
           });
-        } else if (req.user.role !== "admin") {
+        } else if (!req.user.can(Permission.BOOKING_ALL_STORE)) {
           query.find({ stores: { $in: [req.user.store?.id, []] } });
         }
 
@@ -128,7 +129,7 @@ export default (router: Router) => {
 
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.CARD_TYPE)) {
           throw new HttpError(403);
         }
         const cardType = req.item as DocumentType<CardType>;
@@ -150,7 +151,7 @@ export default (router: Router) => {
     // delete the cardType with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.CARD_TYPE)) {
           throw new HttpError(403);
         }
         const cardType = req.item as DocumentType<CardType>;

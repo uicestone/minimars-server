@@ -9,6 +9,7 @@ import { hashPwd, isValidHexObjectId } from "../utils/helper";
 import idCard from "idcard";
 import { UserQuery, UserPostBody, UserPutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
+import { Permission } from "../models/Role";
 
 const { DEBUG } = process.env;
 
@@ -21,7 +22,7 @@ export default (router: Router) => {
     .post(
       handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPostBody;
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.DEVELOP)) {
           ([
             "role",
             "openid",
@@ -34,9 +35,6 @@ export default (router: Router) => {
           ] as Array<keyof User>).forEach(f => {
             delete body[f];
           });
-        }
-        if (["manager", "eventManager"].includes(body.role) && !body.store) {
-          throw new HttpError(400, "该角色必须绑定门店");
         }
         if (body.password) {
           body.password = await hashPwd(body.password);
@@ -58,6 +56,15 @@ export default (router: Router) => {
           }
         }
         const user = new UserModel(body);
+
+        if (
+          !user.can(Permission.BOOKING_ALL_STORE) &&
+          user.can(Permission.BOOKING_CREATE) &&
+          !body.store
+        ) {
+          throw new HttpError(400, "该角色必须绑定门店");
+        }
+
         if (body.idCardNo) {
           body.idCardNo = body.idCardNo.replace("*", "X").toUpperCase();
           const userIdCardNoExists = await UserModel.findOne({
@@ -89,7 +96,7 @@ export default (router: Router) => {
     .get(
       paginatify,
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (!["admin", "manager", "eventManager"].includes(req.user.role)) {
+        if (!req.user.can(Permission.CUSTOMER)) {
           throw new HttpError(403);
         }
         const queryParams = req.query as UserQuery;
@@ -162,7 +169,7 @@ export default (router: Router) => {
         async (req: Request, res: Response, next: NextFunction) => {
           const user = await UserModel.findById(req.params.userId);
           if (
-            !["admin", "manager", "eventManager"].includes(req.user.role) &&
+            !req.user.can(Permission.CUSTOMER) &&
             req.user.id !== req.params.userId
           ) {
             throw new HttpError(403);
@@ -188,7 +195,7 @@ export default (router: Router) => {
     .put(
       handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPutBody;
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.DEVELOP)) {
           ([
             "role",
             "openid",
@@ -201,7 +208,7 @@ export default (router: Router) => {
             delete body[f];
           });
         }
-        if (!["admin", "manager"].includes(req.user.role)) {
+        if (!req.user.can(Permission.CUSTOMER)) {
           (["cardNo"] as Array<keyof User>).forEach(f => {
             delete body[f];
           });
@@ -271,7 +278,7 @@ export default (router: Router) => {
     // delete the user with this id
     .delete(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
+        if (!req.user.can(Permission.STAFF)) {
           throw new HttpError(403);
         }
         const user = req.item as DocumentType<User>;

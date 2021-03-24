@@ -17,23 +17,12 @@ import StoreModel from "../models/Store";
 import { PaymentQuery, PaymentPutBody } from "./interfaces";
 import escapeStringRegexp from "escape-string-regexp";
 import { DocumentType } from "@typegoose/typegoose";
+import { Permission } from "../models/Role";
 
 export default (router: Router) => {
   // Payment CURD
   router
     .route("/payment")
-
-    // create a payment
-    .post(
-      handleAsyncErrors(async (req: Request, res: Response) => {
-        if (req.user.role !== "admin") {
-          throw new HttpError(403);
-        }
-        const payment = new PaymentModel(req.body);
-        await payment.save();
-        res.json(payment);
-      })
-    )
 
     // get all the payments
     .get(
@@ -46,11 +35,14 @@ export default (router: Router) => {
           createdAt: -1
         };
 
-        if (req.user.role === "customer") {
+        if (!req.user.role) {
           query.find({ customer: req.user });
-        } else if (["manager", "eventManager"].includes(req.user.role)) {
+        } else if (
+          req.user.can(Permission.PAYMENT) &&
+          !req.user.can(Permission.BOOKING_ALL_STORE)
+        ) {
           query.find({ store: { $in: [req.user.store?.id, null] } });
-        } else if (!["admin", "accountant"].includes(req.user.role)) {
+        } else if (!req.user.can(Permission.PAYMENT)) {
           throw new HttpError(403);
         }
 
@@ -160,13 +152,13 @@ export default (router: Router) => {
 
   router.route("/payment-sheet").get(
     handleAsyncErrors(async (req: Request, res: Response) => {
-      if (!["admin", "accountant", "manager"].includes(req.user.role)) {
+      if (!req.user.can(Permission.PAYMENT_DOWNLOAD)) {
         throw new HttpError(403);
       }
       const queryParams = req.query as PaymentQuery;
       const query = PaymentModel.find().sort({ _id: -1 });
 
-      if (req.user.role === "manager") {
+      if (!req.user.can(Permission.BOOKING_ALL_STORE)) {
         query.find({ store: req.user.store?.id });
       }
 
@@ -302,8 +294,7 @@ export default (router: Router) => {
     .all(
       handleAsyncErrors(
         async (req: Request, res: Response, next: NextFunction) => {
-          if (!["admin", "manager"].includes(req.user.role)) {
-            // TODO manager can operate payment of same store
+          if (!req.user.can(Permission.PAYMENT)) {
             throw new HttpError(403);
           }
           const payment = await PaymentModel.findById(req.params.paymentId);
@@ -333,17 +324,15 @@ export default (router: Router) => {
         const body = req.body as PaymentPutBody;
 
         if (
-          req.user.role === "manager" &&
+          !req.user.can(Permission.PAYMENT) &&
           receptionGateways.includes(payment.gateway)
         ) {
-          if (body.paid !== undefined) {
-          }
           (["paid", "gateway"] as Array<keyof Payment>).forEach(key => {
             if (body[key] !== undefined) {
               payment.set(key, body[key]);
             }
           });
-        } else if (req.user.role === "admin") {
+        } else if (req.user.can(Permission.PAYMENT)) {
           payment.set(body);
         } else {
           throw new HttpError(403);
