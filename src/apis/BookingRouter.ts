@@ -53,7 +53,6 @@ export default (router: Router) => {
             req.user.can(Permission.BOOKING_CREATE)
           ) {
             booking.customer = new UserModel({
-              role: "customer",
               mobile: query.customerKeyword
             });
             await booking.customer.validate();
