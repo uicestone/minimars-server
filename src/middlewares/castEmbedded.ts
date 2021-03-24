@@ -13,7 +13,8 @@ export default async function (
     "author",
     "event",
     "gift",
-    "coupon"
+    "coupon",
+    "role"
   ];
   for (let key in req.body) {
     if (

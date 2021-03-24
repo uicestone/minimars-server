@@ -57,6 +57,13 @@ export default (router: Router) => {
         }
         const user = new UserModel(body);
 
+        if (body.role) {
+          await user.populate("role").execPopulate();
+          if (!user.role) {
+            throw new HttpError(400, "Invalid role.");
+          }
+        }
+
         if (
           !user.can(Permission.BOOKING_ALL_STORE) &&
           user.can(Permission.BOOKING_CREATE) &&
@@ -117,7 +124,11 @@ export default (router: Router) => {
         }
 
         if (queryParams.role) {
-          query.where({ role: queryParams.role });
+          if (queryParams.role === "customer") {
+            query.where({ role: null });
+          } else {
+            query.where({ role: queryParams.role });
+          }
         }
 
         if (queryParams.membership) {
