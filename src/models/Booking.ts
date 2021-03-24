@@ -374,7 +374,7 @@ export class Booking {
           (booking.card.price / booking.card.times) * (booking.kidsCount || 1),
         title,
         attach,
-        booking,
+        booking: booking.id,
         gateway: PaymentGateway.Card,
         times: booking.kidsCount || 1,
         gatewayData: {
@@ -402,7 +402,7 @@ export class Booking {
           booking.coupon.kidsCount,
         title,
         attach,
-        booking,
+        booking: booking.id,
         gateway: PaymentGateway.Coupon,
         gatewayData: {
           atReception,
@@ -431,7 +431,7 @@ export class Booking {
           (booking.socksCount || 0) * (config.sockPrice || 0) || 0,
         title,
         attach,
-        booking,
+        booking: booking.id,
         gateway: PaymentGateway.Balance,
         gatewayData: {
           atReception,
@@ -465,7 +465,7 @@ export class Booking {
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
         title,
         attach,
-        booking,
+        booking: booking.id,
         gateway: paymentGateway,
         gatewayData: {
           atReception
@@ -488,7 +488,7 @@ export class Booking {
         amountInPoints,
         title,
         attach,
-        booking,
+        booking: booking.id,
         gateway: paymentGateway,
         gatewayData: {
           atReception

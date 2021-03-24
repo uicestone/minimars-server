@@ -240,7 +240,7 @@ export class Card {
             : amount,
         title,
         attach,
-        card,
+        card: card.id,
         gateway: paymentGateway
       });
 
