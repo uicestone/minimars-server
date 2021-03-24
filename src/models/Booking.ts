@@ -380,6 +380,7 @@ export class Booking {
         gatewayData: {
           atReception,
           cardId: booking.card.id,
+          cardTitle: booking.card.title,
           timesBefore: booking.card.timesLeft
         }
       });
@@ -406,6 +407,7 @@ export class Booking {
         gatewayData: {
           atReception,
           couponId: booking.coupon.id,
+          couponTitle: booking.coupon.title,
           bookingId: booking.id
         }
       });

@@ -245,6 +245,8 @@ export default (router: Router) => {
           "金额",
           "余额面额",
           "次数",
+          "会员卡",
+          "平台券",
           "门店",
           "业务场景",
           "明细",
@@ -262,6 +264,8 @@ export default (router: Router) => {
           payment.amountDeposit || payment.amount,
           payment.amountDeposit ? payment.amount : "-",
           payment.times || "-",
+          payment.gatewayData.cardTitle || "-",
+          payment.gatewayData.couponTitle || "-",
           (
             stores.find(s => s.id === (payment.store || "").toString()) || {
               name: "-"
