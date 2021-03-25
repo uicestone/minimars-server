@@ -20,6 +20,7 @@ export enum Permission {
   PAYMENT_DOWNLOAD = "payment download",
   PAYMENT_LAST_WEEK = "payment last week",
   PAYMENT_LAST_MONTH = "payment last month",
+  PAYMENT_ALL_DATE = "payment all date",
   CARD_TYPE = "card-type",
   COUPON = "coupon",
   POST = "post",
