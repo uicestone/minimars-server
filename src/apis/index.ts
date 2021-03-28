@@ -83,11 +83,11 @@ export default (app: Express, router: Router) => {
     }),
     authenticate,
     function (req: Request, res: Response, next: NextFunction) {
-      if (req.session?.userRole === "admin") {
+      if (req.session?.authorized) {
         next();
       } else if (req.user.can(Permission.BOSSBOARD)) {
         next();
-        req.session = { userId: req.user.id, userRole: req.user.role };
+        req.session = { userId: req.user.id, authorized: true };
       } else {
         res.sendStatus(401);
       }
