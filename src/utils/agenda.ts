@@ -410,6 +410,7 @@ export const initAgenda = async () => {
       }
       // find bookings without customer, but has pospal customerUid
       const bookings = await BookingModel.find({
+        date: moment().format("YYYY-MM-DD"),
         "providerData.provider": "pospal",
         "providerData.customerUid": { $exists: true }
       }).where({ customer: null });
