@@ -46,5 +46,5 @@ jobs:
           echo "${DEPLOY_KEY}" | base64 --decode > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${DEPLOY_HOST} >> ~/.ssh/known_hosts
-          rsync -a -e ssh ./ --exclude package.json --delete ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}
-          scp dist/index.html ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/
+          rsync -a -e ssh ./ --exclude ./package.json --delete ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}
+          scp ./package.json ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/
