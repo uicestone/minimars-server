@@ -835,7 +835,12 @@ export class Booking {
       await this.save();
     }
 
-    if (this.type === Scene.PLAY && this.store && this.customer) {
+    if (
+      this.type === Scene.PLAY &&
+      this.store &&
+      this.customer &&
+      !this.payments.some(p => p.gateway === PaymentGateway.Coupon)
+    ) {
       sendTemplateMessage(this.customer, TemplateMessageType.CANCEL, [
         "您的预约已被取消",
         `${this.store.name} ${this.adultsCount}大${this.kidsCount}小`,
