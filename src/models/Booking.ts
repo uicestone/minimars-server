@@ -290,6 +290,9 @@ export class Booking {
     } else if (this.type === "food") {
       if (this.card && !this.populated("card")) {
         await this.populate("card").execPopulate();
+        if (this.price) {
+          bookingPrice.price = this.price;
+        }
         if (
           this.card.type === "coupon" &&
           (!this.card.overPrice || bookingPrice.price >= this.card.overPrice)
