@@ -77,6 +77,12 @@ export const SceneLabel = {
       if (!customer.openid) {
         throw new Error("no_customer_openid");
       }
+      payment.assets = payment.amount;
+      if (payment.booking) {
+        payment.revenue = payment.amount;
+      } else if (payment.card) {
+        payment.debt = payment.amount;
+      }
       if (payment.amount > 0) {
         const wechatUnifiedOrderData = await wechatUnifiedOrder(
           payment._id.toString(),
@@ -127,10 +133,14 @@ export const SceneLabel = {
       );
 
       payment.amountDeposit = depositPaymentAmount;
-      payment.paid = true;
-      if (payment.attach.match(/^booking /)) {
-        await payment.customer?.addPoints(payment.amount);
+      if (payment.booking) {
+        payment.debt = -payment.amountDeposit;
+        payment.balance = -payment.amount;
+        payment.revenue = payment.amountDeposit;
+      } else {
+        throw new Error("balance_payment_missing_booking");
       }
+      payment.paid = true;
       break;
     case PaymentGateway.Card:
       if (!payment.times || !payment.gatewayData.cardId) {
@@ -164,56 +174,28 @@ export const SceneLabel = {
           }.`
         );
       }
-      payment.paid = true;
-      if (payment.attach.match(/^booking /)) {
-        await payment.customer?.addPoints(payment.amount);
+      if (payment.booking) {
+        payment.debt = -payment.amount;
+        payment.revenue = payment.amount;
+      } else {
+        throw new Error("card_payment_missing_booking");
       }
-
+      payment.paid = true;
       break;
     case PaymentGateway.Coupon:
-      payment.paid = true;
-      // await payment.paidSuccess();
-      break;
-    case PaymentGateway.Scan:
-      break;
     case PaymentGateway.Cash:
-      payment.paid = true;
-      // await payment.paidSuccess();
-      if (payment.attach.match(/^booking /)) {
-        await payment.customer?.addPoints(payment.amount);
-      }
-      break;
     case PaymentGateway.Pr:
-      payment.paid = true;
-      // await payment.paidSuccess();
-      break;
     case PaymentGateway.Pos:
-      payment.paid = true;
-      // await payment.paidSuccess();
-      if (payment.attach.match(/^booking /)) {
-        await payment.customer?.addPoints(payment.amount);
-      }
-      break;
     case PaymentGateway.Dianping:
-      payment.paid = true;
-      // await payment.paidSuccess();
-      if (payment.attach.match(/^booking /)) {
-        await payment.customer?.addPoints(payment.amount);
-      }
-      break;
     case PaymentGateway.Shouqianba:
-      payment.paid = true;
-      // await payment.paidSuccess();
-      if (payment.attach.match(/^booking /)) {
-        await payment.customer?.addPoints(payment.amount);
-      }
-      break;
     case PaymentGateway.Mall:
-      payment.paid = true;
-      // await payment.paidSuccess();
+      payment.assets = payment.amount;
       if (payment.booking) {
-        await payment.customer?.addPoints(payment.amount);
+        payment.revenue = payment.amount;
+      } else {
+        payment.debt = payment.amount;
       }
+      payment.paid = true;
       break;
     case PaymentGateway.Points:
       if (payment.amountInPoints === undefined) {
@@ -227,7 +209,6 @@ export const SceneLabel = {
       }
       await customer.addPoints(-payment.amountInPoints);
       payment.paid = true;
-      // await payment.paidSuccess();
       break;
     default:
       throw new Error("unsupported_payment_gateway");
@@ -271,6 +252,18 @@ export class Payment {
 
   @prop()
   amountInPoints?: number;
+
+  @prop({ type: Number, default: 0 })
+  debt = 0;
+
+  @prop({ type: Number, default: 0 })
+  assets = 0;
+
+  @prop({ type: Number, default: 0 })
+  revenue = 0;
+
+  @prop({ type: Number })
+  balance?: number;
 
   @prop({ default: false })
   paid: boolean = false;
