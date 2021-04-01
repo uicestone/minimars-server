@@ -107,7 +107,7 @@ export async function syncUserPoints(
   });
   if (result.is_success) {
     console.log(
-      `[YZN] User points synded, ${user.points} ${user.mobile} ${user.id}.`
+      `[YZN] User points synchronized, ${user.points} ${user.mobile} ${user.id}.`
     );
   }
 }

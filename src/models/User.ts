@@ -178,7 +178,11 @@ export class User {
       if (!this.points) this.points = 0;
       this.points = +(this.points + r * amount).toFixed(2);
     }
-    syncUserPoints(this);
+    try {
+      await syncUserPoints(this);
+    } catch (err) {
+      //
+    }
   }
 
   async depositBalance(
