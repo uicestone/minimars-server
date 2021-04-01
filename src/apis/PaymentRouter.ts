@@ -127,7 +127,7 @@ export default (router: Router) => {
             $group: {
               _id: null,
               totalAmount: {
-                $sum: { $cond: ["$amountDeposit", "$amountDeposit", "$amount"] }
+                $sum: "$revenue"
               }
             }
           }
@@ -241,9 +241,11 @@ export default (router: Router) => {
       const data: any[][] = [
         [
           "手机",
-          "已支付",
-          "金额",
-          "余额面额",
+          "完成",
+          "资产",
+          "负债",
+          "收入",
+          "余额",
           "次数",
           "会员卡",
           "平台券",
@@ -261,8 +263,10 @@ export default (router: Router) => {
         const row = [
           payment.customer?.mobile || "",
           payment.paid,
-          payment.amountDeposit || payment.amount,
-          payment.amountDeposit ? payment.amount : "-",
+          payment.assets,
+          payment.debt,
+          payment.revenue,
+          payment.balance || "-",
           payment.times || "-",
           payment.gatewayData.cardTitle || "-",
           payment.gatewayData.couponTitle || "-",
