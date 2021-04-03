@@ -34,7 +34,7 @@ function handleError(res: any) {
   if (!res || !res.data) {
     throw new Error("wechat_api_network_error");
   } else if (res.data.errcode) {
-    console.error(`[WEC] Wechat API error: ${res.data.errmsg}.`);
+    console.error(`[WEC] Wechat API error: ${JSON.stringify(res.data)}.`);
     throw new Error("wechat_api_error");
   }
   return res.data;
