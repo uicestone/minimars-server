@@ -78,7 +78,7 @@ export async function getAccessToken(isMp = false): Promise<string> {
     }
   });
   if (!data?.access_token) throw new Error("invalid_access_token");
-  console.log(`[WEC] Get access token ${data.access_token}`);
+  console.log(`[WEC] Get access token: ${JSON.stringify(data)}.`);
   at.token = data.access_token;
   at.expiresAt = Date.now() + 3.6e6;
   return at.token;
