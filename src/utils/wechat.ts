@@ -5,6 +5,7 @@ import fs from "fs";
 import Axios, { AxiosRequestConfig } from "axios";
 import { User } from "../models/User";
 import { DocumentType } from "@typegoose/typegoose";
+import { sleep } from "./helper";
 
 const appId = process.env.WEIXIN_APPID || "";
 const secret = process.env.WEIXIN_SECRET || "";
@@ -45,7 +46,7 @@ async function request(
   path: string,
   data: any = null,
   config: AxiosRequestConfig = {}
-) {
+): Promise<any> {
   const client = Axios.create({
     baseURL: "https://api.weixin.qq.com/cgi-bin/"
   });
@@ -62,12 +63,21 @@ async function request(
   } else {
     res = await client.get(path, config);
   }
+  if (res.data.errcode === 40001) {
+    console.log("[WEC] Access token invalid, refresh and retry...");
+    await sleep(2000);
+    await getAccessToken(isMp, true);
+    return await request(isMp, path, data, config);
+  }
   return handleError(res);
 }
 
-export async function getAccessToken(isMp = false): Promise<string> {
+export async function getAccessToken(
+  isMp = false,
+  force = false
+): Promise<string> {
   const at = isMp ? accessTokenMp : accessToken;
-  if (at.expiresAt > Date.now()) {
+  if (!force && at.expiresAt > Date.now()) {
     return at.token;
   }
   const data = await request(isMp, "token", null, {
@@ -80,7 +90,7 @@ export async function getAccessToken(isMp = false): Promise<string> {
   if (!data?.access_token) throw new Error("invalid_access_token");
   console.log(`[WEC] Get access token: ${JSON.stringify(data)}.`);
   at.token = data.access_token;
-  at.expiresAt = Date.now() + 3.6e6;
+  at.expiresAt = Date.now() + data.expires_in * 1000 - 3e5;
   return at.token;
 }
 
