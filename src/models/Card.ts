@@ -179,6 +179,9 @@ export class Card {
   @prop()
   rewardCardTypes?: string;
 
+  @prop({ type: Boolean })
+  cardsRewarded?: boolean;
+
   @prop({ ref: "Booking" })
   rewardedFromBooking?: Ref<Booking>;
 

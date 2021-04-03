@@ -780,12 +780,17 @@ export class Booking {
         slug: { $in: rewardCardTypesString.split(" ") }
       });
 
-      for (
-        let n = 0;
-        n <
-        this.kidsCount / (this.coupon?.kidsCount || this.card?.minKids || 1);
-        n++
-      ) {
+      let n = 1;
+
+      if (this.coupon) {
+        n = this.kidsCount / this.coupon.kidsCount;
+      }
+
+      if (this.card && this.card.cardsRewarded) {
+        n = 0;
+      }
+
+      for (let i = 0; i < n; i++) {
         for (const cardType of rewardCardTypes) {
           const card = cardType.issue(this.customer);
 
@@ -797,6 +802,11 @@ export class Booking {
             `[CRD] Rewarded card ${card.slug} to customer ${this.customer.id}.`
           );
         }
+      }
+
+      if (this.card && !this.card.cardsRewarded) {
+        this.card.cardsRewarded = true;
+        await this.card.save();
       }
     }
 
