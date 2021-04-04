@@ -308,6 +308,10 @@ export class Booking {
           bookingPrice.price = this.card.fixedPrice;
         }
       }
+    } else if (this.type === "party") {
+      if (this.price) {
+        bookingPrice.price = this.price;
+      }
     }
     return bookingPrice;
   }
@@ -337,6 +341,8 @@ export class Booking {
       title = `${booking.gift.title} ${booking.quantity}份 ${
         booking.store?.name || "门店通用"
       } `;
+    } else if (booking.type === Scene.PARTY) {
+      title = "派对消费";
     } else if (booking.type === Scene.EVENT) {
       if (!booking.event || !booking.store)
         throw new Error("undefined_event_store");
@@ -524,11 +530,6 @@ export class Booking {
     } else if ([Scene.GIFT, Scene.EVENT].includes(this.type)) {
       this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
-      if (this.card && this.card.type === "times") {
-        const card = await CardModel.findById(this.card);
-        if (!card) throw new Error("invalid_card");
-        this.card = card;
-      }
       await this.checkIn(false);
     } else {
       this.status = BookingStatus.BOOKED;
