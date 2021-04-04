@@ -13,6 +13,7 @@ export enum Permission {
   BOOKING_ALL_STORE = "booking all store",
   BOOKING_CREATE = "booking create",
   BOOKING_CANCEL_REVIEW = "booking cancel review",
+  CARD = "card",
   CARD_SELL_STORE = "card sell store",
   CARD_SELL_ALL = "card sell all",
   CUSTOMER = "customer",

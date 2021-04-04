@@ -106,7 +106,9 @@ export default (router: Router) => {
     .all(
       handleAsyncErrors(
         async (req: Request, res: Response, next: NextFunction) => {
-          const cardType = await CardTypeModel.findById(req.params.cardTypeId);
+          const cardType = isValidHexObjectId(req.params.cardTypeId)
+            ? await CardTypeModel.findById(req.params.cardTypeId)
+            : await CardTypeModel.findOne({ slug: req.params.cardTypeId });
           if (!cardType) {
             throw new HttpError(
               404,

@@ -68,6 +68,10 @@ export interface CardPostQuery {
 export interface CardQuery extends ListQuery {
   status?: string; // support comma separated values
   customer?: string;
+  title?: string;
+  slug?: string;
+  stores?: string;
+  type?: string;
 }
 
 export interface CardTypePostBody extends Partial<CardType> {}

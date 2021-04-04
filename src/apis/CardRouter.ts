@@ -195,11 +195,17 @@ export default (router: Router) => {
 
         query.select("-content");
 
-        (["customer"] as Array<keyof CardQuery>).forEach(field => {
+        (["customer", "slug", "stores", "type"] as Array<
+          keyof CardQuery
+        >).forEach(field => {
           if (queryParams[field]) {
             query.find({ [field]: queryParams[field] });
           }
         });
+
+        if (queryParams.title) {
+          query.find({ title: new RegExp("^" + queryParams.title) });
+        }
 
         if (queryParams.status) {
           query.find({
