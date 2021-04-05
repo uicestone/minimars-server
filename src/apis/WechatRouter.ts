@@ -208,7 +208,7 @@ export default (router: Router) => {
         }
 
         payment.paid = true;
-        if (payment.attach.match(/^booking /)) {
+        if (payment.booking) {
           await payment.customer?.addPoints(payment.amount);
         }
         Object.assign(payment.gatewayData, parsedData);

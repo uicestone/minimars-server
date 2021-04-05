@@ -63,9 +63,12 @@ export default (router: Router) => {
         }
 
         if (queryParams.attach) {
-          query.find({
-            attach: new RegExp("^" + escapeStringRegexp(queryParams.attach))
-          });
+          if (queryParams.attach === "booking") {
+            query.where({ booking: { $exists: true } });
+          }
+          if (queryParams.attach === "card") {
+            query.where({ card: { $exists: true } });
+          }
         }
 
         if (queryParams.title) {
@@ -181,9 +184,12 @@ export default (router: Router) => {
       }
 
       if (queryParams.attach) {
-        query.find({
-          attach: new RegExp("^" + escapeStringRegexp(queryParams.attach))
-        });
+        if (queryParams.attach === "booking") {
+          query.where({ booking: { $exists: true } });
+        }
+        if (queryParams.attach === "card") {
+          query.where({ card: { $exists: true } });
+        }
       }
 
       if (queryParams.title) {

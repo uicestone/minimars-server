@@ -271,9 +271,6 @@ export class Payment {
   @prop({ default: " " })
   title: string = " ";
 
-  @prop({ type: String, default: "" })
-  attach: string = "";
-
   @prop({ ref: "Booking" })
   booking?: Ref<Booking>;
 
@@ -319,43 +316,38 @@ export class Payment {
     return wechatPayArgs(wechatGatewayData);
   }
 
+  get attach() {
+    if (this.card) return `card ${this.card}`;
+    if (this.booking) return `booking ${this.booking}`;
+    return ((this as unknown) as DocumentType<Payment>).id;
+  }
+
   async paidSuccess(this: DocumentType<Payment>) {
     const payment = this;
 
-    const paymentAttach = payment.attach.split(" ");
-
-    switch (paymentAttach[0]) {
-      case "booking":
-        if (!isValidHexObjectId(paymentAttach[1])) break;
-        const booking = await BookingModel.findOne({ _id: paymentAttach[1] });
-        if (!booking) throw new Error("invalid_booking");
-        if (payment.amount >= 0) {
-          // TODO: no, single payment success is not booking payment success
-          // so right now we don't trigger paidSuccess for balance/card/coupon payment
-          console.log(
-            `[PAY] Booking payment success ${this.id}, booking: ${booking._id}.`
-          );
-          await booking.paymentSuccess();
-        } else {
-          console.log(
-            `[PAY] Booking refund success ${this.id}, booking: ${booking._id}.`
-          );
-          await booking.refundSuccess();
-        }
-        await booking.save();
-        break;
-      case "card":
-        if (!isValidHexObjectId(paymentAttach[1])) break;
-        const card = await CardModel.findOne({ _id: paymentAttach[1] });
-        if (!card) throw new Error("invalid_card");
-        await card.paymentSuccess();
-        await card.save();
-        console.log(`[PAY] Card purchase success, id: ${card._id}.`);
-        break;
-      default:
-      // console.error(
-      //   `[PAY] Unknown payment attach: ${JSON.stringify(payment.attach)}`
-      // );
+    if (this.booking) {
+      const booking = await BookingModel.findById(this.booking);
+      if (!booking) throw new Error("invalid_booking");
+      if (payment.amount >= 0) {
+        // TODO: no, single payment success is not booking payment success
+        // so right now we don't trigger paidSuccess for balance/card/coupon payment
+        console.log(
+          `[PAY] Booking payment success ${this.id}, booking: ${booking._id}.`
+        );
+        await booking.paymentSuccess();
+      } else {
+        console.log(
+          `[PAY] Booking refund success ${this.id}, booking: ${booking._id}.`
+        );
+        await booking.refundSuccess();
+      }
+      await booking.save();
+    } else if (this.card) {
+      const card = await CardModel.findById(this.card);
+      if (!card) throw new Error("invalid_card");
+      await card.paymentSuccess();
+      await card.save();
+      console.log(`[PAY] Card purchase success, id: ${card._id}.`);
     }
   }
 }

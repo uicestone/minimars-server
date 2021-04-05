@@ -621,7 +621,6 @@ export class Booking {
           ? -p.amountForceDeposit
           : undefined,
         title: `退款：${p.title}`,
-        attach: p.attach,
         booking: p.booking,
         gateway: p.gateway,
         card: p.card,
@@ -642,7 +641,6 @@ export class Booking {
         amount: 0,
         amountInPoints: p.amountInPoints && -p.amountInPoints,
         title: `积分退还：${p.title}`,
-        attach: p.attach,
         booking: p.booking,
         gateway: p.gateway,
         gatewayData: p.gatewayData,
@@ -660,7 +658,6 @@ export class Booking {
           store: booking.store,
           amount: -p.amount,
           title: `退款：${p.title}`,
-          attach: p.attach,
           booking: p.booking,
           gateway: p.gateway,
           original: p.id

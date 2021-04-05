@@ -288,7 +288,6 @@ export class Card {
           store: p.store,
           amount: -p.amount,
           title: `退款：${p.title}`,
-          attach: p.attach,
           card: p.card,
           times: p.times ? -p.times : undefined,
           gateway: p.gateway,
