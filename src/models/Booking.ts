@@ -481,12 +481,12 @@ export class Booking {
         }
       });
 
+      await extraPayment.save();
+      booking.payments.push(extraPayment);
+
       if (paymentGateway !== PaymentGateway.WechatPay) {
         await booking.paymentSuccess(atReception);
       }
-
-      await extraPayment.save();
-      booking.payments.push(extraPayment);
     }
     if (amountInPoints && paymentGateway === PaymentGateway.Points) {
       const pointsPayment = new PaymentModel({
@@ -580,6 +580,15 @@ export class Booking {
         await this.customer.save();
       }
     }
+
+    const amountPaidNoCoupon = this.payments.reduce((amount, p) => {
+      if (p.paid && p.gateway !== PaymentGateway.Coupon) {
+        amount += p.amount;
+      }
+      return amount;
+    }, 0);
+
+    await this.customer?.addPoints(amountPaidNoCoupon);
 
     // send user notification
   }

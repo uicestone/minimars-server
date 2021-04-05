@@ -20,7 +20,6 @@ import {
   payArgs as wechatPayArgs,
   refundOrder
 } from "../utils/wechat";
-import { isValidHexObjectId } from "../utils/helper";
 import moment from "moment";
 import HttpError from "../utils/HttpError";
 
