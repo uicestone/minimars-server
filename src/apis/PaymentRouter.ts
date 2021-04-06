@@ -62,6 +62,18 @@ export default (router: Router) => {
           }
         }
 
+        if (queryParams.refunded) {
+          // when search refunded payment, provide refund payment as well
+          if (queryParams.refunded === "true") {
+            query.where({ $or: [{ refunded: true }, { amount: { $lt: 0 } }] });
+          } else {
+            query.where({
+              refunded: { $in: [null, false] },
+              amount: { $gt: 0 }
+            });
+          }
+        }
+
         if (queryParams.attach) {
           if (queryParams.attach === "booking ") {
             query.where({ booking: { $exists: true } });
@@ -72,8 +84,18 @@ export default (router: Router) => {
         }
 
         if (queryParams.title) {
-          query.find({
-            title: new RegExp("^" + escapeStringRegexp(queryParams.title))
+          // auto match refund payment as well
+          query.where({
+            $or: [
+              {
+                title: new RegExp("^" + escapeStringRegexp(queryParams.title))
+              },
+              {
+                title: new RegExp(
+                  "^退款：" + escapeStringRegexp(queryParams.title)
+                )
+              }
+            ]
           });
         }
 

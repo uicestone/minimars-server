@@ -267,6 +267,9 @@ export class Payment {
   @prop({ default: false })
   paid: boolean = false;
 
+  @prop({ type: Boolean })
+  refunded?: boolean;
+
   @prop({ default: " " })
   title: string = " ";
 

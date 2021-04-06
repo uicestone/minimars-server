@@ -295,6 +295,8 @@ export class Card {
           gateway: p.gateway,
           original: p.id
         });
+        p.refunded = true;
+        await p.save();
         await refundPayment.save();
       })
     );

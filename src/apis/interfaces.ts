@@ -124,6 +124,7 @@ export interface PaymentQuery extends ListQuery {
   date?: string;
   dateEnd?: string;
   paid?: "false";
+  refunded?: "true";
   customer?: string;
   attach?: string;
   title?: string;

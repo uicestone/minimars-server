@@ -637,6 +637,8 @@ export class Booking {
         gatewayData: p.gatewayData,
         original: p.id
       });
+      p.refunded = true;
+      await p.save();
       await refundPayment.save();
     }
 
@@ -654,6 +656,8 @@ export class Booking {
         gatewayData: p.gatewayData,
         original: p.id
       });
+      p.refunded = true;
+      await p.save();
       await refundPayment.save();
     }
 
@@ -669,6 +673,8 @@ export class Booking {
           gateway: p.gateway,
           original: p.id
         });
+        p.refunded = true;
+        await p.save();
         await refundPayment.save();
       })
     );
