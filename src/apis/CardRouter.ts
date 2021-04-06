@@ -324,18 +324,18 @@ export default (router: Router) => {
           const customer = await UserModel.findById(card.customer);
           if (!customer) throw new Error("invalid_customer");
           if (
-            !customer.balanceDeposit ||
-            customer.balanceDeposit < card.price ||
-            !customer.balanceReward ||
-            customer.balanceReward < card.balanceReward
+            (card.price &&
+              (!customer.balanceDeposit ||
+                customer.balanceDeposit < card.price)) ||
+            (card.balance &&
+              (!customer.balanceReward ||
+                customer.balanceReward < card.balanceReward))
           ) {
             throw new HttpError(400, "用户余额已不足以删除本储值卡");
           }
           await customer.depositBalance(-card.balance, -card.price);
         }
-        await Payment.deleteMany({
-          _id: { $in: card.payments.map(p => p.id) }
-        });
+        await Payment.deleteMany({ card });
         await card.remove();
         res.end();
       })

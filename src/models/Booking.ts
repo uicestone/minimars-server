@@ -13,7 +13,7 @@ import { config } from "../models/Config";
 import PaymentModel, { Payment, PaymentGateway, Scene } from "./Payment";
 import { User } from "./User";
 import { Store } from "./Store";
-import CardModel, { Card } from "./Card";
+import { Card } from "./Card";
 import { Event } from "./Event";
 import { Gift } from "./Gift";
 import { Coupon } from "./Coupon";
@@ -168,7 +168,11 @@ export class Booking {
   @prop({ type: Number }) // quantity of gifts
   quantity?: number;
 
-  @prop({ ref: "Payment" })
+  @prop({
+    ref: "Payment",
+    foreignField: "booking",
+    localField: "_id"
+  })
   payments!: DocumentType<Payment>[];
 
   @prop()
@@ -394,7 +398,6 @@ export class Booking {
         }
       });
       await cardPayment.save();
-      booking.payments.push(cardPayment);
     }
 
     if (booking.coupon) {
@@ -421,7 +424,6 @@ export class Booking {
         }
       });
       await couponPayment.save();
-      booking.payments.push(couponPayment);
     }
 
     if (
@@ -450,7 +452,6 @@ export class Booking {
       });
 
       await balancePayment.save();
-      booking.payments.push(balancePayment);
     }
 
     const extraPayAmount = totalPayAmount - balancePayAmount;
@@ -482,7 +483,6 @@ export class Booking {
       });
 
       await extraPayment.save();
-      booking.payments.push(extraPayment);
 
       if (paymentGateway !== PaymentGateway.WechatPay) {
         await booking.paymentSuccess(atReception);
@@ -512,14 +512,14 @@ export class Booking {
       }
 
       await pointsPayment.save();
-      booking.payments.push(pointsPayment);
     }
+
     if (paymentGateway === PaymentGateway.Points && !amountInPoints) {
       throw new Error("points_gateway_not_supported");
     }
 
-    // we have to save all payments before booking saved, otherwise mongoose remove unsaved ref keys
-    // await Promise.all(booking.payments.map(p => p.save()));
+    await booking.populate("payments").execPopulate();
+
     // we give up save all payments at the same time. It saves no time but cause a user parallel saving problem
   }
 
@@ -638,7 +638,6 @@ export class Booking {
         original: p.id
       });
       await refundPayment.save();
-      booking.payments.push(refundPayment);
     }
 
     for (const payment of pointsPayments) {
@@ -656,7 +655,6 @@ export class Booking {
         original: p.id
       });
       await refundPayment.save();
-      booking.payments.push(refundPayment);
     }
 
     await Promise.all(
@@ -672,9 +670,11 @@ export class Booking {
           original: p.id
         });
         await refundPayment.save();
-        booking.payments.push(refundPayment);
       })
     );
+
+    await booking.populate("payments").execPopulate();
+
     booking.status = BookingStatus.CANCELED;
   }
 

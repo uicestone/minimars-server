@@ -63,10 +63,10 @@ export default (router: Router) => {
         }
 
         if (queryParams.attach) {
-          if (queryParams.attach === "booking") {
+          if (queryParams.attach === "booking ") {
             query.where({ booking: { $exists: true } });
           }
-          if (queryParams.attach === "card") {
+          if (queryParams.attach === "card ") {
             query.where({ card: { $exists: true } });
           }
         }

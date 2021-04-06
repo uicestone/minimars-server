@@ -97,7 +97,11 @@ export class Card {
   })
   status: CardStatus = CardStatus.PENDING;
 
-  @prop({ ref: "Payment" })
+  @prop({
+    ref: "Payment",
+    foreignField: "card",
+    localField: "_id"
+  })
   payments!: DocumentType<Payment>[];
 
   @prop({ type: Date })
@@ -256,8 +260,6 @@ export class Card {
       if (paymentGateway !== PaymentGateway.WechatPay) {
         await card.paymentSuccess();
       }
-
-      card.payments.push(payment);
     }
   }
 
@@ -294,9 +296,10 @@ export class Card {
           original: p.id
         });
         await refundPayment.save();
-        card.payments.push(refundPayment);
       })
     );
+
+    await card.populate("payments").execPopulate();
 
     this.refundSuccess();
   }

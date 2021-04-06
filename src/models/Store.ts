@@ -277,8 +277,6 @@ export class Store {
           // drop internal payment
           .filter(p => p.gateway !== PaymentGateway.Internal);
 
-        booking.payments = payments;
-
         await booking.save(); // may throw duplicate error so skip payment saving below
         insertBookings++;
         await Promise.all(

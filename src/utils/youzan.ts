@@ -259,7 +259,6 @@ async function createBooking(trade: any) {
     title: orders.map((o: any) => o.title).join(", "),
     amount: totalFee
   });
-  booking.payments = [payment];
   try {
     await booking.save();
     await payment.save();
