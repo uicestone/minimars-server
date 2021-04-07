@@ -252,7 +252,7 @@ export class Card {
       });
 
       if (card.type === "times" && card.times !== undefined) {
-        payment.times = -card.times;
+        payment.times = card.times;
       }
 
       await payment.save();
