@@ -267,7 +267,7 @@ export class Store {
               customer: booking.customer,
               store: this,
               amount: p.amount,
-              attach: `booking ${booking.id}`,
+              booking: booking.id,
               gateway: this.pospalPaymentMethodMap?.[p.code],
               gatewayData: { provider: "pospal" },
               createdAt: new Date(ticket.datetime)
