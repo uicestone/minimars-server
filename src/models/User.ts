@@ -220,11 +220,12 @@ export class User {
     syncToPospal = true
   ) {
     if (this.balanceDeposit === undefined || this.balanceReward === undefined) {
+      console.error(`[USR] Invalid balance of user ${this.id}.`);
       throw new Error("invalid_balance");
     }
     if (this.balance < amount) {
       console.log(
-        `[USR] Insufficient balance ${this.balance}, trying to write-off ${amount}.`
+        `[USR] Insufficient balance ${this.balance} of user ${this.id}, trying to write-off ${amount}.`
       );
       throw new Error("insufficient_balance");
     }
