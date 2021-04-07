@@ -178,11 +178,7 @@ export class User {
       if (!this.points) this.points = 0;
       this.points = +(this.points + r * amount).toFixed(2);
     }
-    try {
-      await syncUserPoints(this);
-    } catch (err) {
-      //
-    }
+    syncUserPoints(this).catch(err => {});
   }
 
   async depositBalance(
@@ -208,7 +204,7 @@ export class User {
       await this.save();
     }
 
-    await new Pospal().addMember(this);
+    new Pospal().addMember(this);
 
     console.log(
       `[USR] Deposit balance of ${this.id} to ${this.balanceDeposit}:${this.balanceReward}, was ${balanceDepositWas}:${balanceRewardWas}`
@@ -251,13 +247,11 @@ export class User {
     this.balanceReward -= rewardPaymentAmount;
 
     if (syncToPospal) {
-      try {
-        await new Pospal().addMember(this);
-      } catch (e) {
+      new Pospal().addMember(this).catch(e => {
         console.error(
           `[USR] Sync ${this.id} ${this.mobile} to pospal failed: ${e.message}.`
         );
-      }
+      });
     }
 
     if (save) {
