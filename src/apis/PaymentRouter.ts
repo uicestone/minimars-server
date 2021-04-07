@@ -35,6 +35,8 @@ export default (router: Router) => {
           createdAt: -1
         };
 
+        const $ors: Record<string, any> = [];
+
         if (!req.user.role) {
           query.find({ customer: req.user });
         } else if (
@@ -47,10 +49,10 @@ export default (router: Router) => {
         }
 
         if (queryParams.date) {
-          const start = moment(queryParams.date).startOf("day");
-          const end = moment(queryParams.dateEnd || queryParams.date).endOf(
-            "day"
-          );
+          const start = moment(queryParams.date).startOf("day").toDate();
+          const end = moment(queryParams.dateEnd || queryParams.date)
+            .endOf("day")
+            .toDate();
           query.find({ createdAt: { $gte: start, $lte: end } });
         }
 
@@ -65,7 +67,7 @@ export default (router: Router) => {
         if (queryParams.refunded) {
           // when search refunded payment, provide refund payment as well
           if (queryParams.refunded === "true") {
-            query.where({ $or: [{ refunded: true }, { amount: { $lt: 0 } }] });
+            $ors.push({ $or: [{ refunded: true }, { amount: { $lt: 0 } }] });
           } else {
             query.where({
               refunded: { $in: [null, false] },
@@ -85,7 +87,7 @@ export default (router: Router) => {
 
         if (queryParams.title) {
           // auto match refund payment as well
-          query.where({
+          $ors.push({
             $or: [
               {
                 title: new RegExp("^" + escapeStringRegexp(queryParams.title))
@@ -140,6 +142,10 @@ export default (router: Router) => {
           query.find({
             scene: { $in: queryParams.scene.split(",") as Scene[] }
           });
+        }
+
+        if ($ors.length) {
+          query.where({ $and: $ors });
         }
 
         let total = await query.countDocuments();
