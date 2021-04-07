@@ -151,7 +151,7 @@ export const SceneLabel = {
         throw new Error("invalid_card");
 
       if (payment.times < 0) {
-        card.timesLeft -= payment.times;
+        card.timesLeft += payment.times;
         await card.save();
         console.log(
           `[PAY] Card ${card.id} refunded, time left: ${card.timesLeft}.`
@@ -163,7 +163,7 @@ export const SceneLabel = {
         if (card.timesLeft < payment.times) {
           throw new Error("insufficient_card_times");
         }
-        card.timesLeft -= payment.times;
+        card.timesLeft += payment.times;
         await card.save();
         console.log(
           `[PAY] Card ${
