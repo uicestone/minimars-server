@@ -602,20 +602,28 @@ export class Booking {
     const balanceAndCardPayments = booking.payments.filter(
       (p: DocumentType<Payment>) =>
         [PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
-        p.amount >= 0 &&
-        p.paid
+        p.amount > 0 &&
+        p.paid &&
+        !p.original &&
+        !p.refunded
     );
 
     const pointsPayments = booking.payments.filter(
       (p: DocumentType<Payment>) =>
-        [PaymentGateway.Points].includes(p.gateway) && p.amount >= 0 && p.paid
+        [PaymentGateway.Points].includes(p.gateway) &&
+        p.amount > 0 &&
+        p.paid &&
+        !p.original &&
+        !p.refunded
     );
 
     const extraPayments = booking.payments.filter(
       (p: DocumentType<Payment>) =>
         ![PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
         p.amount > 0 &&
-        p.paid
+        p.paid &&
+        !p.original &&
+        !p.refunded
     );
 
     for (const payment of balanceAndCardPayments) {
@@ -638,8 +646,8 @@ export class Booking {
         original: p.id
       });
       p.refunded = true;
-      await p.save();
       await refundPayment.save();
+      await p.save();
     }
 
     for (const payment of pointsPayments) {
@@ -657,8 +665,8 @@ export class Booking {
         original: p.id
       });
       p.refunded = true;
-      await p.save();
       await refundPayment.save();
+      await p.save();
     }
 
     await Promise.all(
@@ -674,8 +682,10 @@ export class Booking {
           original: p.id
         });
         p.refunded = true;
-        await p.save();
+        // refund payment should go before original save
+        // in case refund payment save throws error
         await refundPayment.save();
+        await p.save();
       })
     );
 
