@@ -299,6 +299,7 @@ async function createBooking(trade: any) {
       gateway: PaymentGateway.Points,
       booking,
       title: orders.map((o: any) => o.title).join(", "),
+      amount: 0,
       amountInPoints: totalPointsPrice
     });
     await totalPointsPayment.save();
