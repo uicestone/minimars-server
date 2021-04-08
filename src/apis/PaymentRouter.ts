@@ -155,7 +155,13 @@ export default (router: Router) => {
 
         let total = await query.countDocuments();
         const [
-          { assets, debt, revenue, balance, times }
+          { assets, debt, revenue, balance, times } = {
+            assets: 0,
+            debt: 0,
+            revenue: 0,
+            balance: 0,
+            times: 0
+          }
         ] = await PaymentModel.aggregate([
           //@ts-ignore
           { $match: query._conditions },
