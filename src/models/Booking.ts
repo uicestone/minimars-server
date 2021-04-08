@@ -613,7 +613,8 @@ export class Booking {
     const pointsPayments = booking.payments.filter(
       (p: DocumentType<Payment>) =>
         [PaymentGateway.Points].includes(p.gateway) &&
-        p.amount > 0 &&
+        p.amountInPoints &&
+        p.amountInPoints > 0 &&
         p.paid &&
         !p.original &&
         !p.refunded
