@@ -145,12 +145,13 @@ export const SceneLabel = {
       if (!payment.times || !payment.gatewayData.cardId) {
         throw new Error("invalid_card_payment_gateway_data");
       }
-      const card = await CardModel.findOne({ _id: payment.gatewayData.cardId });
+      const card = await CardModel.findById(payment.gatewayData.cardId);
 
-      if (!card || card.timesLeft === undefined)
+      if (!card || card.timesLeft === undefined) {
         throw new Error("invalid_card");
+      }
 
-      if (payment.times < 0) {
+      if (payment.times > 0) {
         card.timesLeft += payment.times;
         await card.save();
         console.log(
@@ -160,7 +161,7 @@ export const SceneLabel = {
         if (card.status !== CardStatus.ACTIVATED) {
           throw new Error("invalid_card");
         }
-        if (card.timesLeft < payment.times) {
+        if (card.timesLeft + payment.times < 0) {
           throw new Error("insufficient_card_times");
         }
         card.timesLeft += payment.times;
