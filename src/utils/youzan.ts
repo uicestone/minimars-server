@@ -227,12 +227,10 @@ export async function handleTradeClose(message: {
 
 async function createBooking(trade: any) {
   const booking = new BookingModel();
-  const payment = new PaymentModel();
   const {
     full_order_info: {
       buyer_info: { buyer_phone: mobile },
       order_info: { created, tid },
-      pay_info: { total_fee: totalFee },
       orders
     }
   } = trade;
@@ -251,21 +249,59 @@ async function createBooking(trade: any) {
     status: BookingStatus.BOOKED,
     remarks: orders.map((o: any) => `${o.title}×${o.num}`).join("、")
   });
-  payment.set({
-    scene: Scene.MALL,
-    customer: user,
-    gateway: PaymentGateway.Mall,
-    booking,
-    title: orders.map((o: any) => o.title).join(", "),
-    amount: totalFee
-  });
+
   try {
     await booking.save();
-    await payment.save();
   } catch (err) {
     if (err.code === 11000) {
-      // silent on dup provider order
+      // silent on dup provider order, skip payment creating
+      return;
+    } else {
+      throw err;
     }
+  }
+
+  const { totalFee, totalPointsPrice } = orders.reduce(
+    (acc: { totalFee: number; totalPointsPrice: number }, order: any) => {
+      if (order.total_fee) {
+        acc.totalFee = +(+order.total_fee + acc.totalFee).toFixed(10);
+      }
+      if (order.points_price) {
+        acc.totalPointsPrice = +(
+          +order.points_price + acc.totalPointsPrice
+        ).toFixed(10);
+      }
+      return acc;
+    },
+    { totalFee: 0, totalPointsPrice: 0 }
+  );
+
+  if (totalFee) {
+    const totalFeePayment = new PaymentModel();
+    totalFeePayment.set({
+      scene: Scene.MALL,
+      customer: user,
+      gateway: PaymentGateway.Mall,
+      booking,
+      title: orders.map((o: any) => o.title).join(", "),
+      amount: totalFee,
+      assets: totalFee,
+      revenue: totalFee
+    });
+    await totalFeePayment.save();
+  }
+
+  if (totalPointsPrice) {
+    const totalPointsPayment = new PaymentModel();
+    totalPointsPayment.set({
+      scene: Scene.MALL,
+      customer: user,
+      gateway: PaymentGateway.Points,
+      booking,
+      title: orders.map((o: any) => o.title).join(", "),
+      amountInPoints: totalPointsPrice
+    });
+    await totalPointsPayment.save();
   }
 }
 
