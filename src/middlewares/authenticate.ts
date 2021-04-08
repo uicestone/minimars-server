@@ -13,18 +13,19 @@ export default async function (
 ) {
   const token = req.get("authorization") || req.query.token;
 
+  if (DEBUG && token && token.length < 128) {
+    const user = await UserModel.findOne({
+      login: token.replace(/^Bearer /, "")
+    });
+
+    if (user) {
+      req.user = user;
+      return next();
+    }
+  }
+
   if (token) {
     try {
-      if (DEBUG) {
-        const user = await UserModel.findOne({
-          login: token.replace(/^Bearer /, "")
-        });
-
-        if (user) {
-          req.user = user;
-          return next();
-        }
-      }
       const tokenData = getTokenData(token);
       const user = await UserModel.findById(tokenData.userId);
       if (user) req.user = user;
@@ -32,14 +33,21 @@ export default async function (
     } catch (err) {
       return next(new HttpError(401, "无效登录，请重新登录"));
     }
-  } else if (
-    ["booking(/.*)?", "payment.*"].some(pattern =>
-      req.path.match(`^/api/${pattern}$`)
-    )
+  }
+
+  if (
+    !req.user &&
+    ![
+      "config(/.*)?",
+      "store(/.*)?",
+      "coupon(/.*)?",
+      "card-type(/.*)?",
+      "role(/.*)?"
+    ].some(pattern => req.path.match(`^/api/${pattern}$`))
   ) {
     return next(new HttpError(401, "登录后才能访问此功能"));
   } else {
-    req.user = new UserModel({ _id: Types.ObjectId(), role: "guest" });
+    req.user = new UserModel({ _id: Types.ObjectId() });
   }
 
   next();
