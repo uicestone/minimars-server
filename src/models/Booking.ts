@@ -380,8 +380,8 @@ export class Booking {
         }
       }
       const cardTimes = booking.card.maxKids
-        ? Math.min(booking.kidsCount || 0, booking.card.maxKids)
-        : booking.kidsCount || 0;
+        ? Math.min(booking.kidsCount || 1, booking.card.maxKids)
+        : booking.kidsCount || 1;
       const cardPayment = new PaymentModel({
         scene: booking.type,
         customer: booking.customer,
