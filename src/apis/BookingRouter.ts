@@ -245,6 +245,8 @@ export default (router: Router) => {
           }
         }
 
+        await booking.save();
+
         try {
           const bookingPrice = await booking.calculatePrice();
           if (booking.customer.isNew) {
