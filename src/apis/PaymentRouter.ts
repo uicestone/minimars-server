@@ -155,15 +155,27 @@ export default (router: Router) => {
 
         let total = await query.countDocuments();
         const [
-          { totalAmount } = { totalAmount: 0 }
+          { assets, debt, revenue, balance, times }
         ] = await PaymentModel.aggregate([
           //@ts-ignore
           { $match: query._conditions },
           {
             $group: {
               _id: null,
-              totalAmount: {
+              assets: {
+                $sum: "$assets"
+              },
+              debt: {
+                $sum: "$debt"
+              },
+              revenue: {
                 $sum: "$revenue"
+              },
+              balance: {
+                $sum: "$balance"
+              },
+              times: {
+                $sum: "$times"
               }
             }
           }
@@ -180,7 +192,12 @@ export default (router: Router) => {
           total = skip + page.length;
         }
 
-        res.set("total-amount", totalAmount.toFixed(2));
+        res.set(
+          "total-amount",
+          [assets, debt, revenue, balance, times]
+            .map((n, i) => (i === 4 ? n.toFixed() : n.toFixed(2)))
+            .join(",")
+        );
 
         res.paginatify(limit, skip, total).json(page);
       })
