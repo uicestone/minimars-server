@@ -60,7 +60,7 @@ export default (router: Router) => {
 
   router.route("/auth/user").get(
     handleAsyncErrors(async (req: Request, res: Response) => {
-      const user = await UserModel.findOne({ _id: req.user });
+      const user = req.user;
       if (!user) {
         throw new HttpError(401, "用户未登录");
       }

@@ -29,7 +29,7 @@ export default async function (
       const tokenData = getTokenData(token);
       const user = await UserModel.findById(tokenData.userId);
       if (user) req.user = user;
-      // req.user = await User.findById(tokenData.userId);
+      else throw new Error("user_not_found");
     } catch (err) {
       return next(new HttpError(401, "无效登录，请重新登录"));
     }
@@ -42,8 +42,13 @@ export default async function (
       "store(/.*)?",
       "coupon(/.*)?",
       "card-type(/.*)?",
-      "role(/.*)?"
-    ].some(pattern => req.path.match(`^/api/${pattern}$`))
+      "role(/.*)?",
+      "post(/.*)?",
+      "wechat.*",
+      "youzan.*"
+    ].some(pattern => {
+      return req.path.match(`^/${pattern}$`);
+    })
   ) {
     return next(new HttpError(401, "登录后才能访问此功能"));
   } else {
