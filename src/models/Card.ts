@@ -251,7 +251,7 @@ export class Card {
         gateway: paymentGateway
       });
 
-      if (card.type === "times" && card.times !== undefined) {
+      if (card.times !== undefined) {
         payment.times = card.times;
       }
 
