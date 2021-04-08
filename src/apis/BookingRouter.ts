@@ -93,11 +93,14 @@ export default (router: Router) => {
 
         if (booking.type === Scene.PLAY) {
           if (!booking.store) throw new Error("missing_booking_store");
-          if (!booking.kidsCount) {
+          if (!booking.kidsCount || booking.kidsCount < 0) {
             booking.kidsCount = 0;
           }
-          if (!booking.adultsCount) {
+          if (!booking.adultsCount || booking.adultsCount < 0) {
             booking.adultsCount = 0;
+          }
+          if (!booking.kidsCount && !booking.adultsCount) {
+            throw new HttpError(400, "成人和儿童数不能都为0");
           }
           if (booking.card) {
             const otherBookings = await BookingModel.find({
