@@ -379,17 +379,19 @@ export class Booking {
           throw new Error("card_expired");
         }
       }
+      const cardTimes = booking.card.maxKids
+        ? Math.min(booking.kidsCount || 0, booking.card.maxKids)
+        : booking.kidsCount || 0;
       const cardPayment = new PaymentModel({
         scene: booking.type,
         customer: booking.customer,
         store: booking.store,
-        amount:
-          (booking.card.price / booking.card.times) * (booking.kidsCount || 1),
+        amount: (booking.card.price / booking.card.times) * cardTimes,
         title,
         attach,
         booking: booking.id,
         gateway: PaymentGateway.Card,
-        times: -(booking.kidsCount || 1),
+        times: -cardTimes,
         gatewayData: {
           atReception,
           cardId: booking.card.id,
