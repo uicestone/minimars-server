@@ -19,6 +19,7 @@ import { saveContentImages, sleep } from "./helper";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
 import Pospal from "./pospal";
 import BookingModel from "../models/Booking";
+import { syncUserPoints } from "./youzan";
 
 const pospalTicketsSyncInterval = +(
   process.env.POSPAL_TICKETS_SYNC_INTERVAL || 1
@@ -449,6 +450,35 @@ export const initAgenda = async () => {
     } catch (e) {
       console.error(e);
     }
+  });
+
+  agenda.define("sync youzan points", async (job, done) => {
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+
+    const users = await UserModel.find({ youzanId: { $exists: true } });
+
+    console.log(users.length, "users with youzanId found.");
+
+    for (const user of users) {
+      await syncUserPoints(user);
+      await sleep(100);
+    }
+
+    console.log("youzanId users synced");
+
+    const cards = await CardModel.find({
+      slug: { $in: ["888", "yp-888", "jq-888", "jn-888", "ts-888"] }
+    });
+
+    for (const card of cards) {
+      const user = await UserModel.findById(card.customer);
+      if (!user || user?.pospalId) continue;
+      syncUserPoints(user);
+      await sleep(100);
+    }
+
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    done();
   });
 
   agenda.define("init store doors", async (job, done) => {
