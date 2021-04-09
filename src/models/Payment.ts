@@ -75,7 +75,10 @@ export const SceneLabel = {
       }
 
       // not the wechatpay in weapp
-      if (payment.gatewayData.provider) return next();
+      if (payment.gatewayData.provider) {
+        payment.paid = true;
+        return next();
+      }
 
       if (!customer?.openid) {
         throw new Error("no_customer_openid");
