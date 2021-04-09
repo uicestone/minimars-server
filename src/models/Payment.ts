@@ -67,9 +67,6 @@ export const SceneLabel = {
     case PaymentGateway.WechatPay:
       if (payment.payArgs) return next();
       await payment.populate("customer").execPopulate();
-      if (!customer?.openid) {
-        throw new Error("no_customer_openid");
-      }
       payment.assets = payment.amount;
       if (payment.booking) {
         payment.revenue = payment.amount;
@@ -79,6 +76,10 @@ export const SceneLabel = {
 
       // not the wechatpay in weapp
       if (payment.gatewayData.provider) return next();
+
+      if (!customer?.openid) {
+        throw new Error("no_customer_openid");
+      }
 
       if (payment.amount > 0) {
         const wechatUnifiedOrderData = await wechatUnifiedOrder(
