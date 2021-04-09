@@ -38,6 +38,7 @@ export default async function (
   if (
     !req.user &&
     ![
+      "auth/login",
       "config(/.*)?",
       "store(/.*)?",
       "coupon(/.*)?",
@@ -51,7 +52,7 @@ export default async function (
     })
   ) {
     return next(new HttpError(401, "登录后才能访问此功能"));
-  } else {
+  } else if (!req.user) {
     req.user = new UserModel({ _id: Types.ObjectId() });
   }
 
