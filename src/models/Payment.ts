@@ -61,13 +61,13 @@ export const SceneLabel = {
 
   await payment.populate("customer").execPopulate();
 
-  const customer = payment.customer as DocumentType<User>;
+  const customer = payment.customer as DocumentType<User> | undefined;
 
   switch (payment.gateway) {
     case PaymentGateway.WechatPay:
       if (payment.payArgs) return next();
       await payment.populate("customer").execPopulate();
-      if (!customer.openid) {
+      if (!customer?.openid) {
         throw new Error("no_customer_openid");
       }
       payment.assets = payment.amount;
@@ -112,6 +112,7 @@ export const SceneLabel = {
       }
       break;
     case PaymentGateway.Balance:
+      if (!customer) throw new Error("invalid_payment_customer");
       const {
         depositPaymentAmount,
         rewardPaymentAmount
@@ -194,6 +195,7 @@ export const SceneLabel = {
       payment.paid = true;
       break;
     case PaymentGateway.Points:
+      if (!customer) throw new Error("invalid_payment_customer");
       if (payment.amountInPoints === undefined) {
         throw new Error("invalid_points_payment");
       }
