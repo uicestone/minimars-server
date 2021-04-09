@@ -68,15 +68,12 @@ export default (router: Router) => {
           // when search refunded payment, provide refund payment as well
           if (queryParams.refunded === "true") {
             $ors.push({
-              $or: [
-                { refunded: true },
-                { original: { $ne: null }, amount: { $lt: 0 } }
-              ]
+              $or: [{ refunded: true }, { original: { $ne: null } }]
             });
           } else {
             query.where({
               refunded: { $in: [null, false] },
-              amount: { $gt: 0 }
+              original: null
             });
           }
         }
