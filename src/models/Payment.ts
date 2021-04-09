@@ -53,12 +53,6 @@ export const SceneLabel = {
     return next();
   }
 
-  if (payment.gatewayData?.provider && payment.amount >= 0) {
-    return next();
-  }
-
-  // console.log(`[PAY] Payment pre save ${payment._id}.`);
-
   if (payment.paid) {
     // payment.paid is modified to true and save
     await payment.paidSuccess();
@@ -124,7 +118,9 @@ export const SceneLabel = {
       } = await customer.writeOffBalance(
         payment.amount,
         payment.amountForceDeposit,
-        payment.amountDeposit
+        payment.amountDeposit,
+        true,
+        payment.gatewayData?.provider !== "pospal"
       );
 
       console.log(

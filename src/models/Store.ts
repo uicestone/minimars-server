@@ -262,7 +262,6 @@ export class Store {
           .map(p => {
             const payment = new PaymentModel({
               scene: Scene.FOOD,
-              paid: true,
               title: "餐饮消费",
               customer: booking.customer,
               store: this,
