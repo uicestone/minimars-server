@@ -278,22 +278,7 @@ export class Store {
 
         await booking.save(); // may throw duplicate error so skip payment saving below
         insertBookings++;
-        await Promise.all(
-          payments.map(async p => {
-            if (p.gateway === PaymentGateway.Balance) {
-              if (!p.customer) return;
-              const { depositPaymentAmount } = await p.customer.writeOffBalance(
-                p.amount,
-                0,
-                0,
-                true,
-                false
-              );
-              p.amountDeposit = depositPaymentAmount;
-            }
-            await p.save();
-          })
-        );
+        await Promise.all(payments.map(async p => p.save()));
       } catch (e) {
         if (e.code === 11000) {
         } else if (e.message === "insufficient_balance") {
