@@ -245,13 +245,13 @@ export default (router: Router) => {
           }
         }
 
+        if (booking.customer.isNew) {
+          await booking.customer.save();
+        }
         await booking.save();
 
         try {
           const bookingPrice = await booking.calculatePrice();
-          if (booking.customer.isNew) {
-            await booking.customer.save();
-          }
           await booking.createPayment(
             {
               paymentGateway:
