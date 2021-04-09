@@ -76,6 +76,10 @@ export const SceneLabel = {
       } else if (payment.card) {
         payment.debt = payment.amount;
       }
+
+      // not the wechatpay in weapp
+      if (payment.gatewayData.provider) return next();
+
       if (payment.amount > 0) {
         const wechatUnifiedOrderData = await wechatUnifiedOrder(
           payment._id.toString(),
