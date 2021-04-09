@@ -392,7 +392,10 @@ export class Booking {
       if (this.price) {
         bookingPrice.price = this.price;
       }
+    } else {
+      throw new Error();
     }
+
     return bookingPrice;
   }
 
