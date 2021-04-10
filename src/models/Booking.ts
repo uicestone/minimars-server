@@ -93,7 +93,10 @@ class FoodItem {
 }
 
 @plugin(autoPopulate, [
-  { path: "customer", select: "name avatarUrl mobile tags" },
+  {
+    path: "customer",
+    select: "name avatarUrl mobile tags points balanceDeposit balanceReward"
+  },
   { path: "store", select: "name code" },
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
   { path: "card", select: "-content" },
