@@ -8,6 +8,7 @@ export default (
   next: NextFunction
 ) => {
   if (err instanceof HttpError) {
+    console.log(`[SYS] HTTP error: ${err.status}, ${err.message}.`);
     res.status(err.status).json({ message: err.message });
   } else if (
     err.name === "MongoError" &&
