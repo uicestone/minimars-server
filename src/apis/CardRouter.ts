@@ -203,16 +203,20 @@ export default (router: Router) => {
           createdAt: -1
         };
 
-        (["customer", "slug", "stores", "type"] as Array<
-          keyof CardQuery
-        >).forEach(field => {
-          if (queryParams[field]) {
-            query.find({ [field]: queryParams[field] });
+        (["customer", "stores", "type"] as Array<keyof CardQuery>).forEach(
+          field => {
+            if (queryParams[field]) {
+              query.find({ [field]: queryParams[field] });
+            }
           }
-        });
+        );
 
         if (queryParams.title) {
           query.find({ title: new RegExp("^" + queryParams.title) });
+        }
+
+        if (queryParams.slug) {
+          query.find({ slug: new RegExp("^" + queryParams.slug) });
         }
 
         if (queryParams.status) {
