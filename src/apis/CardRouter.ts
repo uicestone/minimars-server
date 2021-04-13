@@ -134,14 +134,16 @@ export default (router: Router) => {
           let atStore: DocumentType<Store> | null = null;
           if (query.atStore) {
             atStore = await StoreModel.findById(query.atStore);
+            console.log(`[CRD] Buy card ${card.id} at store ${atStore?.code}.`);
           }
+
           await card.createPayment({
             paymentGateway:
               query.paymentGateway ||
               (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
             atReceptionStore:
               !req.user.can(Permission.BOOKING_ALL_STORE) &&
-              card.customer !== req.user.id
+              card.customer?.toString() !== req.user.id
                 ? req.user.store
                 : atStore || undefined
           });
