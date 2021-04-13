@@ -84,7 +84,7 @@ export async function getAccessToken(
     params: {
       grant_type: "client_credential",
       appid: isMp ? appIdMp : appId,
-      secret: isMp ? secretMp : secretMp
+      secret: isMp ? secretMp : secret
     }
   });
   if (!data?.access_token) throw new Error("invalid_access_token");
