@@ -53,43 +53,31 @@ export default (router: Router) => {
       }
 
       const userData = oAuth.decrypt(encryptedData, session_key, iv);
-      const {
-        openId: openid,
-        unionId: unionid,
-        nickName,
-        avatarUrl,
-        gender,
-        city,
-        province,
-        country
-      } = userData;
+      const { nickName, avatarUrl, gender, city, province, country } = userData;
 
-      if (!openid) {
-        throw new HttpError(400, "微信登录失败，未获取到openId");
+      if (!req.user) {
+        throw new HttpError(
+          400,
+          "Wechat getUserProfile requires authenticate."
+        );
       }
 
-      let user = await UserModel.findOne({ openid });
+      const user = req.user;
+
       const userInfo = {
-        openid,
-        unionid,
         name: nickName,
         gender,
         avatarUrl,
         region: `${country} ${province} ${city}`
       };
-      if (user) {
-        user.set(userInfo);
-        await user.save();
-      } else {
-        user = new UserModel();
-        user.set(userInfo);
-        await user.save();
-      }
+
+      user.set(userInfo);
+      await user.save();
 
       res.json({
         user,
         token: signToken(user),
-        openid,
+        openid: user.openid,
         session_key
       });
     })
