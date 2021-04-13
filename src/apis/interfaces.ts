@@ -63,6 +63,7 @@ export interface CardPutBody extends Partial<Card> {}
 
 export interface CardPostQuery {
   paymentGateway?: PaymentGateway;
+  atStore?: string;
 }
 
 export interface CardQuery extends ListQuery {

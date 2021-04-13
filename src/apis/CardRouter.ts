@@ -24,6 +24,7 @@ import { verify } from "jsonwebtoken";
 import moment from "moment";
 import { sendTemplateMessage, TemplateMessageType } from "../utils/wechat";
 import { Permission } from "../models/Role";
+import StoreModel, { Store } from "../models/Store";
 
 export default (router: Router) => {
   // Card CURD
@@ -130,6 +131,10 @@ export default (router: Router) => {
         });
 
         try {
+          let atStore: DocumentType<Store> | null = null;
+          if (query.atStore) {
+            atStore = await StoreModel.findById(query.atStore);
+          }
           await card.createPayment({
             paymentGateway:
               query.paymentGateway ||
@@ -138,7 +143,7 @@ export default (router: Router) => {
               !req.user.can(Permission.BOOKING_ALL_STORE) &&
               card.customer !== req.user.id
                 ? req.user.store
-                : undefined
+                : atStore || undefined
           });
         } catch (err) {
           switch (err.message) {
