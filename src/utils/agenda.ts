@@ -20,6 +20,7 @@ import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
 import Pospal from "./pospal";
 import BookingModel from "../models/Booking";
 import { syncUserPoints } from "./youzan";
+import PaymentModel from "../models/Payment";
 
 const pospalTicketsSyncInterval = +(
   process.env.POSPAL_TICKETS_SYNC_INTERVAL || 1
@@ -294,6 +295,65 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("verify user points", async (job, done) => {
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    try {
+      const customerPointsMap: Record<string, number> = {};
+      const customerPoints = await PaymentModel.aggregate([
+        {
+          $match: {
+            customer: { $exists: true },
+            paid: true,
+            booking: { $exists: true },
+            gateway: { $ne: PaymentGateway.Coupon }
+          }
+        },
+        { $group: { _id: "$customer", points: { $sum: "$revenue" } } }
+      ]);
+
+      customerPoints.forEach(({ _id, points }) => {
+        customerPointsMap[_id.toString()] = +points.toFixed();
+      });
+
+      const customerWrittenOffPoints = await PaymentModel.aggregate([
+        { $match: { paid: true, amountInPoints: { $exists: true } } },
+        { $group: { _id: "$customer", points: { $sum: "$amountInPoints" } } }
+      ]);
+
+      customerWrittenOffPoints.forEach(({ _id, points }) => {
+        customerPointsMap[_id.toString()] = +(
+          customerPointsMap[_id.toString()] - points
+        ).toFixed();
+      });
+
+      const users = await UserModel.find();
+      for (const u of users) {
+        const storedPoints = u.points || 0;
+        customerPointsMap[u.id] = customerPointsMap[u.id] || 0;
+        if (+storedPoints.toFixed() !== customerPointsMap[u.id]) {
+          u.points = customerPointsMap[u.id];
+          await UserModel.updateOne(
+            { _id: u.id },
+            { points: customerPointsMap[u.id] }
+          );
+          console.error(
+            `[CRO] User points mismatch: ${u.id} ${u.name || ""} ${
+              u.mobile
+            } calc ${
+              customerPointsMap[u.id]
+            }, stored ${storedPoints}, auto fixed.`
+          );
+          await syncUserPoints(u);
+          await sleep(200);
+        }
+      }
+      console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    } catch (e) {
+      console.error(e);
+    }
+    done();
+  });
+
   agenda.define("generate wechat qrcode", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { path } = job.attrs.data;
@@ -528,6 +588,7 @@ export const initAgenda = async () => {
     agenda.every("1 day", "get wechat mp users");
     // agenda.every("0 20 * * *", "check balance reward cards"); // run everyday at 8pm
     agenda.every("0 4 * * *", "verify user balance");
+    agenda.every("30 4 * * *", "verify user points");
     agenda.every("0 16,20,22 * * *", "sync pospal customers");
     agenda.every(`* * * * *`, "sync pospal tickets");
   });
