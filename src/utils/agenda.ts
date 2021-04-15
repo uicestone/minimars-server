@@ -297,6 +297,7 @@ export const initAgenda = async () => {
 
   agenda.define("verify user points", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
+    const { fix } = job.attrs.data;
     try {
       const customerPointsMap: Record<string, number> = {};
       const customerPoints = await PaymentModel.aggregate([
@@ -332,16 +333,18 @@ export const initAgenda = async () => {
         customerPointsMap[u.id] = customerPointsMap[u.id] || 0;
         if (+storedPoints.toFixed() !== customerPointsMap[u.id]) {
           u.points = customerPointsMap[u.id];
-          await UserModel.updateOne(
-            { _id: u.id },
-            { points: customerPointsMap[u.id] }
-          );
+          if (fix) {
+            await UserModel.updateOne(
+              { _id: u.id },
+              { points: customerPointsMap[u.id] }
+            );
+          }
           console.error(
             `[CRO] User points mismatch: ${u.id} ${u.name || ""} ${
               u.mobile
-            } calc ${
-              customerPointsMap[u.id]
-            }, stored ${storedPoints}, auto fixed.`
+            } calc ${customerPointsMap[u.id]}, stored ${storedPoints}${
+              fix ? ", fixed" : ""
+            }.`
           );
           await syncUserPoints(u);
           await sleep(200);
