@@ -898,6 +898,18 @@ export class Booking {
       }
     }
 
+    if (
+      this.type === Scene.PLAY &&
+      this.customer &&
+      this.store &&
+      !this.customer.firstPlayStore &&
+      !this.customer.firstPlayDate
+    ) {
+      this.customer.firstPlayDate = this.date;
+      this.customer.firstPlayStore = this.store?.id;
+      await this.customer.save();
+    }
+
     if (this.card?.type === "times" && this.customer && this.store) {
       sendTemplateMessage(this.customer, TemplateMessageType.WRITEOFF, [
         "您的次卡已成功核销",

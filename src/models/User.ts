@@ -4,7 +4,8 @@ import {
   plugin,
   pre,
   DocumentType,
-  index
+  index,
+  Ref
 } from "@typegoose/typegoose";
 import moment from "moment";
 import updateTimes from "./plugins/updateTimes";
@@ -150,6 +151,12 @@ export class User {
 
   @prop({ index: true })
   cardNo?: string;
+
+  @prop()
+  firstPlayDate?: string;
+
+  @prop({ ref: "Store" })
+  firstPlayStore?: Ref<Store>;
 
   @prop({
     remarks: String,
