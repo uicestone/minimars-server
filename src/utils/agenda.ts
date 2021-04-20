@@ -297,7 +297,7 @@ export const initAgenda = async () => {
 
   agenda.define("verify user points", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { fix } = job.attrs.data;
+    const { fix = false } = job.attrs.data || {};
     try {
       const customerPointsMap: Record<string, number> = {};
       const customerPoints = await PaymentModel.aggregate([
