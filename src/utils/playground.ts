@@ -6,6 +6,7 @@ import StoreModel from "../models/Store";
 import UserModel, { User } from "../models/User";
 import agenda from "./agenda";
 import Pospal from "./pospal";
+import { getQrcode } from "./wechat";
 import {
   getTrade,
   searchTrade,
@@ -70,7 +71,41 @@ export default async function playground() {
     //   for (let n = 0; n < cardInfo.count; n++) {}
     // }
     // searchTrade();
+    // await saveSerialTableQrs("TS", "A", 60);
+    // await saveSerialTableQrs("TS", "B", 20);
+    // await saveSerialTableQrs("TS", "C", 20);
+    // await saveSerialTableQrs("JN", "A", 76);
+    // await saveSerialTableQrs("JN", "B", 25);
+    // await saveSerialTableQrs("BY", "A", 41);
+    // await saveSerialTableQrs("BY", "B", 17);
+    // await saveSerialTableQrs("BY", "C", 15);
+    // await saveSerialTableQrs("BY", "M", 18);
+    // await saveSerialTableQrs("HX", "A", 48);
+    // await saveSerialTableQrs("HX", "B", 10);
+    // await saveSerialTableQrs("HX", "C", 30);
+    // await saveTableQr("TS", "大派对房", "1");
+    // await saveTableQr("TS", "小派对房", "1");
+    // await saveTableQr("JN", "大派对房", "1");
+    // await saveTableQr("JN", "小派对房", "1");
+    // await saveTableQr("BY", "大派对房", "大派对房1");
+    // await saveTableQr("BY", "小派对房", "1");
+    // await saveTableQr("BY", "办公室", "办公室");
+    // await saveTableQr("HX", "大派对房", "大派对房1");
+    // await saveTableQr("HX", "小派对房", "小派对房1");
   } catch (e) {
     console.error(e.code);
   }
+}
+
+async function saveSerialTableQrs(s: string, a: string, max: number) {
+  for (let i = 1; i <= max; i++) {
+    await saveTableQr(s, a + "区", a + i);
+  }
+}
+
+async function saveTableQr(s: string, a: string, t: string) {
+  const code = `/pages/food/index?s=${s}&t=${a}.${t}`;
+  const path = `${s}/${a}.${t}.jpg`;
+  console.log(code, path);
+  await getQrcode(code, path);
 }
