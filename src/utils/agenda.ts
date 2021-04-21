@@ -338,6 +338,8 @@ export const initAgenda = async () => {
               { _id: u.id },
               { points: customerPointsMap[u.id] }
             );
+            await syncUserPoints(u);
+            await sleep(200);
           }
           console.error(
             `[CRO] User points mismatch: ${u.id} ${u.name || ""} ${
@@ -346,8 +348,6 @@ export const initAgenda = async () => {
               fix ? ", fixed" : ""
             }.`
           );
-          await syncUserPoints(u);
-          await sleep(200);
         }
       }
       console.log(`[CRO] Finished '${job.attrs.name}'.`);
