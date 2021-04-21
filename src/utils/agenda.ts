@@ -582,17 +582,17 @@ export const initAgenda = async () => {
 
   agenda.define("issue cards", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { slug, gateway, mobiles } = job.attrs.data as {
+    const { slug, gateway, users } = job.attrs.data as {
       slug: string;
       gateway: PaymentGateway;
-      mobiles: string[];
+      users: [string, string][];
     };
     const cardType = await CardTypeModel.findOne({ slug });
     if (!cardType) throw new Error("invalid_card_type");
-    for (const mobile of mobiles) {
+    for (const [name, mobile] of users) {
       let user = await UserModel.findOne({ mobile });
       if (!user) {
-        user = new UserModel({ mobile });
+        user = new UserModel({ mobile, name });
         await user.save();
         console.log(`[CRO] Created customer ${user.mobile} ${user.id}.`);
       }
