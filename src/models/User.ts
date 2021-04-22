@@ -188,6 +188,7 @@ export class User {
 
   async addPoints(this: DocumentType<User>, amount: number) {
     amount = +amount.toFixed();
+    if (!amount) return;
     if (!this.points) this.points = 0;
     this.points += amount;
     await this.updateOne({ $inc: { points: amount } }).exec();
