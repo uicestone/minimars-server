@@ -55,6 +55,7 @@ export const SceneLabel = {
 
   if (payment.paid) {
     // payment.paid is modified to true and save
+    // currently only wechatpay goes here
     await payment.paidSuccess();
     return next();
   }

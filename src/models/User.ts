@@ -186,18 +186,14 @@ export class User {
     return ps.every(p => this.role?.can(p));
   }
 
-  async addPoints(this: DocumentType<User>, amount: number, save = true) {
-    const r = 1;
-    amount = +amount.toFixed(2);
-    if (save) {
-      await this.updateOne({ $inc: { points: amount * r } }).exec();
-      const u = await UserModel.findById(this._id);
-      if (!u) throw new Error("invalid_user");
-      this.points = u.points;
-    } else {
-      if (!this.points) this.points = 0;
-      this.points = +(this.points + r * amount).toFixed(2);
-    }
+  async addPoints(this: DocumentType<User>, amount: number) {
+    amount = +amount.toFixed();
+    if (!this.points) this.points = 0;
+    this.points += amount;
+    await this.updateOne({ $inc: { points: amount } }).exec();
+    console.log(
+      `[USR] Mod points for ${this.mobile} ${this.id} by ${amount}, to ${this.points}.`
+    );
     syncUserPoints(this).catch(err => {});
   }
 

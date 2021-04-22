@@ -416,123 +416,125 @@ export class Booking {
     amount: number,
     amountInPoints?: number
   ) {
-    const booking = this;
     let totalPayAmount = amount;
     let balancePayAmount = 0;
-    let attach = `booking ${booking._id}`;
-    if (booking.card && ["times", "coupon"].includes(booking.card.type)) {
-      if (booking.card.times === undefined)
+    let attach = `booking ${this._id}`;
+    if (this.card && ["times", "coupon"].includes(this.card.type)) {
+      if (this.card.times === undefined)
         throw new Error("invalid_times_coupon_card");
       if (!atReception) {
         if (
-          booking.card.start &&
-          new Date(booking.card.start) >
-            moment(booking.date).endOf("day").toDate()
+          this.card.start &&
+          new Date(this.card.start) > moment(this.date).endOf("day").toDate()
         ) {
           throw new Error("card_not_started");
         }
-        const cardExpiresAt = booking.card.expiresAt || booking.card.end;
+        const cardExpiresAt = this.card.expiresAt || this.card.end;
         if (
           cardExpiresAt &&
-          new Date(cardExpiresAt) < moment(booking.date).startOf("day").toDate()
+          new Date(cardExpiresAt) < moment(this.date).startOf("day").toDate()
         ) {
           throw new Error("card_expired");
         }
       }
-      const cardTimes = booking.card.maxKids
-        ? Math.min(booking.kidsCount || 1, booking.card.maxKids)
-        : booking.kidsCount || 1;
+      const cardTimes = this.card.maxKids
+        ? Math.min(this.kidsCount || 1, this.card.maxKids)
+        : this.kidsCount || 1;
       const cardPayment = new PaymentModel({
-        scene: booking.type,
-        customer: booking.customer,
-        store: booking.store,
-        amount: (booking.card.price / booking.card.times) * cardTimes,
+        scene: this.type,
+        customer: this.customer,
+        store: this.store,
+        amount: (this.card.price / this.card.times) * cardTimes,
         title: this.title,
         attach,
-        booking: booking.id,
+        booking: this.id,
         gateway: PaymentGateway.Card,
         times: -cardTimes,
         gatewayData: {
           atReception,
-          cardId: booking.card.id,
-          cardTitle: booking.card.title,
-          timesBefore: booking.card.timesLeft
+          cardId: this.card.id,
+          cardTitle: this.card.title,
+          timesBefore: this.card.timesLeft
         }
       });
       await cardPayment.save();
+      this.payments.push(cardPayment);
     }
 
-    if (booking.coupon) {
-      if ((booking.kidsCount || 0) % booking.coupon.kidsCount) {
+    if (this.coupon) {
+      if ((this.kidsCount || 0) % this.coupon.kidsCount) {
         throw new Error("coupon_kids_count_not_match");
       }
       const couponPayment = new PaymentModel({
-        scene: booking.type,
-        customer: booking.customer,
-        store: booking.store,
+        scene: this.type,
+        customer: this.customer,
+        store: this.store,
         amount:
-          (booking.coupon.priceThirdParty * (booking.kidsCount || 1)) /
-          booking.coupon.kidsCount,
-        title: booking.coupon.title + " " + this.title,
+          (this.coupon.priceThirdParty * (this.kidsCount || 1)) /
+          this.coupon.kidsCount,
+        title: this.coupon.title + " " + this.title,
         attach,
-        booking: booking.id,
+        booking: this.id,
         gateway: PaymentGateway.Coupon,
         gatewayData: {
           atReception,
-          couponId: booking.coupon.id,
-          couponTitle: booking.coupon.title,
-          bookingId: booking.id
+          couponId: this.coupon.id,
+          couponTitle: this.coupon.title,
+          bookingId: this.id
         }
       });
       await couponPayment.save();
+      this.payments.push(couponPayment);
     }
 
     if (
       (totalPayAmount >= 0.01 || (amountInPoints && amountInPoints > 0)) &&
       useBalance &&
-      booking.customer?.balance
+      this.customer?.balance
     ) {
-      balancePayAmount = Math.min(totalPayAmount, booking.customer.balance);
+      balancePayAmount = Math.min(totalPayAmount, this.customer.balance);
       const balancePayment = new PaymentModel({
-        scene: booking.type,
-        customer: booking.customer,
-        store: booking.store,
+        scene: this.type,
+        customer: this.customer,
+        store: this.store,
         amount: balancePayAmount,
         amountForceDeposit:
-          (booking.socksCount || 0) * (config.sockPrice || 0) || 0,
+          (this.socksCount || 0) * (config.sockPrice || 0) || 0,
         title: this.title,
         attach,
-        booking: booking.id,
+        booking: this.id,
         gateway: PaymentGateway.Balance,
         gatewayData: {
           atReception,
-          balanceBefore: booking.customer.balance,
-          balanceDepositBefore: booking.customer.balanceDeposit
+          balanceBefore: this.customer.balance,
+          balanceDepositBefore: this.customer.balanceDeposit
         }
       });
 
       await balancePayment.save();
+      this.payments.push(balancePayment);
     }
 
-    const extraPayAmount = totalPayAmount - balancePayAmount;
+    const extraPayAmount = +(totalPayAmount - balancePayAmount).toFixed(2);
     // console.log(`[PAY] Extra payment amount is ${extraPayAmount}`);
 
-    if (extraPayAmount < 0.01 && !amountInPoints) {
-      await booking.paymentSuccess(atReception);
-    } else if (extraPayAmount >= 0.01) {
+    if (extraPayAmount < 0) throw new Error("booking_payment_amount_overflow");
+
+    if (!extraPayAmount && !amountInPoints) {
+      await this.paymentSuccess(atReception);
+    } else {
       if (!paymentGateway) {
-        // TODO possible create balance payment before failed
         throw new Error("missing_gateway");
       }
 
       const extraPayment = new PaymentModel({
-        scene: booking.type,
-        customer: booking.customer,
-        store: booking.store?.id,
+        scene: this.type,
+        customer: this.customer,
+        store: this.store?.id,
         amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
         title: this.title,
         attach,
-        booking: booking.id,
+        booking: this.id,
         gateway: paymentGateway,
         gatewayData: {
           atReception
@@ -540,42 +542,36 @@ export class Booking {
       });
 
       await extraPayment.save();
+      this.payments.push(extraPayment);
 
       if (paymentGateway !== PaymentGateway.WechatPay) {
-        await booking.paymentSuccess(atReception);
+        await this.paymentSuccess(atReception);
       }
     }
     if (amountInPoints) {
       const pointsPayment = new PaymentModel({
-        scene: booking.type,
-        customer: booking.customer,
-        store: booking.store,
+        scene: this.type,
+        customer: this.customer,
+        store: this.store,
         amount: 0,
         amountInPoints,
         title: this.title,
         attach,
-        booking: booking.id,
+        booking: this.id,
         gateway: PaymentGateway.Points,
         gatewayData: {
           atReception
         }
       });
 
-      try {
-        await booking.paymentSuccess(atReception);
-        await pointsPayment.save();
-      } catch (err) {
-        throw err;
-      }
-
       await pointsPayment.save();
+      this.payments.push(pointsPayment);
+      await this.paymentSuccess(atReception);
     }
 
     if (paymentGateway === PaymentGateway.Points && !amountInPoints) {
       throw new Error("points_gateway_not_supported");
     }
-
-    await booking.populate("payments").execPopulate();
 
     // we give up save all payments at the same time. It saves no time but cause a user parallel saving problem
   }
@@ -658,12 +654,7 @@ export class Booking {
   }
 
   async createRefundPayment(this: DocumentType<Booking>) {
-    const booking = this;
-
-    // repopulate payments with customers
-    await booking.populate("payments").execPopulate();
-
-    const balanceAndCardPayments = booking.payments.filter(
+    const balanceAndCardPayments = this.payments.filter(
       (p: DocumentType<Payment>) =>
         [PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
         p.amount > 0 &&
@@ -672,7 +663,7 @@ export class Booking {
         !p.refunded
     );
 
-    const pointsPayments = booking.payments.filter(
+    const pointsPayments = this.payments.filter(
       (p: DocumentType<Payment>) =>
         [PaymentGateway.Points].includes(p.gateway) &&
         p.amountInPoints &&
@@ -682,7 +673,7 @@ export class Booking {
         !p.refunded
     );
 
-    const extraPayments = booking.payments.filter(
+    const extraPayments = this.payments.filter(
       (p: DocumentType<Payment>) =>
         ![PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
         p.amount > 0 &&
@@ -696,7 +687,7 @@ export class Booking {
       const refundPayment = new PaymentModel({
         scene: p.scene,
         customer: p.customer,
-        store: booking.store,
+        store: this.store,
         amount: -p.amount,
         amountDeposit: p.amountDeposit ? -p.amountDeposit : undefined,
         amountForceDeposit: p.amountForceDeposit
@@ -713,6 +704,7 @@ export class Booking {
       p.refunded = true;
       await refundPayment.save();
       await p.save();
+      this.payments.push(refundPayment);
     }
 
     for (const payment of pointsPayments) {
@@ -720,7 +712,7 @@ export class Booking {
       const refundPayment = new PaymentModel({
         scene: p.scene,
         customer: p.customer,
-        store: booking.store,
+        store: this.store,
         amount: 0,
         amountInPoints: p.amountInPoints && -p.amountInPoints,
         title: `积分退还：${p.title}`,
@@ -732,6 +724,7 @@ export class Booking {
       p.refunded = true;
       await refundPayment.save();
       await p.save();
+      this.payments.push(refundPayment);
     }
 
     await Promise.all(
@@ -739,7 +732,7 @@ export class Booking {
         const refundPayment = new PaymentModel({
           scene: p.scene,
           customer: p.customer,
-          store: booking.store,
+          store: this.store,
           amount: -p.amount,
           title: `退款：${p.title}`,
           booking: p.booking,
@@ -751,16 +744,14 @@ export class Booking {
         // in case refund payment save throws error
         await refundPayment.save();
         await p.save();
+        this.payments.push(refundPayment);
       })
     );
-
-    await booking.populate("payments").execPopulate();
-
-    booking.status = BookingStatus.CANCELED;
   }
 
   async refundSuccess(this: DocumentType<Booking>) {
     this.status = BookingStatus.CANCELED;
+
     if (this.type === Scene.EVENT) {
       if (!this.populated("event")) {
         await this.populate({
@@ -787,6 +778,15 @@ export class Booking {
         await this.gift.save();
       }
     }
+
+    const amountRefundedNoCoupon = this.payments.reduce((amount, p) => {
+      if (p.paid && p.original && p.gateway !== PaymentGateway.Coupon) {
+        amount += p.amount;
+      }
+      return amount;
+    }, 0);
+
+    await this.customer?.addPoints(amountRefundedNoCoupon);
     // send user notification
   }
 

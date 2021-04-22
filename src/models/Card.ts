@@ -234,7 +234,7 @@ export class Card {
     amount?: number
   ) {
     const card = this as DocumentType<Card>;
-    let totalPayAmount = card.price;
+    let totalPayAmount = +card.price.toFixed(2);
     let attach = `card ${card.id}`;
     let title = `${card.title}`;
 
@@ -242,7 +242,9 @@ export class Card {
       title = title + "×" + card.quantity;
     }
 
-    if (totalPayAmount < 0.01) {
+    if (totalPayAmount < 0) throw new Error("total_payment_amount_error");
+
+    if (!totalPayAmount) {
       await card.paymentSuccess();
     } else {
       const scene =
@@ -289,9 +291,6 @@ export class Card {
 
   async createRefundPayment(this: DocumentType<Card>) {
     const card = this;
-
-    // repopulate payments with customers
-    await card.populate("payments").execPopulate();
 
     const extraPayments = card.payments.filter(
       (p: DocumentType<Payment>) =>
