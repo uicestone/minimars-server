@@ -47,68 +47,67 @@ export const SceneLabel = {
   mall: "商城"
 };
 
-@pre("save", async function (next) {
-  const payment = this as DocumentType<Payment>;
-  if (!payment.isModified("paid") && !payment.isNew) {
+@pre("save", async function (this: DocumentType<Payment>, next) {
+  if (!this.isModified("paid") && !this.isNew) {
     return next();
   }
 
-  if (payment.paid) {
-    // payment.paid is modified to true and save
+  if (this.paid) {
+    // this.paid is modified to true and save
     // currently only wechatpay goes here
-    await payment.paidSuccess();
+    await this.paidSuccess();
     return next();
   }
 
-  await payment.populate("customer").execPopulate();
+  await this.populate("customer").execPopulate();
 
-  const customer = payment.customer as DocumentType<User> | undefined;
+  const customer = this.customer as DocumentType<User> | undefined;
 
-  switch (payment.gateway) {
+  switch (this.gateway) {
     case PaymentGateway.WechatPay:
-      if (payment.payArgs) return next();
-      await payment.populate("customer").execPopulate();
-      payment.assets = payment.amount;
-      if (payment.booking) {
-        payment.revenue = payment.amount;
-      } else if (payment.card) {
-        payment.debt = payment.amount;
+      if (this.payArgs) return next();
+      await this.populate("customer").execPopulate();
+      this.assets = this.amount;
+      if (this.booking) {
+        this.revenue = this.amount;
+      } else if (this.card) {
+        this.debt = this.amount;
       }
 
       // not the wechatpay in weapp
-      if (payment.gatewayData.provider) {
-        payment.paid = true;
+      if (this.gatewayData.provider) {
+        this.paid = true;
         return next();
       }
-
+      console.log("wechat refund, customer:", this.customer);
       if (!customer?.openid) {
         throw new Error("no_customer_openid");
       }
 
-      if (payment.amount > 0) {
+      if (this.amount > 0) {
         const wechatUnifiedOrderData = await wechatUnifiedOrder(
-          payment._id.toString(),
-          payment.amount,
+          this._id.toString(),
+          this.amount,
           customer.openid,
-          payment.title,
-          payment.attach
+          this.title,
+          this.attach
         );
-        Object.assign(payment.gatewayData, wechatUnifiedOrderData);
+        Object.assign(this.gatewayData, wechatUnifiedOrderData);
       } else {
         const originalPayment = await PaymentModel.findOne({
-          _id: payment.original
+          _id: this.original
         });
         if (!originalPayment) throw new Error("invalid_refund_original");
         const wechatRefundOrderData = await refundOrder(
-          payment.original || "",
-          payment.id,
+          this.original || "",
+          this.id,
           originalPayment.amount,
-          payment.amount
+          this.amount
         );
-        Object.assign(payment.gatewayData, wechatRefundOrderData);
+        Object.assign(this.gatewayData, wechatRefundOrderData);
         if (wechatRefundOrderData.result_code === "SUCCESS") {
-          payment.paid = true;
-          await payment.paidSuccess();
+          this.paid = true;
+          await this.paidSuccess();
         } else {
           if (wechatRefundOrderData.err_code === "NOTENOUGH") {
             throw new Error("wechat_account_insufficient_balance");
@@ -126,39 +125,39 @@ export const SceneLabel = {
         depositPaymentAmount,
         rewardPaymentAmount
       } = await customer.writeOffBalance(
-        payment.amount,
-        payment.amountForceDeposit,
-        payment.amountDeposit,
+        this.amount,
+        this.amountForceDeposit,
+        this.amountDeposit,
         true,
-        payment.gatewayData?.provider !== "pospal"
+        this.gatewayData?.provider !== "pospal"
       );
 
       console.log(
         `[PAY] Payment amount D:R is ${depositPaymentAmount}:${rewardPaymentAmount}.`
       );
 
-      payment.amountDeposit = depositPaymentAmount;
-      if (payment.booking) {
-        payment.debt = -payment.amountDeposit;
-        payment.balance = -payment.amount;
-        payment.revenue = payment.amountDeposit;
+      this.amountDeposit = depositPaymentAmount;
+      if (this.booking) {
+        this.debt = -this.amountDeposit;
+        this.balance = -this.amount;
+        this.revenue = this.amountDeposit;
       } else {
         throw new Error("balance_payment_missing_booking");
       }
-      payment.paid = true;
+      this.paid = true;
       break;
     case PaymentGateway.Card:
-      if (!payment.times || !payment.gatewayData.cardId) {
-        throw new Error("invalid_card_payment_gateway_data");
+      if (!this.times || !this.gatewayData.cardId) {
+        throw new Error("invalid_card_this_gateway_data");
       }
-      const card = await CardModel.findById(payment.gatewayData.cardId);
+      const card = await CardModel.findById(this.gatewayData.cardId);
 
       if (!card || card.timesLeft === undefined) {
         throw new Error("invalid_card");
       }
 
-      if (payment.times > 0) {
-        card.timesLeft += payment.times;
+      if (this.times > 0) {
+        card.timesLeft += this.times;
         await card.save();
         console.log(
           `[PAY] Card ${card.id} refunded, time left: ${card.timesLeft}.`
@@ -167,26 +166,24 @@ export const SceneLabel = {
         if (card.status !== CardStatus.ACTIVATED) {
           throw new Error("invalid_card");
         }
-        if (card.timesLeft + payment.times < 0) {
+        if (card.timesLeft + this.times < 0) {
           throw new Error("insufficient_card_times");
         }
-        card.timesLeft += payment.times;
+        card.timesLeft += this.times;
         await card.save();
         console.log(
           `[PAY] Card ${
             card.id
-          } used in ${payment.booking?.toString()}, times left: ${
-            card.timesLeft
-          }.`
+          } used in ${this.booking?.toString()}, times left: ${card.timesLeft}.`
         );
       }
-      if (payment.booking) {
-        payment.debt = -payment.amount;
-        payment.revenue = payment.amount;
+      if (this.booking) {
+        this.debt = -this.amount;
+        this.revenue = this.amount;
       } else {
         throw new Error("card_payment_missing_booking");
       }
-      payment.paid = true;
+      this.paid = true;
       break;
     case PaymentGateway.Coupon:
     case PaymentGateway.Cash:
@@ -195,27 +192,27 @@ export const SceneLabel = {
     case PaymentGateway.Dianping:
     case PaymentGateway.Shouqianba:
     case PaymentGateway.Mall:
-      payment.assets = payment.amount;
-      if (payment.booking) {
-        payment.revenue = payment.amount;
+      this.assets = this.amount;
+      if (this.booking) {
+        this.revenue = this.amount;
       } else {
-        payment.debt = payment.amount;
+        this.debt = this.amount;
       }
-      payment.paid = true;
+      this.paid = true;
       break;
     case PaymentGateway.Points:
       if (!customer) throw new Error("invalid_payment_customer");
-      if (payment.amountInPoints === undefined) {
+      if (this.amountInPoints === undefined) {
         throw new Error("invalid_points_payment");
       }
       if (
         customer.points === undefined ||
-        payment.amountInPoints > customer.points
+        this.amountInPoints > customer.points
       ) {
         throw new Error("insufficient_points");
       }
-      await customer.addPoints(-payment.amountInPoints);
-      payment.paid = true;
+      await customer.addPoints(-this.amountInPoints);
+      this.paid = true;
       break;
     default:
       throw new Error("unsupported_payment_gateway");
