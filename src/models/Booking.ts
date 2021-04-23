@@ -654,6 +654,10 @@ export class Booking {
   }
 
   async createRefundPayment(this: DocumentType<Booking>) {
+    // booking.payments[].customer is unselected from auto-populating,
+    // but payment pre-save needs it, so we re populate full payments
+    await this.populate("payments").execPopulate();
+
     const balanceAndCardPayments = this.payments.filter(
       (p: DocumentType<Payment>) =>
         [PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
