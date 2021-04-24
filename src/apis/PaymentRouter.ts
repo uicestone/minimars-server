@@ -83,7 +83,9 @@ export default (router: Router) => {
             query.where({ booking: { $exists: true } });
           }
           if (queryParams.attach === "card ") {
-            query.where({ card: { $exists: true } });
+            query.where({
+              scene: { $in: [Scene.CARD, Scene.BALANCE, Scene.BALANCE] }
+            });
           }
         }
 
