@@ -290,9 +290,11 @@ export class Card {
   }
 
   async createRefundPayment(this: DocumentType<Card>) {
-    const card = this;
+    // card.payments[].customer is unselected from auto-populating,
+    // but payment pre-save needs it, so we re populate full payments
+    await this.populate("payments").execPopulate();
 
-    const extraPayments = card.payments.filter(
+    const extraPayments = this.payments.filter(
       (p: DocumentType<Payment>) =>
         ![PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
         p.amount > 0 &&
@@ -317,8 +319,6 @@ export class Card {
         await refundPayment.save();
       })
     );
-
-    await card.populate("payments").execPopulate();
 
     this.refundSuccess();
   }
