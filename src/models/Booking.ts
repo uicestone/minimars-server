@@ -448,6 +448,7 @@ export class Booking {
         title: this.title,
         attach,
         booking: this.id,
+        card: this.card.id,
         gateway: PaymentGateway.Card,
         times: -cardTimes,
         gatewayData: {
