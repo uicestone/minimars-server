@@ -128,20 +128,29 @@ export default (router: Router) => {
     // create a store
     .get(
       handleAsyncErrors(async (req: Request, res: Response) => {
-        const qr = req.query.qr as string;
-        const match = qr.match(/^.*?:\/\/(.*?)-.*qrc=(.*)$/);
-        if (!match) {
-          throw new HttpError(400, "二维码信息错误");
+        let store: DocumentType<Store> | null = null;
+        let tableId = "";
+        if (req.query.qr) {
+          const match = req.query.qr.match(/^.*?:\/\/(.*?)-.*qrc=(.*)$/);
+          if (!match) {
+            throw new HttpError(400, "二维码信息错误");
+          }
+          const [, pospalCode, tableIdEncoded] = match;
+          tableId = decodeURIComponent(tableIdEncoded);
+          store = await StoreModel.findOne({ pospalCode }).select(
+            "name phone address posterUrl foodMenu"
+          );
         }
-        const [, pospalCode, tableIdEncoded] = match;
-        const tableId = decodeURIComponent(tableIdEncoded);
-        const store = await StoreModel.findOne({ pospalCode }).select(
-          "name phone address posterUrl foodMenu"
-        );
+        if (req.query.storeCode) {
+          store = await StoreModel.findOne({
+            code: req.query.storeCode
+          }).select("name phone address posterUrl foodMenu");
+          tableId = req.query.tableId;
+        }
         if (!store) {
-          throw new HttpError(404, `Store not found: ${req.params.storeId}`);
+          throw new HttpError(404, `Store not found.`);
         }
-        if (!store.foodMenu) {
+        if (!store.foodMenu || !store.foodMenu.length) {
           const pospal = new Pospal(store.code);
           const menu = await pospal.getMenu();
           store.foodMenu = menu;
