@@ -92,6 +92,7 @@ export default async function playground() {
     // await saveTableQr("BY", "办公室", "办公室");
     // await saveTableQr("HX", "大派对房", "大派对房1");
     // await saveTableQr("HX", "小派对房", "小派对房1");
+    // console.log(await new Pospal("TS").queryAllProductCategories());
   } catch (e) {
     console.error(e.code);
   }

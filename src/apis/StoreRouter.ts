@@ -138,19 +138,23 @@ export default (router: Router) => {
           const [, pospalCode, tableIdEncoded] = match;
           tableId = decodeURIComponent(tableIdEncoded);
           store = await StoreModel.findOne({ pospalCode }).select(
-            "name phone address posterUrl foodMenu"
+            "name code phone address posterUrl foodMenu"
           );
         }
         if (req.query.storeCode) {
           store = await StoreModel.findOne({
             code: req.query.storeCode
-          }).select("name phone address posterUrl foodMenu");
+          }).select("name code phone address posterUrl foodMenu");
           tableId = req.query.tableId;
         }
         if (!store) {
           throw new HttpError(404, `Store not found.`);
         }
-        if (!store.foodMenu || !store.foodMenu.length) {
+        if (
+          process.env.DEBUG_FOOD_MENU ||
+          !store.foodMenu ||
+          !store.foodMenu.length
+        ) {
           const pospal = new Pospal(store.code);
           const menu = await pospal.getMenu();
           store.foodMenu = menu;
