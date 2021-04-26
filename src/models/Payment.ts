@@ -403,7 +403,8 @@ export const flowGateways = [
   PaymentGateway.Dianping,
   PaymentGateway.WechatPay,
   PaymentGateway.Alipay,
-  PaymentGateway.UnionPay
+  PaymentGateway.UnionPay,
+  PaymentGateway.Mall
 ];
 
 export const cardCouponGateways = [
