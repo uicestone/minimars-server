@@ -12,7 +12,8 @@ import { DocumentType } from "@typegoose/typegoose";
 export default async (
   dateInput?: string | Date,
   dateEndInput?: string | Date,
-  store?: DocumentType<Store>
+  store?: DocumentType<Store>,
+  popBookingCardCoupon = false
 ) => {
   // const starts: number = Date.now();
   // console.log("[DEBUG] Stats starts:", starts);
@@ -58,8 +59,8 @@ export default async (
       "payments",
       "event",
       "gift",
-      "card",
-      "coupon"
+      popBookingCardCoupon || "card",
+      popBookingCardCoupon || "coupon"
     ]
   });
   paymentsQuery.setOptions({ skipAutoPopulationPaths: ["customer"] });

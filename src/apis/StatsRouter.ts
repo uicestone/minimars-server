@@ -132,7 +132,8 @@ export default (router: Router) => {
       const stats = await getStats(
         dateInput,
         dateInputEnd,
-        req.query.store || req.user.store
+        req.query.store || req.user.store,
+        !!req.query.popBookingCardCoupon
       );
       res.json(stats);
     })
