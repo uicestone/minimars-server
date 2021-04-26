@@ -9,6 +9,10 @@ function autoPopulate(schema: Schema, options: ModelPopulateOptions[]): void {
     }
     await Promise.all(
       populates.map(populate => {
+        // @ts-ignore
+        if (this.options?.skipAutoPopulationPaths?.includes(populate.path)) {
+          return;
+        }
         return doc.populate(populate).execPopulate();
       })
     );

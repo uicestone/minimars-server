@@ -31,7 +31,9 @@ export default async (
   const bookingsPaidQuery = Booking.find({
     date: { $gte: dateStr, $lte: dateEndStr },
     status: { $in: paidBookingStatus }
-  });
+  }).select(
+    "type kidsCount adultsCount amountPaid amountPaidInBalance card coupon"
+  );
 
   if (store) {
     bookingsPaidQuery.find({ store });
@@ -43,23 +45,45 @@ export default async (
       $lte: endOfDay
     },
     paid: true
-  });
+  }).select("amount amountDeposit scene store gateway");
 
   if (store) {
     paymentsQuery.find({ store });
   }
 
   bookingsPaidQuery.setOptions({
-    skipAutoPopulationPaths: ["customer", "store", "payments", "event", "gift"]
+    skipAutoPopulationPaths: [
+      "customer",
+      "store",
+      "payments",
+      "event",
+      "gift",
+      "card",
+      "coupon"
+    ]
   });
   paymentsQuery.setOptions({ skipAutoPopulationPaths: ["customer"] });
-  console.time("[STATS] Queries took");
+  console.time("[STATS] Booking queries took");
+  console.time("[STATS] Payment queries took");
   const [bookingsPaid, payments] = await Promise.all([
-    bookingsPaidQuery.exec(),
-    paymentsQuery.exec()
+    bookingsPaidQuery.exec().then(r => {
+      console.timeEnd("[STATS] Booking queries took");
+      return r;
+    }),
+    paymentsQuery.exec().then(r => {
+      console.timeEnd("[STATS] Payment queries took");
+      return r;
+    })
   ]);
-  console.timeEnd("[STATS] Queries took");
+  // const bookingsPaid = await bookingsPaidQuery.exec();
+  // console.timeEnd("[STATS] Booking queries took");
+  // console.time("[STATS] Payment queries took");
+  // const payments = await paymentsQuery.exec();
+  // console.timeEnd("[STATS] Payment queries took");
   // console.log("[DEBUG] Bookings & payments queried:", Date.now() - starts);
+  console.log(
+    `[STATS] bookings:${bookingsPaid.length}, payments:${payments.length}.`
+  );
 
   const flowAmount = payments
     .filter(p => flowGateways.includes(p.gateway))
