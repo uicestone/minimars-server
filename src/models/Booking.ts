@@ -247,6 +247,8 @@ export class Booking {
       title = "派对消费";
     } else if (this.type === Scene.FOOD) {
       title = `餐饮消费`;
+    } else if (this.type === Scene.MALL) {
+      title = this.remarks || "";
     } else {
       if (!this.store) throw new Error("undefined_play_store");
       title = `${this.store.name} ${this.adultsCount}大${
