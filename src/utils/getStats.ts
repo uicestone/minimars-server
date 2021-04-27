@@ -33,7 +33,7 @@ export default async (
     date: { $gte: dateStr, $lte: dateEndStr },
     status: { $in: paidBookingStatus }
   }).select(
-    "type kidsCount adultsCount amountPaid amountPaidInBalance card coupon"
+    "type kidsCount adultsCount amountPaid amountPaidInBalance amountPaidInCard card coupon"
   );
 
   if (store) {
