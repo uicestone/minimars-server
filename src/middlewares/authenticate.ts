@@ -51,6 +51,7 @@ export default async function (
       return req.path.match(`^/${pattern}$`);
     })
   ) {
+    console.log(`[AUT] Blocked path without request user: ${req.path}.`);
     return next(new HttpError(401, "登录后才能访问此功能"));
   } else if (!req.user) {
     req.user = new UserModel({ _id: Types.ObjectId() });
