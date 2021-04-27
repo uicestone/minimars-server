@@ -128,11 +128,13 @@ export default (router: Router) => {
           });
         }
 
-        (["store", "customer"] as Array<keyof PaymentQuery>).forEach(field => {
-          if (queryParams[field]) {
-            query.find({ [field]: queryParams[field] });
+        (["store", "customer", "card"] as Array<keyof PaymentQuery>).forEach(
+          field => {
+            if (queryParams[field]) {
+              query.find({ [field]: queryParams[field] });
+            }
           }
-        });
+        );
 
         if (queryParams.amount) {
           const amounts = queryParams.amount
