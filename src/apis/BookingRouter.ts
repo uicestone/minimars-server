@@ -526,7 +526,7 @@ export default (router: Router) => {
           statusWas !== BookingStatus.IN_SERVICE &&
           booking.status === BookingStatus.IN_SERVICE
         ) {
-          booking.checkIn(false);
+          booking.checkIn();
         }
 
         if (

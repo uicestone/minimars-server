@@ -12,7 +12,7 @@ import updateTimes from "./plugins/updateTimes";
 import autoPopulate from "./plugins/autoPopulate";
 import { config } from "../models/Config";
 import PaymentModel, { Payment, PaymentGateway, Scene } from "./Payment";
-import { User } from "./User";
+import UserModel, { User } from "./User";
 import { storeMap, Store } from "./Store";
 import { Card } from "./Card";
 import { Event } from "./Event";
@@ -586,7 +586,7 @@ export class Booking {
     } else if ([Scene.GIFT, Scene.EVENT].includes(this.type)) {
       this.status = atReception ? BookingStatus.FINISHED : BookingStatus.BOOKED;
     } else if (this.date === moment().format("YYYY-MM-DD") && atReception) {
-      await this.checkIn(false);
+      await this.checkIn();
     } else {
       this.status = BookingStatus.BOOKED;
     }
@@ -849,12 +849,9 @@ export class Booking {
     });
   }
 
-  async checkIn(this: DocumentType<Booking>, save = true) {
+  async checkIn(this: DocumentType<Booking>) {
     this.status = BookingStatus.IN_SERVICE;
     this.checkInAt = moment().format("HH:mm:ss");
-    if (save) {
-      await this.save();
-    }
 
     console.log(`[BOK] Booking ${this.id} checked in.`);
 
@@ -866,11 +863,13 @@ export class Booking {
       await this.populate("coupon").execPopulate();
     }
 
+    const customer = await UserModel.findById(this.customer);
+
     const rewardCardTypesString =
       this.coupon?.rewardCardTypes ||
       (this.card?.type !== "balance" && this.card?.rewardCardTypes);
 
-    if (rewardCardTypesString && this.kidsCount && this.customer) {
+    if (rewardCardTypesString && this.kidsCount && customer) {
       const rewardCardTypes = await CardTypeModel.find({
         slug: { $in: rewardCardTypesString.split(" ") }
       });
@@ -887,14 +886,14 @@ export class Booking {
 
       for (let i = 0; i < n; i++) {
         for (const cardType of rewardCardTypes) {
-          const card = cardType.issue(this.customer);
+          const card = cardType.issue(customer);
 
           card.paymentSuccess();
           card.rewardedFromBooking = this;
 
           await card.save();
           console.log(
-            `[CRD] Rewarded card ${card.slug} to customer ${this.customer.id}.`
+            `[CRD] Rewarded card ${card.slug} to customer ${customer.id}.`
           );
         }
       }
@@ -907,20 +906,20 @@ export class Booking {
 
     if (
       this.type === Scene.PLAY &&
-      this.customer &&
+      customer &&
       this.store &&
-      !this.customer.firstPlayStore &&
-      !this.customer.firstPlayDate
+      !customer.firstPlayStore &&
+      !customer.firstPlayDate
     ) {
-      this.customer.firstPlayDate = this.date;
-      this.customer.firstPlayStore = this.store?.id;
-      await this.customer.save();
+      customer.firstPlayDate = this.date;
+      customer.firstPlayStore = this.store?.id;
+      await customer.save();
     }
 
-    if (this.card?.type === "times" && this.customer && this.store) {
-      sendTemplateMessage(this.customer, TemplateMessageType.WRITEOFF, [
+    if (this.card?.type === "times" && customer && this.store) {
+      sendTemplateMessage(customer, TemplateMessageType.WRITEOFF, [
         "您的次卡已成功核销",
-        this.customer.name || "",
+        customer.name || "",
         `${this.store.name} ${this.adultsCount}大${this.kidsCount}小`,
         `${this.kidsCount}`,
         `${this.date} ${this.checkInAt}`,
