@@ -64,27 +64,11 @@ export default async (
     ]
   });
   paymentsQuery.setOptions({ skipAutoPopulationPaths: ["customer"] });
-  console.time("[STATS] Booking queries took");
-  console.time("[STATS] Payment queries took");
+
   const [bookingsPaid, payments] = await Promise.all([
-    bookingsPaidQuery.exec().then(r => {
-      console.timeEnd("[STATS] Booking queries took");
-      return r;
-    }),
-    paymentsQuery.exec().then(r => {
-      console.timeEnd("[STATS] Payment queries took");
-      return r;
-    })
+    bookingsPaidQuery.exec(),
+    paymentsQuery.exec()
   ]);
-  // const bookingsPaid = await bookingsPaidQuery.exec();
-  // console.timeEnd("[STATS] Booking queries took");
-  // console.time("[STATS] Payment queries took");
-  // const payments = await paymentsQuery.exec();
-  // console.timeEnd("[STATS] Payment queries took");
-  // console.log("[DEBUG] Bookings & payments queried:", Date.now() - starts);
-  console.log(
-    `[STATS] bookings:${bookingsPaid.length}, payments:${payments.length}.`
-  );
 
   const flowAmount = payments
     .filter(p => flowGateways.includes(p.gateway))

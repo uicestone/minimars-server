@@ -44,9 +44,9 @@ export default (router: Router) => {
 
       res.json({ token, user } as AuthLoginResponseBody);
 
-      let authLog = `[USR] 用户 ${user.name || user.login} (${
+      let authLog = `[USR] ${user.id} ${user.name || user.login || ""} (${
         user._id
-      }) 成功登录`;
+      }) logged in.`;
 
       ["version", "device-serial", "system", "device-model"].forEach(field => {
         if (req.get(`x-client-${field}`)) {
@@ -64,7 +64,7 @@ export default (router: Router) => {
       if (!user) {
         throw new HttpError(401, "用户未登录");
       }
-      let authLog = `[USR] 用户 ${user.name || "未知名称"} 获取登录信息`;
+      let authLog = `[USR] ${user.id} ${user.name || ""} requested auth user.`;
 
       ["version", "device-serial", "system", "device-model"].forEach(field => {
         if (req.get(`x-client-${field}`)) {
