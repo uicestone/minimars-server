@@ -7,6 +7,11 @@ function autoPopulate(schema: Schema, options: ModelPopulateOptions[]): void {
     if (!doc) {
       return;
     }
+    // console.log(
+    //   `[DEBUG] Auto-populate ${doc.collection.name}: ${JSON.stringify(
+    //     populates
+    //   )}.`
+    // );
     await Promise.all(
       populates.map(populate => {
         // @ts-ignore

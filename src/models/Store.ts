@@ -262,7 +262,7 @@ export class Store {
           }
         }
 
-        booking.payments = ticket.payments
+        const payments = ticket.payments
           .map(p => {
             const payment = new PaymentModel({
               scene: Scene.FOOD,
@@ -282,7 +282,8 @@ export class Store {
 
         await booking.save(); // may throw duplicate error so skip payment saving below
         insertBookings++;
-        await Promise.all(booking.payments.map(async p => p.save()));
+        await Promise.all(payments.map(async p => p.save()));
+        await booking.populate("payments").execPopulate();
         await booking.paymentSuccess();
         await booking.save();
       } catch (e) {
