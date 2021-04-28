@@ -298,6 +298,23 @@ export class Store {
       console.log(`[STR] Created ${insertBookings} food bookings.`);
     }
   }
+
+  async checkPospalPaymentMethods() {
+    const allMethods = await new Pospal(this.code).queryAllPayMethod();
+    const currentMethodMap = this?.pospalPaymentMethodMap;
+    if (currentMethodMap) {
+      for (let m in currentMethodMap) {
+        const methodItem = allMethods.find((item: any) => item.code === m);
+        if (!methodItem) {
+          console.log(m, "not found.");
+          continue;
+        }
+        console.log(
+          `[STR] ${this.code} ${m} -> ${currentMethodMap[m]}, pospal: ${methodItem.showName}`
+        );
+      }
+    }
+  }
 }
 
 const StoreModel = getModelForClass(Store, {

@@ -117,12 +117,6 @@ export const initAgenda = async () => {
     done();
   });
 
-  agenda.define("create indexes", async (job, done) => {
-    UserModel.createIndexes();
-    console.log("[CRO] Index created.");
-    done();
-  });
-
   agenda.define("save image from content", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const cardTypes = await CardType.find();
@@ -401,6 +395,37 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("issue cards", async (job, done) => {
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    const { slug, gateway, users } = job.attrs.data as {
+      slug: string;
+      gateway: PaymentGateway;
+      users: [string, string][];
+    };
+    const cardType = await CardTypeModel.findOne({ slug });
+    if (!cardType) throw new Error("invalid_card_type");
+    for (const [name, mobile] of users) {
+      let user = await UserModel.findOne({ mobile });
+      if (!user) {
+        user = new UserModel({ mobile, name });
+        await user.save();
+        console.log(`[CRO] Created customer ${user.mobile} ${user.id}.`);
+      }
+      const card = cardType.issue(user);
+      await card.save();
+      console.log(
+        `[CRO] Issued card ${slug} to customer ${user.mobile} ${user.id}.`
+      );
+      await card.createPayment({
+        paymentGateway: gateway || PaymentGateway.Pos
+      });
+      card.paymentSuccess();
+      await card.save();
+    }
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    done();
+  });
+
   agenda.define("sync history pospal tickets", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { code, dateStart, dateEnd } = job.attrs.data;
@@ -515,6 +540,16 @@ export const initAgenda = async () => {
     }
   });
 
+  agenda.define("check pospal payment methods", async (job, done) => {
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    const stores = await StoreModel.find();
+    for (const store of stores) {
+      store.checkPospalPaymentMethods();
+    }
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    done();
+  });
+
   agenda.define("sync youzan points", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
 
@@ -580,37 +615,6 @@ export const initAgenda = async () => {
     done();
   });
 
-  agenda.define("issue cards", async (job, done) => {
-    console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { slug, gateway, users } = job.attrs.data as {
-      slug: string;
-      gateway: PaymentGateway;
-      users: [string, string][];
-    };
-    const cardType = await CardTypeModel.findOne({ slug });
-    if (!cardType) throw new Error("invalid_card_type");
-    for (const [name, mobile] of users) {
-      let user = await UserModel.findOne({ mobile });
-      if (!user) {
-        user = new UserModel({ mobile, name });
-        await user.save();
-        console.log(`[CRO] Created customer ${user.mobile} ${user.id}.`);
-      }
-      const card = cardType.issue(user);
-      await card.save();
-      console.log(
-        `[CRO] Issued card ${slug} to customer ${user.mobile} ${user.id}.`
-      );
-      await card.createPayment({
-        paymentGateway: gateway || PaymentGateway.Pos
-      });
-      card.paymentSuccess();
-      await card.save();
-    }
-    console.log(`[CRO] Finished '${job.attrs.name}'.`);
-    done();
-  });
-
   agenda.start();
 
   agenda.on("ready", () => {
@@ -620,7 +624,6 @@ export const initAgenda = async () => {
     agenda.every("1 day", "update holidays");
     agenda.every("0 0 * * *", "set expired cards"); // run everyday at 0am
     agenda.every("1 day", "get wechat mp users");
-    // agenda.every("0 20 * * *", "check balance reward cards"); // run everyday at 8pm
     agenda.every("0 4 * * *", "verify user balance");
     agenda.every("30 4 * * *", "verify user points");
     agenda.every("0 16,20,22 * * *", "sync pospal customers");
