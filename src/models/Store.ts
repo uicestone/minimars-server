@@ -136,7 +136,7 @@ export class Store {
     }
     for (const door of doors) {
       await sleep(1000);
-      console.log(`[STR] Auth ${no} to store ${this.code}.`);
+      console.log(`[STR] ${this.code}: auth ${no} to store ${this.code}.`);
       door.controller?.registerCard(no, moment().format("YYYY-MM-DD"));
     }
   }
@@ -214,7 +214,9 @@ export class Store {
       throw new Error("invalid_payment_code");
     }
     if (typeof from !== "number") {
-      console.log(`[STR] Fetched ${result.length} Pospal tickets.`);
+      console.log(
+        `[STR] ${this.code}: fetched ${result.length} Pospal tickets.`
+      );
     }
     let insertBookings = 0;
     for (const ticket of result) {
@@ -296,7 +298,9 @@ export class Store {
       }
     }
     if (typeof from !== "number" || insertBookings) {
-      console.log(`[STR] Created ${insertBookings} food bookings.`);
+      console.log(
+        `[STR] ${this.code}: created ${insertBookings} food bookings.`
+      );
     }
   }
 
@@ -307,7 +311,7 @@ export class Store {
       for (let m in currentMethodMap) {
         const methodItem = allMethods.find((item: any) => item.code === m);
         if (!methodItem) {
-          console.log(m, "not found.");
+          console.log(`[STR] ${this.code}`, m, "not found.");
           continue;
         }
         console.log(

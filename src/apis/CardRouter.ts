@@ -56,7 +56,7 @@ export default (router: Router) => {
             ) as string).split(" ");
 
             console.log(
-              `[CRD] Gift code parsed, userId: ${userId}, cardId: ${cardId}.`
+              `[CRD] Gift code parsed, user: ${userId}, card: ${cardId}.`
             );
 
             const card = await CardModel.findOne({ _id: cardId });

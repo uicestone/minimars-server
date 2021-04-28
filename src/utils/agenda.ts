@@ -87,7 +87,7 @@ export const initAgenda = async () => {
     });
 
     if (bookings.length) {
-      console.log(`[CRO] Finish previous in_service bookings...`);
+      console.log(`[CRO] Finish previous in-service bookings...`);
     }
 
     for (const booking of bookings) {
@@ -186,7 +186,7 @@ export const initAgenda = async () => {
             user.cards.filter(c => c.slug === rewardCardType.slug).length;
           for (let i = 0; i < fixRewardCount; i++) {
             console.log(
-              `[CRO] User ${user.id} missing reward ${rewardCardType.slug} from ${cardType.slug}`
+              `[CRO] User ${user.id} missing reward ${rewardCardType.slug} from ${cardType.slug}.`
             );
             const rewardedCard = rewardCardType.issue(user);
             rewardedCard.paymentSuccess();
@@ -414,7 +414,7 @@ export const initAgenda = async () => {
       const card = cardType.issue(user);
       await card.save();
       console.log(
-        `[CRO] Issued card ${slug} to customer ${user.mobile} ${user.id}.`
+        `[CRO] Issued card ${card.id} (${slug}) to customer ${user.mobile} ${user.id}.`
       );
       await card.createPayment({
         paymentGateway: gateway || PaymentGateway.Pos
@@ -493,7 +493,7 @@ export const initAgenda = async () => {
           continue;
         user.pospalId = customer.customerUid.toString();
         console.log(
-          `[CRO] User ${user.mobile} pospal id set to ${user.pospalId}`
+          `[CRO] User ${user.id} ${user.mobile} pospal id set to ${user.pospalId}.`
         );
         await user.save();
       }
@@ -555,14 +555,14 @@ export const initAgenda = async () => {
 
     const users = await UserModel.find({ youzanId: { $exists: true } });
 
-    console.log(users.length, "users with youzanId found.");
+    console.log("[CRO]", users.length, "users with youzanId found.");
 
     for (const user of users) {
       await syncUserPoints(user);
       await sleep(100);
     }
 
-    console.log("youzanId users synced");
+    console.log("[CRO] YouzanId users synced");
 
     const cards = await CardModel.find({
       slug: { $in: ["888", "yp-888", "jq-888", "jn-888", "ts-888"] }

@@ -110,7 +110,7 @@ export default class Pospal {
   appKey: string;
   customers?: Member[];
   menu?: Menu;
-  constructor(storeCode?: string) {
+  constructor(private storeCode: string = "") {
     this.appId =
       process.env[
         `POSPAL_APPID${storeCode ? "_" + storeCode.toUpperCase() : ""}`
@@ -181,10 +181,8 @@ export default class Pospal {
           +(user.balance - customer.balance).toFixed(2),
           +((user.points || 0) - customer.point).toFixed(2)
         );
-        // console.log(user.mobile, user.balance, customer.balance);
-        // console.log(user.mobile, user.points, customer.point);
         console.log(
-          `[PSP] Found user ${
+          `[PSP${this.storeCode}] Found user ${
             user.mobile
           } with balance/points offset, fixed (${+(
             user.balance - customer.balance
@@ -208,7 +206,7 @@ export default class Pospal {
       { pospalId: customerInfo.customerUid.toString() }
     );
     console.log(
-      `[PSP] New Pospal customer created ${customerInfo.customerUid} ${user.mobile}.`
+      `[PSP${this.storeCode}] New Pospal customer created ${customerInfo.customerUid} ${user.mobile}.`
     );
   }
 
@@ -225,7 +223,9 @@ export default class Pospal {
   }
 
   async updateMemberBaseInfo(customerUid: string, set: Partial<Member>) {
-    console.log(`[PSP] Update ${customerUid} set ${JSON.stringify(set)}`);
+    console.log(
+      `[PSP${this.storeCode}] Update ${customerUid} set ${JSON.stringify(set)}.`
+    );
     await this.post("customerOpenApi/updateBaseInfo", {
       customerInfo: {
         customerUid,
@@ -251,7 +251,7 @@ export default class Pospal {
     parameterType: string;
     parameterValue: string;
   }): Promise<Member[]> {
-    console.log(`[PSP] Query all customers.`);
+    console.log(`[PS${this.storeCode}] Query all customers.`);
     const data: {
       postBackParameter: {
         parameterType: string;
@@ -291,7 +291,7 @@ export default class Pospal {
   ): Promise<Ticket[]> {
     const d = dateOrPastMinutes || moment().format("YYYY-MM-DD");
     if (typeof d !== "number") {
-      console.log(`[PSP] Query tickets for ${d}`);
+      console.log(`[PSP${this.storeCode}] Query tickets for ${d}`);
     }
     const start =
       typeof d === "number"
@@ -350,7 +350,7 @@ export default class Pospal {
     parameterType: string;
     parameterValue: string;
   }): Promise<Category[]> {
-    console.log(`[PSP] Query all product categories.`);
+    console.log(`[PSP${this.storeCode}] Query all product categories.`);
     const data: {
       postBackParameter: {
         parameterType: string;
@@ -376,7 +376,7 @@ export default class Pospal {
     parameterType: string;
     parameterValue: string;
   }): Promise<ProductImage[]> {
-    console.log(`[PSP] Query all product images.`);
+    console.log(`[PSP${this.storeCode}] Query all product images.`);
     const data: {
       postBackParameter: {
         parameterType: string;
@@ -402,7 +402,7 @@ export default class Pospal {
     parameterType: string;
     parameterValue: string;
   }): Promise<Product[]> {
-    console.log(`[PSP] Query all products.`);
+    console.log(`[PSP${this.storeCode}] Query all products.`);
     const data: {
       postBackParameter: {
         parameterType: string;

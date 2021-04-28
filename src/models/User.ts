@@ -193,7 +193,7 @@ export class User {
     this.points += amount;
     await this.updateOne({ $inc: { points: amount } }).exec();
     console.log(
-      `[USR] Mod points for ${this.mobile} ${this.id} by ${amount}, to ${this.points}.`
+      `[USR] Add points for ${this.mobile} ${this.id} by ${amount}, to ${this.points}.`
     );
     syncUserPoints(this).catch(err => {});
   }
@@ -224,7 +224,7 @@ export class User {
     new Pospal().addMember(this);
 
     console.log(
-      `[USR] Deposit balance of ${this.id} to ${this.balanceDeposit}:${this.balanceReward}, was ${balanceDepositWas}:${balanceRewardWas}`
+      `[USR] Deposit balance of ${this.id} to ${this.balanceDeposit}:${this.balanceReward}, was ${balanceDepositWas}:${balanceRewardWas}.`
     );
   }
 
@@ -277,7 +277,7 @@ export class User {
     }
 
     console.log(
-      `[USR] Write off balance of ${this.id} to ${this.balanceDeposit}:${this.balanceReward}, was ${balanceDepositWas}:${balanceRewardWas}`
+      `[USR] Write off balance of ${this.id} to ${this.balanceDeposit}:${this.balanceReward}, was ${balanceDepositWas}:${balanceRewardWas}.`
     );
 
     return {

@@ -79,7 +79,7 @@ export const SceneLabel = {
         this.paid = true;
         return next();
       }
-      console.log("wechat refund, customer:", this.customer);
+      console.log(`[PAY] Wechat refund ${this.id}, customer: ${this.customer}`);
       if (!customer?.openid) {
         throw new Error("no_customer_openid");
       }
@@ -133,7 +133,7 @@ export const SceneLabel = {
       );
 
       console.log(
-        `[PAY] Payment amount D:R is ${depositPaymentAmount}:${rewardPaymentAmount}.`
+        `[PAY] Payment ${this.id} amount D:R is ${depositPaymentAmount}:${rewardPaymentAmount}.`
       );
 
       this.amountDeposit = depositPaymentAmount;
@@ -156,27 +156,19 @@ export const SceneLabel = {
         throw new Error("invalid_card");
       }
 
-      if (this.times > 0) {
-        card.timesLeft += this.times;
-        await card.save();
-        console.log(
-          `[PAY] Card ${card.id} refunded, time left: ${card.timesLeft}.`
-        );
-      } else {
+      if (this.times <= 0) {
         if (card.status !== CardStatus.ACTIVATED) {
           throw new Error("invalid_card");
         }
         if (card.timesLeft + this.times < 0) {
           throw new Error("insufficient_card_times");
         }
-        card.timesLeft += this.times;
-        await card.save();
-        console.log(
-          `[PAY] Card ${
-            card.id
-          } used in ${this.booking?.toString()}, times left: ${card.timesLeft}.`
-        );
       }
+      card.timesLeft += this.times;
+      await card.save();
+      console.log(
+        `[PAY] ${this.id} write-off card ${card.id} by ${this.times} in booking ${this.booking}, times left: ${card.timesLeft}.`
+      );
       if (this.booking) {
         this.debt = -this.amount;
         this.revenue = this.amount;
@@ -330,22 +322,15 @@ export class Payment {
   }
 
   async paidSuccess(this: DocumentType<Payment>) {
-    const payment = this;
-
+    console.log(`[PAY] Paid success ${this.id}.`);
     if (this.booking) {
       const booking = await BookingModel.findById(this.booking);
       if (!booking) throw new Error("invalid_booking");
-      if (payment.amount >= 0) {
+      if (this.amount >= 0) {
         // TODO: no, single payment success is not booking payment success
         // so right now we don't trigger paidSuccess for balance/card/coupon payment
-        console.log(
-          `[PAY] Booking payment success ${this.id}, booking: ${booking._id}.`
-        );
         await booking.paymentSuccess();
       } else {
-        console.log(
-          `[PAY] Booking refund success ${this.id}, booking: ${booking._id}.`
-        );
         await booking.refundSuccess();
       }
       await booking.save();
@@ -354,7 +339,6 @@ export class Payment {
       if (!card) throw new Error("invalid_card");
       await card.paymentSuccess();
       await card.save();
-      console.log(`[PAY] Card purchase success, id: ${card._id}.`);
     }
   }
 }

@@ -336,7 +336,7 @@ export class Card {
     }
 
     if (this.payments.filter(p => p.paid).length) {
-      console.log(`[CRD] Refund card ${this._id}.`);
+      console.log(`[CRD] Refund ${this.id}.`);
       // we don't directly change status to canceled, will auto change on refund fullfil
       await this.createRefundPayment();
       if (!this.payments.filter(p => p.amount < 0).some(p => !p.paid)) {
@@ -357,7 +357,7 @@ export class Card {
       await customer?.depositBalance(-(this.balance || 0), -this.price);
     }
 
-    console.log(`[CRD] Refund card ${this.id}.`);
+    console.log(`[CRD] Cancel card ${this.id}.`);
 
     if (save) {
       await this.save();

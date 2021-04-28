@@ -38,7 +38,7 @@ export default function handleSocketData(
         const timeout = +(process.env.DOOR_PING_INTERVAL || "") * (1 + 1 / 60);
         socket.setTimeout(timeout);
         console.log(
-          `[SOK] Identified store ${client.store.code}, socket timeout set to ${timeout}`
+          `[SOK] Identified store ${client.store.code}, socket timeout set to ${timeout}.`
         );
         client.store.ip = socket.remoteAddress;
         client.store.save();

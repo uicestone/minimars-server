@@ -16,7 +16,7 @@ export default (router: Router) => {
       if (!code) throw new HttpError(400, "OAuth code missing.");
 
       const userData = await oAuth.getUser(code);
-      console.log("[WEC] Wechat login user data:", JSON.stringify(userData));
+      // console.log("[WEC] Wechat login user data:", JSON.stringify(userData));
 
       const { openid, session_key, unionid } = userData;
       let user = await UserModel.findOne({ openid });
@@ -29,7 +29,9 @@ export default (router: Router) => {
         await user.save();
       }
 
-      console.log(`[WEC] Wechat login ${user.id}, session_key: ${session_key}`);
+      console.log(
+        `[WEC] Wechat login ${user.id}, session_key: ${session_key}.`
+      );
 
       res.json({
         user,
@@ -174,7 +176,7 @@ export default (router: Router) => {
         }
 
         console.log(
-          `[PAY] WechatPay success. Data: ${JSON.stringify(parsedData)}`
+          `[PAY] WechatPay success. Data: ${JSON.stringify(parsedData)}.`
         );
 
         const payment = await PaymentModel.findOne({

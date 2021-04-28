@@ -10,6 +10,7 @@ export default (router: Router) => {
         delete face.irimg;
         delete face.orgimg;
         console.log(
+          "[VSO]",
           face.userId,
           face.name,
           face.score,

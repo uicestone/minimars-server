@@ -21,7 +21,7 @@ export const initMongoose = async () => {
     mongoClient = m.connections[0].db;
     console.log(`[MGO] DB: ${mongoUrl} connected.`);
   } catch (err) {
-    console.error(`[MGO] DB Connection Error: ${err.message}`);
+    console.error(`[MGO] DB Connection Error: ${err.message}.`);
   }
 
   mongoose.Promise = global.Promise;

@@ -72,7 +72,7 @@ export default (router: Router) => {
         }
 
         console.log(
-          `[BOK] Create booking for customer ${booking.customer.mobile} ${booking.customer.id}.`
+          `[BOK] Create ${booking.id} for customer ${booking.customer.mobile} ${booking.customer.id}.`
         );
 
         await booking.populate("store").execPopulate();

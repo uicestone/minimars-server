@@ -109,7 +109,7 @@ export async function getQrcode(
     return;
   }
   const fileName = `${process.cwd()}/${output}`;
-  console.log(fileName);
+  console.log(`[WEC] Qrcode file saved: ${fileName}.`);
   fs.writeFileSync(fileName, data);
 }
 
@@ -259,7 +259,7 @@ export const refundOrder = async (
   refundFee: number
 ) => {
   console.log(
-    `[PAY] Wechat refund ${outTradeNo} ${outRefundNo} ${totalFee} ${refundFee}`
+    `[WEC] Refund ${outTradeNo} ${outRefundNo} ${totalFee} ${refundFee}.`
   );
   return await pay.refund({
     out_trade_no: outTradeNo,

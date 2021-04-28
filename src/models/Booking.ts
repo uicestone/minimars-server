@@ -591,7 +591,7 @@ export class Booking {
       this.status = BookingStatus.BOOKED;
     }
 
-    console.log(`[BOK] Payment success: ${this.id}, status is ${this.status}.`);
+    console.log(`[BOK] Payment success ${this.id}, status: ${this.status}.`);
 
     if (this.type === Scene.EVENT) {
       if (!this.populated("event")) {
@@ -853,7 +853,7 @@ export class Booking {
     this.status = BookingStatus.IN_SERVICE;
     this.checkInAt = moment().format("HH:mm:ss");
 
-    console.log(`[BOK] Booking ${this.id} checked in.`);
+    console.log(`[BOK] Check-in ${this.id}.`);
 
     if (this.card && !this.populated("card")) {
       await this.populate("card").execPopulate();
@@ -893,7 +893,7 @@ export class Booking {
 
           await card.save();
           console.log(
-            `[CRD] Rewarded card ${card.slug} to customer ${customer.id}.`
+            `[BOK] ${this.id} rewarded card ${card.id} ${card.slug} to customer ${customer.id}.`
           );
         }
       }
@@ -934,7 +934,7 @@ export class Booking {
     }
 
     if (this.payments.filter(p => p.paid).length) {
-      console.log(`[BOK] Refund booking ${this._id}.`);
+      console.log(`[BOK] Refund ${this.id}.`);
       // we don't directly change status to canceled, will auto change on refund fullfil
       this.status = BookingStatus.PENDING_REFUND;
       await this.createRefundPayment();
@@ -945,7 +945,7 @@ export class Booking {
       this.refundSuccess();
     }
 
-    console.log(`[BOK] Cancel booking ${this._id}.`);
+    console.log(`[BOK] Cancel ${this.id}.`);
 
     if (save) {
       await this.save();
@@ -972,7 +972,7 @@ export class Booking {
 
     booking.status = BookingStatus.FINISHED;
 
-    console.log(`[BOK] Finish booking ${booking._id}.`);
+    console.log(`[BOK] Finish ${booking._id}.`);
 
     if (save) {
       await booking.save();
