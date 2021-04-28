@@ -262,7 +262,7 @@ export class Store {
           }
         }
 
-        const payments = ticket.payments
+        booking.payments = ticket.payments
           .map(p => {
             const payment = new PaymentModel({
               scene: Scene.FOOD,
@@ -282,7 +282,9 @@ export class Store {
 
         await booking.save(); // may throw duplicate error so skip payment saving below
         insertBookings++;
-        await Promise.all(payments.map(async p => p.save()));
+        await Promise.all(booking.payments.map(async p => p.save()));
+        await booking.paymentSuccess();
+        await booking.save();
       } catch (e) {
         if (e.code === 11000) {
         } else if (e.message === "insufficient_balance") {
