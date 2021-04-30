@@ -523,7 +523,7 @@ export class Booking {
 
     if (extraPayAmount < 0) throw new Error("booking_payment_amount_overflow");
 
-    if (!extraPayAmount && !amountInPoints) {
+    if (!extraPayAmount && paymentGateway !== PaymentGateway.Points) {
       await this.paymentSuccess(atReception);
     } else if (paymentGateway !== PaymentGateway.Points) {
       if (!paymentGateway) {

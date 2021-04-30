@@ -79,7 +79,9 @@ export const SceneLabel = {
         this.paid = true;
         return next();
       }
-      console.log(`[PAY] Wechat refund ${this.id}, customer: ${this.customer}`);
+      console.log(
+        `[PAY] Wechat payment ${this.id}, customer: ${this.customer?.id}`
+      );
       if (!customer?.openid) {
         throw new Error("no_customer_openid");
       }
