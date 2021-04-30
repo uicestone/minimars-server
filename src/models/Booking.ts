@@ -523,9 +523,28 @@ export class Booking {
 
     if (extraPayAmount < 0) throw new Error("booking_payment_amount_overflow");
 
-    if (!extraPayAmount && paymentGateway !== PaymentGateway.Points) {
+    if (paymentGateway === PaymentGateway.Points) {
+      const pointsPayment = new PaymentModel({
+        scene: this.type,
+        customer: this.customer,
+        store: this.store,
+        amount: 0,
+        amountInPoints,
+        title: this.title,
+        attach,
+        booking: this.id,
+        gateway: PaymentGateway.Points,
+        gatewayData: {
+          atReception
+        }
+      });
+
+      await pointsPayment.save();
+      this.payments.push(pointsPayment);
       await this.paymentSuccess(atReception);
-    } else if (paymentGateway !== PaymentGateway.Points) {
+    } else if (!extraPayAmount) {
+      await this.paymentSuccess(atReception);
+    } else {
       if (!paymentGateway) {
         throw new Error("missing_gateway");
       }
@@ -550,27 +569,6 @@ export class Booking {
       if (paymentGateway !== PaymentGateway.WechatPay) {
         await this.paymentSuccess(atReception);
       }
-    }
-
-    if (amountInPoints) {
-      const pointsPayment = new PaymentModel({
-        scene: this.type,
-        customer: this.customer,
-        store: this.store,
-        amount: 0,
-        amountInPoints,
-        title: this.title,
-        attach,
-        booking: this.id,
-        gateway: PaymentGateway.Points,
-        gatewayData: {
-          atReception
-        }
-      });
-
-      await pointsPayment.save();
-      this.payments.push(pointsPayment);
-      await this.paymentSuccess(atReception);
     }
 
     if (paymentGateway === PaymentGateway.Points && !amountInPoints) {
