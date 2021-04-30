@@ -525,7 +525,7 @@ export class Booking {
 
     if (!extraPayAmount && !amountInPoints) {
       await this.paymentSuccess(atReception);
-    } else {
+    } else if (paymentGateway !== PaymentGateway.Points) {
       if (!paymentGateway) {
         throw new Error("missing_gateway");
       }
@@ -551,6 +551,7 @@ export class Booking {
         await this.paymentSuccess(atReception);
       }
     }
+
     if (amountInPoints) {
       const pointsPayment = new PaymentModel({
         scene: this.type,
