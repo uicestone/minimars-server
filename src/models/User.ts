@@ -134,9 +134,6 @@ export class User {
   balanceReward?: number;
 
   get balance() {
-    if (this.balanceDeposit === undefined && this.balanceReward === undefined) {
-      return NaN;
-    }
     return +((this.balanceDeposit || 0) + (this.balanceReward || 0)).toFixed(2);
   }
 
@@ -236,10 +233,6 @@ export class User {
     save = true,
     syncToPospal = true
   ) {
-    if (this.balanceDeposit === undefined || this.balanceReward === undefined) {
-      console.error(`[USR] Invalid balance of user ${this.id}.`);
-      throw new Error("invalid_balance");
-    }
     if (this.balance < amount) {
       console.log(
         `[USR] Insufficient balance ${this.balance} of user ${this.id}, trying to write-off ${amount}.`
@@ -247,22 +240,33 @@ export class User {
       throw new Error("insufficient_balance");
     }
 
-    const balanceDepositWas = this.balanceDeposit,
-      balanceRewardWas = this.balanceReward;
+    let balanceDeposit = this.balanceDeposit || 0;
+    let balanceReward = this.balanceReward || 0;
+
+    const balanceDepositWas = balanceDeposit,
+      balanceRewardWas = balanceReward;
 
     const depositPaymentAmount =
       amountDeposit ||
       Math.max(
         +(
           amountForceDeposit +
-          ((amount - amountForceDeposit) * this.balanceDeposit) / this.balance
+          ((amount - amountForceDeposit) * balanceDeposit) / this.balance
         ).toFixed(2),
         0.01
       );
 
     const rewardPaymentAmount = +(amount - depositPaymentAmount).toFixed(2);
-    this.balanceDeposit -= depositPaymentAmount;
-    this.balanceReward -= rewardPaymentAmount;
+    balanceDeposit -= depositPaymentAmount;
+    balanceReward -= rewardPaymentAmount;
+
+    if (balanceDeposit !== balanceDepositWas) {
+      this.balanceDeposit = balanceDeposit;
+    }
+
+    if (balanceReward !== balanceRewardWas) {
+      this.balanceReward = balanceReward;
+    }
 
     if (syncToPospal) {
       new Pospal().addMember(this).catch(e => {
