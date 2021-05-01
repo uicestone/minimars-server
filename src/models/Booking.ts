@@ -524,6 +524,9 @@ export class Booking {
     if (extraPayAmount < 0) throw new Error("booking_payment_amount_overflow");
 
     if (paymentGateway === PaymentGateway.Points) {
+      if (amountInPoints === undefined) {
+        throw new HttpError(400, "不支持积分支付");
+      }
       const pointsPayment = new PaymentModel({
         scene: this.type,
         customer: this.customer,
