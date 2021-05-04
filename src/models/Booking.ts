@@ -857,7 +857,9 @@ export class Booking {
 
     console.log(`[BOK] Check-in ${this.id}.`);
 
-    if (this.card && !this.populated("card")) {
+    if (this.card) {
+      // force reload card, because checkIn may call by booking.paymentSuccess
+      // and booking.card.timesLeft has not been updated.
       await this.populate("card").execPopulate();
     }
 
@@ -902,7 +904,7 @@ export class Booking {
 
       if (this.card && !this.card.cardsRewarded) {
         this.card.cardsRewarded = true;
-        await this.card.save();
+        await this.card.save(); // TODO conflict with -timesLeft
       }
     }
 
