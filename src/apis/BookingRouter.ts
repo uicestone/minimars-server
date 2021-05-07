@@ -59,6 +59,9 @@ export default (router: Router) => {
             booking.customer = new UserModel({
               mobile: query.customerKeyword
             });
+            if (req.user.role && req.user.store) {
+              booking.customer.registerAt = req.user.store.name;
+            }
             await booking.customer.validate();
           }
         }

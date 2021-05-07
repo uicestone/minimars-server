@@ -149,6 +149,7 @@ export async function handleAuthMobile(message: {
   if (!user) {
     user = new UserModel();
     user.mobile = message.mobile;
+    user.registerAt = "有赞商城";
   }
   user.youzanId = message.yz_open_id;
   console.log(
@@ -236,8 +237,7 @@ async function createBooking(trade: any) {
   } = trade;
   let user = await UserModel.findOne({ mobile });
   if (!user) {
-    user = new UserModel();
-    user.mobile = mobile;
+    user = new UserModel({ mobile, registerAt: "有赞商城" });
     await user.save();
   }
   booking.set({
@@ -317,7 +317,7 @@ async function createCard(trade: any) {
   const stores = await StoreModel.find();
   let user = await UserModel.findOne({ mobile });
   if (!user) {
-    user = new UserModel({ mobile });
+    user = new UserModel({ mobile, registerAt: "有赞商城" });
     await user.save();
   }
 

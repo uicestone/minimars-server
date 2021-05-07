@@ -413,7 +413,7 @@ export const initAgenda = async () => {
     for (const [name, mobile] of users) {
       let user = await UserModel.findOne({ mobile });
       if (!user) {
-        user = new UserModel({ mobile, name });
+        user = new UserModel({ mobile, name, registerAt: "手动导入" });
         await user.save();
         console.log(`[CRO] Created customer ${user.mobile} ${user.id}.`);
       }

@@ -57,6 +57,10 @@ export default (router: Router) => {
         }
         const user = new UserModel(body);
 
+        if (req.user.role && req.user.store) {
+          user.registerAt = req.user.store.name;
+        }
+
         if (body.role) {
           await user.populate("role").execPopulate();
           if (!user.role) {

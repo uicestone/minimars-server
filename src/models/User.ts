@@ -155,6 +155,9 @@ export class User {
   @prop({ ref: "Store" })
   firstPlayStore?: Ref<Store>;
 
+  @prop()
+  registerAt?: string;
+
   @prop({
     remarks: String,
     set: (v: string) => {

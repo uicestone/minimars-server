@@ -25,7 +25,7 @@ export default (router: Router) => {
         await user.save();
       } else {
         user = new UserModel();
-        user.set({ openid, unionid });
+        user.set({ openid, unionid, registerAt: "微信小程序" });
         await user.save();
       }
 
