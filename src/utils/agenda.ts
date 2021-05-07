@@ -291,13 +291,13 @@ export const initAgenda = async () => {
 
   agenda.define("verify user points", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { fix = false } = job.attrs.data || {};
+    const { fix = false, userId = undefined } = job.attrs.data || {};
     try {
       const customerPointsMap: Record<string, number> = {};
       const customerPoints = await PaymentModel.aggregate([
         {
           $match: {
-            customer: { $exists: true },
+            customer: userId || { $exists: true },
             paid: true,
             booking: { $exists: true },
             gateway: { $ne: PaymentGateway.Coupon }
@@ -311,7 +311,13 @@ export const initAgenda = async () => {
       });
 
       const customerWrittenOffPoints = await PaymentModel.aggregate([
-        { $match: { paid: true, amountInPoints: { $exists: true } } },
+        {
+          $match: {
+            paid: true,
+            amountInPoints: { $exists: true },
+            customer: userId || { $exists: true }
+          }
+        },
         { $group: { _id: "$customer", points: { $sum: "$amountInPoints" } } }
       ]);
 
@@ -321,7 +327,7 @@ export const initAgenda = async () => {
         ).toFixed();
       });
 
-      const users = await UserModel.find();
+      const users = await UserModel.find(userId ? { _id: userId } : {});
       for (const u of users) {
         const storedPoints = u.points || 0;
         customerPointsMap[u.id] = customerPointsMap[u.id] || 0;
