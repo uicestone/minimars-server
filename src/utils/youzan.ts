@@ -291,6 +291,8 @@ async function createBooking(trade: any) {
     await totalFeePayment.save();
   }
 
+  await user.addPoints(totalFee);
+
   if (totalPointsPrice) {
     const totalPointsPayment = new PaymentModel();
     totalPointsPayment.set({

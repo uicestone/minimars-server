@@ -205,7 +205,10 @@ export const SceneLabel = {
       ) {
         throw new Error("insufficient_points");
       }
-      await customer.addPoints(-this.amountInPoints);
+      setTimeout(() => {
+        if (!this.amountInPoints) return;
+        customer.addPoints(-this.amountInPoints);
+      }, 1e3);
       this.paid = true;
       break;
     default:
