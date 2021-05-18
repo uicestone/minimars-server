@@ -146,7 +146,7 @@ export default class Pospal {
 
   handleError(data: { status: string; messages: string[]; data: any }) {
     if (data.status === "error") {
-      console.error(`[PSP] ${data.messages.join("；")}`);
+      console.error(`[PSP${this.storeCode}] ${data.messages.join("；")}`);
       throw new Error(`pospal_request_error`);
     } else {
       return data.data;
@@ -171,7 +171,7 @@ export default class Pospal {
         (await this.getMember(user.pospalId));
       if (!customer) {
         console.error(
-          `[PSP] Customer not found for ${user.pospalId} ${user.mobile}.`
+          `[PSP${this.storeCode}] Customer not found for ${user.pospalId} ${user.mobile}.`
         );
         return;
       }
