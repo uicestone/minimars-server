@@ -421,24 +421,24 @@ export class Booking {
     let totalPayAmount = amount;
     let balancePayAmount = 0;
     let attach = `booking ${this._id}`;
+    if (!atReception) {
+      if (
+        this.card?.start &&
+        new Date(this.card.start) > moment(this.date).endOf("day").toDate()
+      ) {
+        throw new Error("card_not_started");
+      }
+      const cardExpiresAt = this.card?.expiresAt || this.card?.end;
+      if (
+        cardExpiresAt &&
+        new Date(cardExpiresAt) < moment(this.date).startOf("day").toDate()
+      ) {
+        throw new Error("card_expired");
+      }
+    }
     if (this.card && ["times", "coupon"].includes(this.card.type)) {
       if (this.card.times === undefined)
         throw new Error("invalid_times_coupon_card");
-      if (!atReception) {
-        if (
-          this.card.start &&
-          new Date(this.card.start) > moment(this.date).endOf("day").toDate()
-        ) {
-          throw new Error("card_not_started");
-        }
-        const cardExpiresAt = this.card.expiresAt || this.card.end;
-        if (
-          cardExpiresAt &&
-          new Date(cardExpiresAt) < moment(this.date).startOf("day").toDate()
-        ) {
-          throw new Error("card_expired");
-        }
-      }
       const cardTimes = this.card.maxKids
         ? Math.min(this.kidsCount || 1, this.card.maxKids)
         : this.kidsCount || 1;

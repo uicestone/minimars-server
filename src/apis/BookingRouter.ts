@@ -301,9 +301,9 @@ export default (router: Router) => {
             case "insufficient_points":
               throw new HttpError(400, "客户账户积分不足");
             case "card_expired":
-              throw new HttpError(400, "会员卡已失效");
+              throw new HttpError(400, "该会员卡已失效");
             case "card_not_started":
-              throw new HttpError(400, "会员卡未生效");
+              throw new HttpError(400, "该会员卡未生效");
             case "insufficient_card_times":
               throw new HttpError(400, "次卡剩余次数不足");
             case "missing_gateway":
