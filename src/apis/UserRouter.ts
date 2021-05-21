@@ -23,16 +23,18 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPostBody;
         if (!req.user.can(Permission.DEVELOP)) {
-          ([
-            "role",
-            "openid",
-            "cardType",
-            "cardNo",
-            "balanceDeposit",
-            "balanceReward",
-            "tags",
-            "points"
-          ] as Array<keyof User>).forEach(f => {
+          (
+            [
+              "role",
+              "openid",
+              "cardType",
+              "cardNo",
+              "balanceDeposit",
+              "balanceReward",
+              "tags",
+              "points"
+            ] as Array<keyof User>
+          ).forEach(f => {
             delete body[f];
           });
         }
@@ -58,7 +60,7 @@ export default (router: Router) => {
         const user = new UserModel(body);
 
         if (req.user.role && req.user.store) {
-          user.registerAt = req.user.store.name;
+          user.registeredAt = req.user.store.name;
         }
 
         if (body.role) {
@@ -211,16 +213,18 @@ export default (router: Router) => {
       handleAsyncErrors(async (req: Request, res: Response) => {
         const body = req.body as UserPutBody;
         if (!req.user.can(Permission.DEVELOP)) {
-          ([
-            "role",
-            "openid",
-            "cardType",
-            "balanceDeposit",
-            "balanceReward",
-            "tags",
-            "points",
-            "covers"
-          ] as Array<keyof User>).forEach(f => {
+          (
+            [
+              "role",
+              "openid",
+              "cardType",
+              "balanceDeposit",
+              "balanceReward",
+              "tags",
+              "points",
+              "covers"
+            ] as Array<keyof User>
+          ).forEach(f => {
             delete body[f];
           });
         }

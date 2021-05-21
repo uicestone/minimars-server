@@ -60,7 +60,7 @@ export default (router: Router) => {
               mobile: query.customerKeyword
             });
             if (req.user.role && req.user.store) {
-              booking.customer.registerAt = req.user.store.name;
+              booking.customer.registeredAt = req.user.store.name;
             }
             await booking.customer.validate();
           }
@@ -375,15 +375,17 @@ export default (router: Router) => {
           }
         }
 
-        ([
-          "type",
-          "store",
-          "date",
-          "customer",
-          "event",
-          "gift",
-          "coupon"
-        ] as Array<keyof BookingQuery>).forEach(field => {
+        (
+          [
+            "type",
+            "store",
+            "date",
+            "customer",
+            "event",
+            "gift",
+            "coupon"
+          ] as Array<keyof BookingQuery>
+        ).forEach(field => {
           if (queryParams[field]) {
             query.find({ [field]: queryParams[field] });
           }
