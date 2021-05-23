@@ -12,6 +12,7 @@ import CardModel, { BalanceGroup } from "./Card";
 import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
 import moment from "moment";
+import { Scene } from "./Payment";
 
 class BalancePriceGroup {
   @prop({ type: Number, required: true })
@@ -218,6 +219,15 @@ export class CardType {
         .add(this.expiresInDays, "days")
         .endOf("day")
         .toDate();
+    }
+
+    if (this.type === Scene.PERIOD) {
+      if (!this.start) {
+        card.start = moment().startOf("day").toDate();
+      }
+      if (!this.end) {
+        card.end = card.expiresAt;
+      }
     }
 
     return card;
