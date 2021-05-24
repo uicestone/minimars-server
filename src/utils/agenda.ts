@@ -14,7 +14,11 @@ import UserModel, { User } from "../models/User";
 import configModel, { Config } from "../models/Config";
 import CardTypeModel from "../models/CardType";
 import StoreModel from "../models/Store";
-import paymentModel, { PaymentGateway } from "../models/Payment";
+import paymentModel, {
+  Payment,
+  PaymentGateway,
+  Scene
+} from "../models/Payment";
 import { saveContentImages, sleep } from "./helper";
 import { getMpUserOpenids, getQrcode, getUsersInfo } from "./wechat";
 import Pospal from "./pospal";
@@ -432,6 +436,62 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("generate period card revenue", async (job, done) => {
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    const { clearDate = new Date() } = job.attrs.data || {};
+    // clear period cards that ends in the previous month of clearDate or later
+    // during the previous month on clearDate
+    const monthEnd = moment(clearDate)
+      .subtract(1, "month")
+      .endOf("month")
+      .toDate();
+    const monthStart = moment(clearDate)
+      .subtract(1, "month")
+      .startOf("month")
+      .toDate();
+    const cards = await CardModel.find({
+      type: Scene.PERIOD,
+      end: { $gte: monthStart },
+      start: { $lte: monthEnd }
+    });
+    console.log(
+      `[CRO] ${cards.length} cards to be count in ${moment(monthStart).format(
+        "MMM"
+      )}.`
+    );
+    for (const card of cards) {
+      // pay amount / card period * period in this month
+      // period in this month is (min(period end, month end) - max(period start, month start))
+      if (!card.end || !card.start) {
+        console.error(`[CRO] Card ${card.id} missing start of end date.`);
+        continue;
+      }
+
+      const monthlyAmount =
+        (card.price / (+card.end - +card.start)) *
+        (Math.min(+card.end, +monthEnd) - Math.max(+card.start, +monthStart));
+
+      const payment = new PaymentModel({
+        scene: Scene.PLAY,
+        customer: card.customer,
+        store: card.payments[0]?.store,
+        amount: monthlyAmount,
+        debt: -monthlyAmount,
+        revenue: monthlyAmount,
+        paid: true,
+        title: `${card.title} ${moment(monthStart).format("M")}月核销`,
+        card: card.id,
+        gateway: PaymentGateway.Card
+      });
+
+      await payment.save();
+      const user = await UserModel.findById(payment.customer);
+      await user?.addPoints(monthlyAmount);
+      console.log(`[CRO] Finished '${job.attrs.name}'.`);
+      done();
+    }
+  });
+
   agenda.define("sync history pospal tickets", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const { code, dateStart, dateEnd } = job.attrs.data;
@@ -633,7 +693,8 @@ export const initAgenda = async () => {
     agenda.every("0 4 * * *", "verify user balance");
     agenda.every("30 4 * * *", "verify user points");
     agenda.every("0 16,20,22 * * *", "sync pospal customers");
-    agenda.every(`* * * * *`, "sync pospal tickets");
+    agenda.every("* * * * *", "sync pospal tickets");
+    agenda.every("0 4 1 * *", "generate period card revenue");
   });
 
   agenda.on("error", err => {
