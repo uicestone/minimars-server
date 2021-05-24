@@ -307,7 +307,12 @@ export const initAgenda = async () => {
             gateway: { $ne: PaymentGateway.Coupon }
           }
         },
-        { $group: { _id: "$customer", points: { $sum: "$amount" } } }
+        {
+          $group: {
+            _id: "$customer",
+            points: { $sum: { $round: ["$amount", 0] } }
+          }
+        }
       ]);
 
       customerPoints.forEach(({ _id, points }) => {
