@@ -438,24 +438,26 @@ export const initAgenda = async () => {
 
   agenda.define("generate period card revenue", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { clearDate = new Date() } = job.attrs.data || {};
+    const {
+      clearDate = new Date(),
+      start = undefined,
+      end = undefined
+    } = job.attrs.data || {};
     // clear period cards that ends in the previous month of clearDate or later
     // during the previous month on clearDate
-    const monthEnd = moment(clearDate)
-      .subtract(1, "month")
-      .endOf("month")
-      .toDate();
-    const monthStart = moment(clearDate)
-      .subtract(1, "month")
-      .startOf("month")
-      .toDate();
+    const periodEnd = end
+      ? new Date(end)
+      : moment(clearDate).subtract(1, "month").endOf("month").toDate();
+    const periodStart = start
+      ? new Date(start)
+      : moment(clearDate).subtract(1, "month").startOf("month").toDate();
     const cards = await CardModel.find({
       type: Scene.PERIOD,
-      end: { $gte: monthStart },
-      start: { $lte: monthEnd }
+      end: { $gte: periodStart },
+      start: { $lte: periodEnd }
     });
     console.log(
-      `[CRO] ${cards.length} cards to be count in ${moment(monthStart).format(
+      `[CRO] ${cards.length} cards to be count in ${moment(periodStart).format(
         "MMM"
       )}.`
     );
@@ -468,20 +470,27 @@ export const initAgenda = async () => {
       }
 
       const monthlyAmount =
-        (card.price / (+card.end - +card.start)) *
-        (Math.min(+card.end, +monthEnd) - Math.max(+card.start, +monthStart));
+        (card.price / (+card.end - +card.start + 1)) *
+        (Math.min(+card.end, +periodEnd) -
+          Math.max(+card.start, +periodStart) +
+          1);
+
+      if (!monthlyAmount) continue;
 
       const payment = new PaymentModel({
-        scene: Scene.PLAY,
+        scene: Scene.PERIOD,
         customer: card.customer,
         store: card.payments[0]?.store,
         amount: monthlyAmount,
         debt: -monthlyAmount,
         revenue: monthlyAmount,
         paid: true,
-        title: `${card.title} ${moment(monthStart).format("M")}月核销`,
+        title: `${card.title} ${
+          start && end ? "一次性" : moment(periodStart).format("M") + "月"
+        }核销`,
         card: card.id,
-        gateway: PaymentGateway.Card
+        gateway: PaymentGateway.Card,
+        createdAt: periodEnd
       });
 
       await payment.save();
