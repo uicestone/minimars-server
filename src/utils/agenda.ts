@@ -307,12 +307,7 @@ export const initAgenda = async () => {
             gateway: { $ne: PaymentGateway.Coupon }
           }
         },
-        {
-          $group: {
-            _id: "$customer",
-            points: { $sum: { $round: ["$amount", 0] } }
-          }
-        }
+        { $group: { _id: "$customer", points: { $sum: "$amount" } } }
       ]);
 
       customerPoints.forEach(({ _id, points }) => {
@@ -340,7 +335,7 @@ export const initAgenda = async () => {
       for (const u of users) {
         const storedPoints = u.points || 0;
         customerPointsMap[u.id] = customerPointsMap[u.id] || 0;
-        if (+storedPoints.toFixed() !== customerPointsMap[u.id]) {
+        if (storedPoints - customerPointsMap[u.id] > 1) {
           u.points = customerPointsMap[u.id];
           if (fix) {
             await UserModel.updateOne(
