@@ -48,6 +48,12 @@ class BalancePriceGroup {
       }
     }
   }
+  if (this.start) {
+    this.start = moment(this.start).startOf("day").toDate();
+  }
+  if (this.end) {
+    this.end = moment(this.end).endOf("day").toDate();
+  }
   next();
 })
 export class CardType {
@@ -226,7 +232,7 @@ export class CardType {
         card.start = moment().startOf("day").toDate();
       }
       if (!this.end) {
-        card.end = card.expiresAt;
+        card.end = moment(card.expiresAt).endOf("day").toDate();
       }
     }
 
