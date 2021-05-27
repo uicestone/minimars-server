@@ -50,10 +50,19 @@ export default (router: Router) => {
 
         if (body.giftCode) {
           try {
-            const [userId, cardId] = (verify(
-              body.giftCode,
-              process.env.APP_SECRET || ""
-            ) as string).split(" ");
+            let userId: string, cardId: string;
+
+            const directMatch = body.giftCode.match(
+              /([a-fA-F0-9]{24})-([a-fA-F0-9]{24})/
+            );
+            if (directMatch) {
+              cardId = directMatch[1];
+              userId = directMatch[2];
+            } else {
+              [userId, cardId] = (
+                verify(body.giftCode, process.env.APP_SECRET || "") as string
+              ).split(" ");
+            }
 
             console.log(
               `[CRD] Gift code parsed, user: ${userId}, card: ${cardId}.`

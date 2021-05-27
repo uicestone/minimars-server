@@ -96,14 +96,34 @@ export async function getAccessToken(
 
 export async function getQrcode(
   path: string,
-  output = "qrcode.jpg"
+  output = "qrcode.jpg",
+  type: "qr" | "wxa_unlimit" | "wxa" = "qr",
+  scene = ""
 ): Promise<void> {
-  const data = await request(
-    false,
-    "wxaapp/createwxaqrcode",
-    { path, width: 1280 },
-    { responseType: "arraybuffer" }
-  );
+  if (type === "qr" && path.length > 128) {
+    throw new Error(`Max path length exceeded, got ${path.length}.`);
+  }
+  if (type !== "qr" && !scene) {
+    throw new Error("Scene is required.");
+  }
+  if (type !== "qr" && path.includes("?")) {
+    throw new Error("Wxa code can't include params.");
+  }
+  const data =
+    type === "qr"
+      ? await request(
+          false,
+          "wxaapp/createwxaqrcode",
+          { path, width: 1280 },
+          { responseType: "arraybuffer" }
+        )
+      : type === "wxa_unlimit"
+      ? await request(
+          false,
+          "https://api.weixin.qq.com/wxa/getwxacodeunlimit",
+          { scene, page: path }
+        )
+      : "";
   if (data.errcode) {
     console.error(`[WEC] ${data.errcode} ${data.errmsg}.`);
     return;

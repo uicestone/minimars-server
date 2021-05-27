@@ -442,6 +442,32 @@ export const initAgenda = async () => {
     done();
   });
 
+  agenda.define("generate gift card codes", async (job, done) => {
+    console.log(`[CRO] Running '${job.attrs.name}'...`);
+    const { cardIds } = (job.attrs.data as { cardIds: string[] }) || {
+      cardIds: []
+    };
+    for (const cardId of cardIds) {
+      const card = await CardModel.findById(cardId);
+      if (!card) {
+        console.error(`[CRO] Card ${cardId} not found.`);
+        continue;
+      }
+      if (!card.isGift || card.status !== CardStatus.VALID) {
+        console.error(`[CRO] Card ${cardId} is not gift.`);
+        continue;
+        // card.isGift = true;
+        // card.status = CardStatus.VALID;
+        // await card.save();
+      }
+      const weappQrPath = `/pages/index/index?giftCode=${card.id}-${card.customer}`;
+      getQrcode(weappQrPath, `output/qrcode-${card.slug}-${card.id}.jpg`);
+      break;
+    }
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    done();
+  });
+
   agenda.define("generate period card revenue", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
     const {
