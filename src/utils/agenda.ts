@@ -461,7 +461,7 @@ export const initAgenda = async () => {
         // await card.save();
       }
       const weappQrPath = `/pages/index/index?giftCode=${card.id}-${card.customer}`;
-      getQrcode(weappQrPath, `output/qrcode-${card.slug}-${card.id}.jpg`);
+      await getQrcode(weappQrPath, `output/qrcode-${card.slug}-${card.id}.jpg`);
     }
     console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
