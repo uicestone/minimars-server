@@ -410,27 +410,33 @@ export const initAgenda = async () => {
     const { slug, gateway, users } = job.attrs.data as {
       slug: string;
       gateway: PaymentGateway;
-      users: [string, string][];
+      users: [string, string, number?][];
     };
     const cardType = await CardTypeModel.findOne({ slug });
     if (!cardType) throw new Error("invalid_card_type");
-    for (const [name, mobile] of users) {
+    for (const [name, mobile, count = 1] of users) {
       let user = await UserModel.findOne({ mobile });
       if (!user) {
         user = new UserModel({ mobile, name, registeredAt: "手动导入" });
         await user.save();
         console.log(`[CRO] Created customer ${user.mobile} ${user.id}.`);
       }
-      const card = cardType.issue(user);
-      await card.save();
-      console.log(
-        `[CRO] Issued card ${card.id} (${slug}) to customer ${user.mobile} ${user.id}.`
-      );
-      await card.createPayment({
-        paymentGateway: gateway || PaymentGateway.Pos
-      });
-      card.paymentSuccess();
-      await card.save();
+      for (let i = 0; i < count; i++) {
+        const card = cardType.issue(user);
+        await card.save();
+        console.log(
+          `[CRO] Issued card ${card.id} (${slug}) #${i + 1} to customer ${
+            user.mobile
+          } ${user.id}.`
+        );
+        await card.createPayment({
+          paymentGateway: gateway || PaymentGateway.Pos
+        });
+        if (card.status === CardStatus.PENDING) {
+          card.paymentSuccess();
+        }
+        await card.save();
+      }
     }
     console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
