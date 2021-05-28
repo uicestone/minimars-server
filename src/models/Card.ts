@@ -207,7 +207,7 @@ export class Card {
   providerData?: Record<string, any>;
 
   get giftCode(): string | undefined {
-    const card = (this as unknown) as DocumentType<Card>;
+    const card = this as unknown as DocumentType<Card>;
     if (!card.isGift || card.status !== CardStatus.VALID) return undefined;
     const code = sign(
       card.customer + " " + card.id,
@@ -258,7 +258,9 @@ export class Card {
       const payment = new PaymentModel({
         scene,
         customer: card.customer,
-        store: atReceptionStore?.id,
+        store:
+          atReceptionStore?.id ||
+          (card.stores.length === 1 ? card.stores[0] : undefined),
         amount:
           amount === undefined
             ? DEBUG
