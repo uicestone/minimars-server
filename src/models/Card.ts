@@ -248,7 +248,8 @@ export class Card {
       await card.paymentSuccess();
     } else {
       const scene =
-        paymentGateway == PaymentGateway.Mall
+        paymentGateway === PaymentGateway.Mall ||
+        (card.stores.length !== 1 && !atReceptionStore)
           ? Scene.MALL
           : card.type === "balance"
           ? Scene.BALANCE
