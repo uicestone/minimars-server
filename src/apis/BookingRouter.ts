@@ -275,17 +275,18 @@ export default (router: Router) => {
 
         try {
           const bookingPrice = await booking.calculatePrice();
+          const paymentGateway =
+            query.paymentGateway ||
+            (req.ua.isWechat ? PaymentGateway.WechatPay : undefined);
           await booking.createPayment(
             {
-              paymentGateway:
-                query.paymentGateway ||
-                (req.ua.isWechat ? PaymentGateway.WechatPay : undefined),
+              paymentGateway,
               useBalance: query.useBalance !== "false",
               atReception:
                 !req.user.can(Permission.BOOKING_ALL_STORE) &&
                 booking.customer.id !== req.user.id
             },
-            bookingPrice.price,
+            paymentGateway === PaymentGateway.Points ? 0 : bookingPrice.price,
             bookingPrice.priceInPoints
           );
         } catch (err) {

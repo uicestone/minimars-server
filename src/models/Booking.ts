@@ -418,7 +418,7 @@ export class Booking {
     amount: number,
     amountInPoints?: number
   ) {
-    let totalPayAmount = amount;
+    const totalPayAmount = +amount.toFixed(2);
     let balancePayAmount = 0;
     let attach = `booking ${this._id}`;
     if (!atReception) {
@@ -489,12 +489,7 @@ export class Booking {
       await couponPayment.save();
       this.payments.push(couponPayment);
     }
-
-    if (
-      (totalPayAmount >= 0.01 || (amountInPoints && amountInPoints > 0)) &&
-      useBalance &&
-      this.customer?.balance
-    ) {
+    if (totalPayAmount && useBalance && this.customer?.balance) {
       balancePayAmount = Math.min(totalPayAmount, this.customer.balance);
       const balancePayment = new PaymentModel({
         scene: this.type,
@@ -836,13 +831,15 @@ export class Booking {
       }
     ) as Amounts;
 
-    ([
-      "amountPaid",
-      "amountPaidInDeposit",
-      "amountPaidInBalance",
-      "amountPaidInCard",
-      "amountPaidInPoints"
-    ] as Array<keyof Amounts>).forEach(amountField => {
+    (
+      [
+        "amountPaid",
+        "amountPaidInDeposit",
+        "amountPaidInBalance",
+        "amountPaidInCard",
+        "amountPaidInPoints"
+      ] as Array<keyof Amounts>
+    ).forEach(amountField => {
       if (paymentsAmounts[amountField]) {
         this[amountField] = paymentsAmounts[amountField];
       } else {
