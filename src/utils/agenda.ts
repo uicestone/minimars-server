@@ -303,11 +303,19 @@ export const initAgenda = async () => {
           $match: {
             customer: userId || { $exists: true },
             paid: true,
-            booking: { $exists: true },
             gateway: { $ne: PaymentGateway.Coupon }
           }
         },
-        { $group: { _id: "$customer", points: { $sum: "$amount" } } }
+        {
+          $group: {
+            _id: "$customer",
+            points: {
+              $sum: {
+                $cond: [{ $eq: ["$gateway", "balance"] }, "$amount", "$revenue"]
+              }
+            }
+          }
+        }
       ]);
 
       customerPoints.forEach(({ _id, points }) => {
