@@ -185,7 +185,9 @@ export const SceneLabel = {
     case PaymentGateway.Pos:
     case PaymentGateway.Dianping:
     case PaymentGateway.Shouqianba:
+    case PaymentGateway.MallPos:
     case PaymentGateway.Mall:
+    case PaymentGateway.Agency:
       this.assets = this.amount;
       if (this.booking) {
         this.revenue = this.amount;
