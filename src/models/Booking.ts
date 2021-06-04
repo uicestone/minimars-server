@@ -327,6 +327,10 @@ export class Booking {
           0,
           this.adultsCount - this.kidsCount * this.coupon.freeParentsPerKid
         );
+        if (this.coupon.kidsCount === 0) {
+          // adults only coupon
+          extraAdultsCount = 0;
+        }
       }
 
       bookingPrice.price =
@@ -474,7 +478,10 @@ export class Booking {
     }
 
     if (this.coupon) {
-      if ((this.kidsCount || 0) % this.coupon.kidsCount) {
+      if (
+        (this.kidsCount || 0) % this.coupon.kidsCount ||
+        (!this.coupon.kidsCount && this.kidsCount)
+      ) {
         throw new Error("coupon_kids_count_not_match");
       }
       const couponPayment = new PaymentModel({
@@ -482,8 +489,9 @@ export class Booking {
         customer: this.customer,
         store: this.store,
         amount:
-          (this.coupon.priceThirdParty * (this.kidsCount || 1)) /
-          this.coupon.kidsCount,
+          (this.coupon.priceThirdParty *
+            (this.kidsCount || this.adultsCount || 1)) /
+          (this.coupon.kidsCount || 1),
         title: this.coupon.title + " " + this.title,
         attach,
         booking: this.id,
@@ -560,7 +568,7 @@ export class Booking {
         scene: this.type,
         customer: this.customer,
         store: this.store?.id,
-        amount: DEBUG ? extraPayAmount / 1e4 : extraPayAmount,
+        amount: extraPayAmount,
         title: this.title,
         attach,
         booking: this.id,
