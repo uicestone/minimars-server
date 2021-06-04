@@ -97,7 +97,10 @@ class FoodItem {
     path: "customer",
     select: "name avatarUrl mobile tags points balanceDeposit balanceReward"
   },
-  { path: "store", select: "name code" },
+  {
+    path: "store",
+    select: "name code kidsFullDayPrice extraParentFullDayPrice"
+  },
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
   { path: "card", select: "-content" },
   { path: "coupon", select: "-content" },
@@ -267,19 +270,25 @@ export class Booking {
     }
 
     if (this.type === "play") {
+      const kidFullDayPrice =
+        this.store?.kidFullDayPrice || config.kidFullDayPrice;
+      const extraParentFullDayPrice =
+        this.store?.extraParentFullDayPrice || config.extraParentFullDayPrice;
+      const freeParentsPerKid =
+        this.store?.freeParentsPerKid || config.freeParentsPerKid;
       if (
         this.adultsCount === undefined ||
         this.kidsCount === undefined ||
-        config.freeParentsPerKid === undefined ||
-        config.extraParentFullDayPrice === undefined ||
-        config.kidFullDayPrice === undefined
+        freeParentsPerKid === undefined ||
+        extraParentFullDayPrice === undefined ||
+        kidFullDayPrice === undefined
       ) {
         throw new Error("undefined_play_params");
       }
       let kidsCount = this.kidsCount;
       let extraAdultsCount = Math.max(
         0,
-        this.adultsCount - this.kidsCount * config.freeParentsPerKid
+        this.adultsCount - this.kidsCount * freeParentsPerKid
       );
 
       if (this.card) {
@@ -299,7 +308,7 @@ export class Booking {
             0,
             this.adultsCount -
               (this.kidsCount - kidsCount) * this.card.freeParentsPerKid -
-              kidsCount * config.freeParentsPerKid
+              kidsCount * freeParentsPerKid
           );
         }
         // TODO check card valid times
@@ -321,8 +330,8 @@ export class Booking {
       }
 
       bookingPrice.price =
-        config.extraParentFullDayPrice * extraAdultsCount +
-        config.kidFullDayPrice * kidsCount;
+        extraParentFullDayPrice * extraAdultsCount +
+        kidFullDayPrice * kidsCount;
 
       if (this.coupon && this.coupon.price) {
         bookingPrice.price += this.coupon.price * this.kidsCount;

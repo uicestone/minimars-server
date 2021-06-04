@@ -116,6 +116,15 @@ export class Store {
   @prop()
   ip?: string;
 
+  @prop({ type: Number })
+  kidFullDayPrice?: number;
+
+  @prop({ type: Number })
+  freeParentsPerKid?: number;
+
+  @prop({ type: Number })
+  extraParentFullDayPrice?: number;
+
   @prop({ type: Object })
   pospalPaymentMethodMap?: Record<string, PaymentGateway>;
 
