@@ -99,7 +99,7 @@ class FoodItem {
   },
   {
     path: "store",
-    select: "name code kidsFullDayPrice extraParentFullDayPrice"
+    select: "name code kidFullDayPrice extraParentFullDayPrice"
   },
   { path: "payments", options: { sort: { _id: -1 } }, select: "-customer" },
   { path: "card", select: "-content" },
