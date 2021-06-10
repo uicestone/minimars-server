@@ -182,7 +182,11 @@ export default async (
       return acc;
     }, [] as { name: string; price: number; kidsCount: number; adultsCount: number; amount: number; kidsPerCoupon: number }[])
     .map(item => {
-      item.amount = (item.price * item.kidsCount) / item.kidsPerCoupon;
+      if (item.kidsPerCoupon) {
+        item.amount = (item.price * item.kidsCount) / item.kidsPerCoupon;
+      } else {
+        item.amount = item.price * item.adultsCount;
+      }
       // couponsCount kidsCount is used as coupon count
       item.kidsCount = item.kidsCount / item.kidsPerCoupon;
       return item;
