@@ -93,8 +93,14 @@ export default async function playground() {
     // await saveTableQr("HX", "大派对房", "大派对房1");
     // await saveTableQr("HX", "小派对房", "小派对房1");
     // console.log(await new Pospal("TS").queryAllProductCategories());
+    // const start = moment("2019-01-01");
+    // while (start.toDate() < new Date()) {
+    //   await calCohort(start.format("Y-MM-DD"));
+    //   console.log("\n");
+    //   start.add(1, "quarter");
+    // }
   } catch (e) {
-    console.error(e.code);
+    console.error(e);
   }
 }
 
@@ -109,4 +115,40 @@ async function saveTableQr(s: string, a: string, t: string) {
   const path = `${s}/${a}.${t}.jpg`;
   console.log(code, path);
   await getQrcode(code, path);
+}
+
+async function calCohort(startStr: string) {
+  const start = moment(startStr);
+  const end = start.clone().endOf("month");
+  const [{ users }] = await BookingModel.aggregate([
+    {
+      $match: {
+        type: Scene.PLAY,
+        // card: { $ne: null },
+        status: { $ne: BookingStatus.CANCELED },
+        date: { $gte: start.format("Y-MM-DD"), $lte: end.format("Y-MM-DD") }
+      }
+    },
+    { $group: { _id: null, users: { $addToSet: "$customer" } } }
+  ]);
+
+  let s = start;
+  console.log(start.format("Y-MM-DD"), users.length);
+  while (s.toDate() < new Date()) {
+    s = s.add(1, "month");
+    const e = s.clone().endOf("month");
+    const [{ users: returnUsers } = { users: [] }] =
+      await BookingModel.aggregate([
+        {
+          $match: {
+            customer: { $in: users },
+            type: Scene.PLAY,
+            status: { $ne: BookingStatus.CANCELED },
+            date: { $gte: s.format("Y-MM-DD"), $lte: e.format("Y-MM-DD") }
+          }
+        },
+        { $group: { _id: null, users: { $addToSet: "$customer" } } }
+      ]);
+    console.log(s.format("Y-MM-DD"), returnUsers.length || 0);
+  }
 }
