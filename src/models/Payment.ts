@@ -123,16 +123,14 @@ export const SceneLabel = {
       break;
     case PaymentGateway.Balance:
       if (!customer) throw new Error("invalid_payment_customer");
-      const {
-        depositPaymentAmount,
-        rewardPaymentAmount
-      } = await customer.writeOffBalance(
-        this.amount,
-        this.amountForceDeposit,
-        this.amountDeposit,
-        true,
-        this.gatewayData?.provider !== "pospal"
-      );
+      const { depositPaymentAmount, rewardPaymentAmount } =
+        await customer.writeOffBalance(
+          this.amount,
+          this.amountForceDeposit,
+          this.amountDeposit,
+          true,
+          this.gatewayData?.provider !== "pospal"
+        );
 
       console.log(
         `[PAY] Payment ${this.id} amount D:R is ${depositPaymentAmount}:${rewardPaymentAmount}.`
@@ -150,7 +148,7 @@ export const SceneLabel = {
       break;
     case PaymentGateway.Card:
       if (!this.times || !this.gatewayData.cardId) {
-        throw new Error("invalid_card_this_gateway_data");
+        throw new Error("invalid_card_payment_gateway_data");
       }
       const card = await CardModel.findById(this.gatewayData.cardId);
 
@@ -189,10 +187,12 @@ export const SceneLabel = {
     case PaymentGateway.Mall:
     case PaymentGateway.Agency:
       this.assets = this.amount;
-      if (this.booking) {
-        this.revenue = this.amount;
-      } else {
-        this.debt = this.amount;
+      if (!this.revenue && !this.debt) {
+        if (this.booking) {
+          this.revenue = this.amount;
+        } else {
+          this.debt = this.amount;
+        }
       }
       this.paid = true;
       break;
@@ -296,7 +296,7 @@ export class Payment {
   original?: string;
 
   get valid() {
-    const payment = (this as unknown) as DocumentType<Payment>;
+    const payment = this as unknown as DocumentType<Payment>;
     return (
       payment.paid ||
       payment.isNew ||
@@ -305,7 +305,7 @@ export class Payment {
   }
 
   get payArgs() {
-    const payment = (this as unknown) as DocumentType<Payment>;
+    const payment = this as unknown as DocumentType<Payment>;
     if (payment.gateway !== PaymentGateway.WechatPay || payment.paid) return;
     if (!payment.gatewayData.nonce_str || !payment.gatewayData.prepay_id) {
       // if (payment.valid && payment.amount > 0) {
@@ -325,7 +325,7 @@ export class Payment {
   get attach() {
     if (this.card) return `card ${this.card}`;
     if (this.booking) return `booking ${this.booking}`;
-    return ((this as unknown) as DocumentType<Payment>).id;
+    return (this as unknown as DocumentType<Payment>).id;
   }
 
   async paidSuccess(this: DocumentType<Payment>) {

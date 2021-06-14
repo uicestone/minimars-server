@@ -318,8 +318,12 @@ export default (router: Router) => {
           statusWas !== CardStatus.CANCELED &&
           req.user.can(Permission.CARD_SELL_ALL)
         ) {
+          const refundAmount = +req.query.refundAmount;
+          if (!(refundAmount >= 0 && refundAmount <= card.price)) {
+            throw new HttpError(400, "无效退款金额");
+          }
           card.status = statusWas;
-          await card.refund();
+          await card.refund(refundAmount);
         }
 
         await card.save();

@@ -292,36 +292,52 @@ export class Card {
     // send user notification
   }
 
-  async createRefundPayment(this: DocumentType<Card>) {
+  async createRefundPayment(
+    this: DocumentType<Card>,
+    totalRefundAmount?: number
+  ) {
     // card.payments[].customer is unselected from auto-populating,
     // but payment pre-save needs it, so we re populate full payments
     await this.populate("payments").execPopulate();
 
-    const extraPayments = this.payments.filter(
-      (p: DocumentType<Payment>) =>
-        ![PaymentGateway.Balance, PaymentGateway.Card].includes(p.gateway) &&
-        p.amount > 0 &&
-        p.paid
-    );
+    let amountToRefund = totalRefundAmount || this.price;
+    for (const p of this.payments) {
+      if (
+        ![Scene.CARD, Scene.BALANCE, Scene.MALL, Scene.PERIOD].includes(p.scene)
+      ) {
+        continue;
+      }
+      const refundAmount = Math.min(amountToRefund, p.amount);
 
-    await Promise.all(
-      extraPayments.map(async (p: DocumentType<Payment>) => {
-        const refundPayment = new PaymentModel({
-          scene: p.scene,
-          customer: p.customer,
-          store: p.store,
-          amount: -p.amount,
-          title: `退款：${p.title}`,
-          card: p.card,
-          times: p.times ? -p.times : undefined,
-          gateway: p.gateway,
-          original: p.id
-        });
-        p.refunded = true;
-        await p.save();
-        await refundPayment.save();
-      })
-    );
+      amountToRefund = +(amountToRefund - refundAmount).toFixed(2);
+
+      const card = await CardModel.findById(p.card);
+      if (!card) throw new Error("invalid_card");
+
+      const debt =
+        card.timesLeft !== undefined && card.times
+          ? -((card.timesLeft / card.times) * card.price).toFixed(8)
+          : -card.price;
+
+      // refund payment by refundAmount
+      const refundPayment = new PaymentModel({
+        scene: p.scene,
+        customer: p.customer,
+        store: p.store,
+        amount: -refundAmount,
+        assets: -refundAmount,
+        debt,
+        revenue: -(refundAmount + debt).toFixed(8),
+        title: `退款：${p.title}`,
+        card: p.card,
+        times: card.timesLeft !== undefined ? -card.timesLeft : undefined,
+        gateway: p.gateway,
+        original: p.id
+      });
+      p.refunded = true;
+      await p.save();
+      await refundPayment.save();
+    }
 
     this.refundSuccess();
   }
@@ -329,11 +345,13 @@ export class Card {
   async refundSuccess(this: DocumentType<Card>) {
     this.status = CardStatus.CANCELED;
     console.log(`[CRD] Refund success ${this.id}.`);
+    if (this.timesLeft) {
+      this.timesLeft = 0;
+    }
     // send user notification
   }
 
-  async refund(this: DocumentType<Card>, save = true) {
-    console.log("refund", this.type, this.status);
+  async refund(this: DocumentType<Card>, refundAmount: number) {
     if (this.status === CardStatus.CANCELED) {
       return;
     }
@@ -341,7 +359,7 @@ export class Card {
     if (this.payments.filter(p => p.paid).length) {
       console.log(`[CRD] Refund ${this.id}.`);
       // we don't directly change status to canceled, will auto change on refund fullfil
-      await this.createRefundPayment();
+      await this.createRefundPayment(refundAmount);
       if (!this.payments.filter(p => p.amount < 0).some(p => !p.paid)) {
         this.refundSuccess();
       }
@@ -362,9 +380,7 @@ export class Card {
 
     console.log(`[CRD] Cancel card ${this.id}.`);
 
-    if (save) {
-      await this.save();
-    }
+    await this.save();
   }
 }
 
