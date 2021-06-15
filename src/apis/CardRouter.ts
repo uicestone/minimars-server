@@ -318,12 +318,19 @@ export default (router: Router) => {
           statusWas !== CardStatus.CANCELED &&
           req.user.can(Permission.CARD_SELL_ALL)
         ) {
-          const refundAmount = +req.query.refundAmount;
-          if (!(refundAmount >= 0 && refundAmount <= card.price)) {
-            throw new HttpError(400, "无效退款金额");
+          try {
+            const refundAmount = +req.query.refundAmount;
+            if (!(refundAmount >= 0 && refundAmount <= card.price)) {
+              throw new HttpError(400, "无效退款金额");
+            }
+            card.status = statusWas;
+            await card.refund(refundAmount);
+          } catch (e) {
+            if (e.message === "wechat_account_insufficient_balance") {
+              throw new HttpError(400, "微信商户余额不足，退款失败");
+            }
+            throw e;
           }
-          card.status = statusWas;
-          await card.refund(refundAmount);
         }
 
         await card.save();
