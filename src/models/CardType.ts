@@ -54,7 +54,7 @@ class BalancePriceGroup {
     }
   }
   if (this.rewardCardTypes) {
-    for (const slug of this.rewardCardTypes.split(" ")) {
+    for (const slug of this.rewardCardTypes.split(/[ ；;,，、\/]+/)) {
       const card = await CardTypeModel.findOne({ slug });
       if (!card) {
         throw new HttpError(400, `不存在这个卡券种类：${slug}`);
