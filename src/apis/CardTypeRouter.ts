@@ -3,7 +3,10 @@ import paginatify from "../middlewares/paginatify";
 import handleAsyncErrors from "../utils/handleAsyncErrors";
 import parseSortString from "../utils/parseSortString";
 import HttpError from "../utils/HttpError";
-import CardTypeModel, { CardType } from "../models/CardType";
+import CardTypeModel, {
+  CardType,
+  typeRelatedProperties
+} from "../models/CardType";
 import { CardTypeQuery, CardTypePutBody } from "./interfaces";
 import { DocumentType } from "@typegoose/typegoose";
 import { isValidHexObjectId } from "../utils/helper";
@@ -63,14 +66,16 @@ export default (router: Router) => {
           query.where({ title: new RegExp(queryParams.title) });
         }
 
-        ([
-          "couponSlug",
-          "slug",
-          "openForClient",
-          "openForReception",
-          "type",
-          "stores"
-        ] as Array<keyof CardTypeQuery>).forEach(field => {
+        (
+          [
+            "couponSlug",
+            "slug",
+            "openForClient",
+            "openForReception",
+            "type",
+            "stores"
+          ] as Array<keyof CardTypeQuery>
+        ).forEach(field => {
           if (queryParams[field]) {
             if (queryParams[field] === "true") {
               query.find({ [field]: true });
@@ -135,12 +140,9 @@ export default (router: Router) => {
         const cardType = req.item as DocumentType<CardType>;
         const body = req.body as CardTypePutBody;
         if (body.type && body.type !== cardType.type) {
-          cardType.set({
-            start: undefined,
-            end: undefined,
-            balance: undefined,
-            times: undefined
-          });
+          for (const k of typeRelatedProperties) {
+            cardType.set({ k: undefined });
+          }
         }
         cardType.set(body);
         await cardType.save();

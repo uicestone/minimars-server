@@ -28,6 +28,9 @@ class BalancePriceGroup {
   if (this.customerTags) {
     this.customerTags = this.customerTags.map(t => t.toLowerCase());
   }
+  if (!this.expiresInDays && !this.end) {
+    throw new HttpError(400, "有效时长和有效期必选一项");
+  }
   if (this.type === "balance") {
     if (this.balance === undefined || this.price === undefined)
       throw new HttpError(400, "面值，价格必填");
@@ -35,6 +38,19 @@ class BalancePriceGroup {
       this.balancePriceGroups = this.balancePriceGroups.filter(
         g => g.price !== undefined && g.balance !== undefined
       );
+    }
+  }
+  if (this.type === "times" && isNaN(this.times || NaN)) {
+    throw new HttpError(400, "次卡类型必须设置次数");
+  }
+  if (this.type === "coupon") {
+    if (isNaN(this.times || NaN)) this.times = 1;
+    if (
+      isNaN(this.discountPrice || NaN) &&
+      isNaN(this.discountRate || NaN) &&
+      isNaN(this.fixedPrice || NaN)
+    ) {
+      throw new HttpError(400, "优惠券减、折、价格必须至少选择一种");
     }
   }
   if (this.rewardCardTypes) {
@@ -63,32 +79,20 @@ export class CardType {
   @prop({ required: true, unique: true })
   slug!: string;
 
-  @prop()
-  couponSlug?: string;
-
   @prop({
     enum: ["times", "period", "balance", "coupon", "partner"],
     required: true
   })
   type!: "times" | "period" | "balance" | "coupon" | "partner";
 
-  @prop({ default: false })
-  isGift: boolean = false;
+  @prop({ type: Number, required: true })
+  price!: number;
 
   @prop({ ref: "Store" })
   stores!: DocumentType<Store>[];
 
-  @prop()
-  posterUrl?: string;
-
-  @prop({ type: String, default: [] })
-  posterUrls: string[] = [];
-
-  @prop()
-  content?: string;
-
   @prop({ type: Number })
-  times?: number;
+  expiresInDays?: number;
 
   @prop({ type: Date })
   start?: Date;
@@ -99,26 +103,8 @@ export class CardType {
   @prop()
   dayType?: "onDaysOnly" | "offDaysOnly";
 
-  @prop({ type: Number })
-  expiresInDays?: number;
-
-  @prop({ type: Number })
-  balance?: number;
-
-  @prop({ type: Number, required: true })
-  price!: number;
-
-  @prop({ type: BalancePriceGroup })
-  balancePriceGroups?: BalancePriceGroup[];
-
-  @prop({ type: Number })
-  maxKids?: number;
-
-  @prop({ type: Number, default: 1 })
-  minKids = 1;
-
-  @prop({ type: Number, default: 2 })
-  freeParentsPerKid: number = 2;
+  @prop({ default: false })
+  isGift: boolean = false;
 
   @prop({ type: Boolean, default: false })
   openForClient: boolean = false;
@@ -126,11 +112,48 @@ export class CardType {
   @prop({ type: Boolean, default: false })
   openForReception: boolean = false;
 
+  @prop()
+  posterUrl?: string;
+
+  @prop()
+  couponSlug?: string;
+
+  @prop({ type: String, default: [] })
+  posterUrls: string[] = [];
+
+  @prop()
+  content?: string;
+
   @prop({ type: String })
   customerTags!: string[];
 
   @prop({ type: Number })
   maxPerCustomer?: number;
+
+  @prop({ type: Number })
+  quantity?: number;
+
+  @prop()
+  rewardCardTypes?: string;
+
+  // type-related properties below
+  @prop({ type: Number })
+  times?: number;
+
+  @prop({ type: Number })
+  balance?: number;
+
+  @prop({ type: BalancePriceGroup })
+  balancePriceGroups?: BalancePriceGroup[];
+
+  @prop({ type: Number })
+  maxKids?: number;
+
+  @prop({ type: Number })
+  minKids?: number;
+
+  @prop({ type: Number })
+  freeParentsPerKid?: number;
 
   @prop({ type: Number })
   overPrice?: number;
@@ -144,14 +167,8 @@ export class CardType {
   @prop({ type: Number })
   fixedPrice?: number;
 
-  @prop({ type: Number })
-  quantity?: number;
-
   @prop()
   partnerUrl?: string;
-
-  @prop()
-  rewardCardTypes?: string;
 
   issue(
     this: DocumentType<CardType>,
@@ -239,6 +256,20 @@ export class CardType {
     return card;
   }
 }
+
+export const typeRelatedProperties: Array<keyof CardType> = [
+  "times",
+  "balance",
+  "balancePriceGroups",
+  "maxKids",
+  "minKids",
+  "freeParentsPerKid",
+  "overPrice",
+  "discountPrice",
+  "discountRate",
+  "fixedPrice",
+  "partnerUrl"
+];
 
 const CardTypeModel = getModelForClass(CardType, {
   schemaOptions: {
