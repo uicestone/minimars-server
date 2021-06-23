@@ -28,7 +28,7 @@ class BalancePriceGroup {
   if (this.customerTags) {
     this.customerTags = this.customerTags.map(t => t.toLowerCase());
   }
-  if (!this.expiresInDays && !this.end) {
+  if (this.expiresInDays === undefined && !this.end === undefined) {
     throw new HttpError(400, "有效时长和有效期必选一项");
   }
   if (this.type === "balance") {
