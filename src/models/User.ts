@@ -37,7 +37,21 @@ import { Gift } from "./Gift";
   ,
   { path: "currentCover", select: "title posterUrl" }
 ])
-@index({ name: "text", mobile: "text", cardNo: "text", tags: "text" })
+@index({
+  name: "text",
+  mobile: "text",
+  cardNo: "text",
+  tags: "text",
+  mobileSegments: "text"
+})
+@pre("validate", function (this: DocumentType<User>) {
+  if (this.mobile) {
+    this.mobileSegments = this.mobile.replace(
+      /(\d{3})(\d{4})(\d{4})/,
+      "$1 $2 $3"
+    );
+  }
+})
 export class User {
   @prop({ ref: Role })
   role?: DocumentType<Role>;
@@ -87,6 +101,9 @@ export class User {
     }
   })
   mobile?: string;
+
+  @prop()
+  mobileSegments?: string;
 
   @prop()
   avatarUrl?: string;
