@@ -72,6 +72,7 @@ export default (router: Router) => {
             "slug",
             "openForClient",
             "openForReception",
+            "isContract",
             "type",
             "stores"
           ] as Array<keyof CardTypeQuery>
