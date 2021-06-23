@@ -132,6 +132,8 @@ export default (router: Router) => {
         if (queryParams.role) {
           if (queryParams.role === "customer") {
             query.where({ role: null });
+          } else if (queryParams.role === "staff") {
+            query.where({ role: { $ne: null } });
           } else {
             query.where({ role: queryParams.role });
           }
