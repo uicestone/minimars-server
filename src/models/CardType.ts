@@ -48,7 +48,7 @@ class BalancePriceGroup {
     if (
       isNaN(this.discountPrice || NaN) &&
       isNaN(this.discountRate || NaN) &&
-      isNaN(this.fixedPrice || NaN)
+      this.fixedPrice === undefined
     ) {
       throw new HttpError(400, "优惠券减、折、价格必须至少选择一种");
     }
