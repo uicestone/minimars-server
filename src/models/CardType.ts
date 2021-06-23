@@ -116,14 +116,14 @@ export class CardType {
   @prop()
   posterUrl?: string;
 
-  @prop()
-  couponSlug?: string;
-
   @prop({ type: String, default: [] })
   posterUrls: string[] = [];
 
   @prop()
   content?: string;
+
+  @prop()
+  couponSlug?: string;
 
   @prop({ type: String })
   customerTags!: string[];
@@ -176,12 +176,10 @@ export class CardType {
     customer: DocumentType<User>,
     {
       quantity = undefined,
-      balanceGroups = undefined,
-      rewardedFromBooking = undefined
+      balanceGroups = undefined
     }: {
       quantity?: number;
       balanceGroups?: BalanceGroup[];
-      rewardedFromBooking?: Booking;
     } = {}
   ) {
     const card = new CardModel({

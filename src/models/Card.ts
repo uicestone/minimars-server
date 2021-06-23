@@ -111,6 +111,9 @@ export class Card {
   })
   status: CardStatus = CardStatus.PENDING;
 
+  @prop({ type: Boolean })
+  isRenewTimes?: boolean;
+
   @prop({
     ref: "Payment",
     foreignField: "card",
@@ -124,14 +127,12 @@ export class Card {
   @prop({ type: Date })
   expiresAtWas?: Date;
 
+  // properties from cardType
   @prop({ type: String, required: true })
   title!: string;
 
   @prop({ type: String })
   slug?: string;
-
-  @prop()
-  couponSlug?: string;
 
   @prop({
     type: String,
@@ -140,20 +141,11 @@ export class Card {
   })
   type!: "times" | "period" | "balance" | "coupon" | "partner";
 
-  @prop({ type: Boolean, default: false })
-  isGift: boolean = false;
+  @prop({ type: Number, required: true })
+  price!: number;
 
   @prop({ ref: "Store" })
   stores!: Ref<Store>[];
-
-  @prop()
-  posterUrl?: string;
-
-  @prop()
-  content?: string;
-
-  @prop({ type: Number })
-  times?: number;
 
   @prop({ type: Date })
   start?: Date;
@@ -164,11 +156,27 @@ export class Card {
   @prop()
   dayType?: "onDaysOnly" | "offDaysOnly";
 
+  @prop({ type: Boolean, default: false })
+  isGift: boolean = false;
+
+  @prop()
+  posterUrl?: string;
+
+  @prop()
+  content?: string;
+
+  @prop()
+  couponSlug?: string;
+
+  @prop()
+  rewardCardTypes?: string;
+
+  // type-related properties below
+  @prop({ type: Number })
+  times?: number;
+
   @prop({ type: Number })
   balance?: number;
-
-  @prop({ type: Number, required: true })
-  price!: number;
 
   @prop({ type: Number })
   maxKids?: number;
@@ -193,9 +201,6 @@ export class Card {
 
   @prop()
   partnerUrl?: string;
-
-  @prop()
-  rewardCardTypes?: string;
 
   @prop({ type: Boolean })
   cardsRewarded?: boolean;

@@ -222,13 +222,15 @@ export default (router: Router) => {
             stores: { $all: card.stores },
             timesLeft: { $gt: 0 },
             type: "times",
-            expiresAt: { $lt: card.expiresAt }
+            expiresAt: { $lt: card.expiresAt },
+            status: CardStatus.ACTIVATED // only activated card will be extended for now
           }).where({ end: null });
+
           await Promise.all(
             expiredTimesCards.map(ec => {
               ec.expiresAtWas = ec.expiresAt;
               ec.expiresAt = card.expiresAt;
-              ec.status = CardStatus.ACTIVATED;
+              // ec.status = CardStatus.ACTIVATED;
               console.log(
                 `[CRD] Customer ${
                   ec.customer
@@ -241,6 +243,15 @@ export default (router: Router) => {
               return ec.save();
             })
           );
+
+          const timesCards = await CardModel.find({
+            status: { $ne: CardStatus.CANCELED },
+            customer: card.customer,
+            type: "times"
+          });
+          if (timesCards.length) {
+            card.isRenewTimes = true;
+          }
         }
 
         await card.save();
