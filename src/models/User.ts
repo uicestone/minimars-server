@@ -46,9 +46,8 @@ import { Gift } from "./Gift";
 })
 @pre("validate", function (this: DocumentType<User>) {
   if (this.mobile) {
-    this.mobileSegments = this.mobile.replace(
-      /(\d{3})(\d{4})(\d{4})/,
-      "$1 $2 $3"
+    this.mobileSegments = [this.mobile.substr(-4), this.mobile.substr(-5)].join(
+      " "
     );
   }
 })
