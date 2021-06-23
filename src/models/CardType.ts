@@ -104,8 +104,11 @@ export class CardType {
   @prop()
   dayType?: "onDaysOnly" | "offDaysOnly";
 
-  @prop({ default: false })
-  isGift: boolean = false;
+  @prop({ type: Boolean })
+  isGift?: boolean;
+
+  @prop({ type: Boolean })
+  isContract?: boolean;
 
   @prop({ type: Boolean, default: false })
   openForClient: boolean = false;

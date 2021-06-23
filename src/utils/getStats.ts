@@ -98,32 +98,46 @@ export default async (
       0
     );
 
-  const foodBookingsCount = bookingsPaid.filter(b => b.type === Scene.FOOD)
-    .length;
+  const foodBookingsCount = bookingsPaid.filter(
+    b => b.type === Scene.FOOD
+  ).length;
 
-  const mallBookingsCount = bookingsPaid.filter(b => b.type === Scene.MALL)
-    .length;
+  const mallBookingsCount = bookingsPaid.filter(
+    b => b.type === Scene.MALL
+  ).length;
 
   const customersByType = bookingsPaid
     .filter(b => b.type === Scene.PLAY)
     .reduce(
       (acc, booking) => {
-        if (booking.card) {
-          acc.card.adultsCount += booking.adultsCount || 0;
-          acc.card.kidsCount += booking.kidsCount || 0;
+        let key: "card" | "balance" | "coupon" | "guest" | "contract" | "other";
+        if (booking.amountPaidInBalance) {
+          key = "balance";
+        } else if (booking.card) {
+          if (booking.card.isContract) {
+            key = "contract";
+          } else {
+            key = "card";
+          }
         } else if (booking.coupon) {
-          acc.coupon.adultsCount += booking.adultsCount || 0;
-          acc.coupon.kidsCount += booking.kidsCount || 0;
+          key = "coupon";
+        } else if (!booking.card && !booking.coupon) {
+          key = "guest";
         } else {
-          acc.guest.adultsCount += booking.adultsCount || 0;
-          acc.guest.kidsCount += booking.kidsCount || 0;
+          key = "other";
         }
+        acc[key].adultsCount += booking.adultsCount || 0;
+        acc[key].kidsCount += booking.kidsCount || 0;
+
         return acc;
       },
       {
         card: { adultsCount: 0, kidsCount: 0 },
         coupon: { adultsCount: 0, kidsCount: 0 },
-        guest: { adultsCount: 0, kidsCount: 0 }
+        guest: { adultsCount: 0, kidsCount: 0 },
+        balance: { adultsCount: 0, kidsCount: 0 },
+        contract: { adultsCount: 0, kidsCount: 0 },
+        other: { adultsCount: 0, kidsCount: 0 }
       }
     );
 

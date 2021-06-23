@@ -156,8 +156,11 @@ export class Card {
   @prop()
   dayType?: "onDaysOnly" | "offDaysOnly";
 
-  @prop({ type: Boolean, default: false })
-  isGift: boolean = false;
+  @prop({ type: Boolean })
+  isGift?: boolean;
+
+  @prop({ type: Boolean })
+  isContract?: boolean;
 
   @prop()
   posterUrl?: string;
