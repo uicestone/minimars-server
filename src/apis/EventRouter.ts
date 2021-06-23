@@ -38,7 +38,9 @@ export default (router: Router) => {
         const { limit, skip } = req.pagination;
         const query = EventModel.find().populate("customer");
         const sort = parseSortString(queryParams.order) || {
-          order: -1
+          order: -1,
+          date: -1,
+          createdAt: -1
         };
         query.select("-content");
 
