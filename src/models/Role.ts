@@ -16,6 +16,7 @@ export enum Permission {
   CARD = "card",
   CARD_SELL_STORE = "card sell store",
   CARD_SELL_ALL = "card sell all",
+  CARD_ISSUE_SURVEY = "card issue survey",
   CUSTOMER = "customer",
   PAYMENT = "payment",
   PAYMENT_DOWNLOAD = "payment download",

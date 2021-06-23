@@ -37,6 +37,10 @@ export default (
         .map(e => e.message)
         .join("\n")
     });
+  } else if (err.name === "CastError") {
+    res.status(400).json({
+      message: err.message
+    });
   } else {
     console.error(`${err.name}: ${err.message}`, "\n[Stack]", err.stack);
     res.status(500).send("Internal server error.");

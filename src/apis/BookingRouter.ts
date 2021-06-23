@@ -395,6 +395,25 @@ export default (router: Router) => {
           }
         });
 
+        if (!limit) {
+          query.where({ date: moment().format("YYYY-MM-DD") });
+        }
+
+        if (req.user.can(Permission.CARD_ISSUE_SURVEY)) {
+          query.setOptions({
+            skipAutoPopulationPaths: [
+              "payments",
+              "event",
+              "gift",
+              "card",
+              "coupon"
+            ]
+          });
+          query.select(
+            "customer date checkInAt store adultsCount kidsCount amountPaid"
+          );
+        }
+
         let total = await query.countDocuments();
 
         const page = await query

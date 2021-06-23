@@ -12,7 +12,10 @@ import CardType from "../models/CardType";
 import Payment, { PaymentGateway } from "../models/Payment";
 import UserModel from "../models/User";
 import CardTypeModel from "../models/CardType";
-import BookingModel, { paidBookingStatus } from "../models/Booking";
+import BookingModel, {
+  BookingStatus,
+  paidBookingStatus
+} from "../models/Booking";
 import {
   CardPostBody,
   CardPutBody,
@@ -112,6 +115,34 @@ export default (router: Router) => {
           throw new HttpError(404, `CardType '${body.slug}' not exists.`);
         }
 
+        if (req.user.can(Permission.CARD_SELL_STORE)) {
+          if (!cardType.stores.some(s => s.id === req.user.store?.id)) {
+            throw new HttpError(403, "无法销售非本门店卡");
+          }
+        } else if (req.user.can(Permission.CARD_SELL_ALL)) {
+          //
+        } else if (req.user.can(Permission.CARD_ISSUE_SURVEY)) {
+          if (!body.rewardedFromBooking) {
+            throw new HttpError(
+              400,
+              "Missing required property: rewardedFromBooking."
+            );
+          }
+          if (cardType.price) {
+            throw new HttpError(400, "无权发送这张卡券");
+          }
+          const booking = await BookingModel.findOne({
+            customer,
+            date: moment().format("YYYY-MM-DD"),
+            status: { $ne: BookingStatus.CANCELED }
+          });
+          if (!booking) {
+            throw new HttpError(400, "该用户没有当日有效订单，无法发送卡券");
+          }
+        } else if (req.user.id !== customer.id) {
+          throw new HttpError(403, "无法为他人购卡");
+        }
+
         if (body.quantity && body.quantity > 1 && cardType.type !== "times") {
           throw new HttpError(400, "只有次卡支持一次购买多张");
         }
@@ -138,6 +169,17 @@ export default (router: Router) => {
           quantity: body.quantity,
           balanceGroups: body.balanceGroups
         });
+
+        if (body.rewardedFromBooking) {
+          const booking = await BookingModel.findById(body.rewardedFromBooking);
+          if (!booking) throw new HttpError(404, "Booking not found.");
+          const cardRewarded = await CardModel.findOne({
+            slug: cardType.slug,
+            rewardedFromBooking: booking.id
+          });
+          if (cardRewarded) throw new HttpError(409, "该订单已经发放该种赠券");
+          card.rewardedFromBooking = booking.id;
+        }
 
         try {
           let atStore: DocumentType<Store> | null = null;

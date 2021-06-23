@@ -13,6 +13,7 @@ import autoPopulate from "./plugins/autoPopulate";
 import HttpError from "../utils/HttpError";
 import moment from "moment";
 import { Scene } from "./Payment";
+import { Booking } from "./Booking";
 
 class BalancePriceGroup {
   @prop({ type: Number, required: true })
@@ -175,8 +176,13 @@ export class CardType {
     customer: DocumentType<User>,
     {
       quantity = undefined,
-      balanceGroups = undefined
-    }: { quantity?: number; balanceGroups?: BalanceGroup[] } = {}
+      balanceGroups = undefined,
+      rewardedFromBooking = undefined
+    }: {
+      quantity?: number;
+      balanceGroups?: BalanceGroup[];
+      rewardedFromBooking?: Booking;
+    } = {}
   ) {
     const card = new CardModel({
       customer: customer.id
