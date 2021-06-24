@@ -296,12 +296,24 @@ export class Booking {
           await this.populate("card").execPopulate();
         }
         if (
+          this.card.type === "coupon" &&
+          (!this.card.overPrice || bookingPrice.price >= this.card.overPrice)
+        ) {
+          if (this.card.discountPrice) {
+            bookingPrice.price -= this.card.discountPrice;
+          } else if (this.card.discountRate) {
+            bookingPrice.price =
+              bookingPrice.price * (1 - this.card.discountRate);
+          }
+        } else if (this.card.type === "coupon" && this.card.fixedPrice) {
+          bookingPrice.price = this.card.fixedPrice;
+        } else if (this.card.type === "balance") {
+          this.card = undefined;
+        } else if (
           this.card.maxKids === undefined ||
           this.card.freeParentsPerKid === undefined
-        )
+        ) {
           throw new Error("invalid_card");
-        if (this.card.type === "balance") {
-          this.card = undefined;
         } else {
           kidsCount = Math.max(0, this.kidsCount - this.card.maxKids);
           extraAdultsCount = Math.max(
