@@ -293,7 +293,7 @@ export default (router: Router) => {
             bookingPrice.priceInPoints
           );
         } catch (err) {
-          booking.status = BookingStatus.CANCELED;
+          await booking.remove();
           switch (err.message) {
             case "coupon_not_found":
               throw new HttpError(400, "优惠不存在");
