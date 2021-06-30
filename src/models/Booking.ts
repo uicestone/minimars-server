@@ -95,7 +95,8 @@ class FoodItem {
 @plugin(autoPopulate, [
   {
     path: "customer",
-    select: "name avatarUrl mobile tags points balanceDeposit balanceReward"
+    select:
+      "name avatarUrl mobile tags points balanceDeposit balanceReward openidMp"
   },
   {
     path: "store",
