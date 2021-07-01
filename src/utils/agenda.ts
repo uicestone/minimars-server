@@ -371,7 +371,7 @@ export const initAgenda = async () => {
 
   agenda.define("generate wechat qrcode", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { path } = job.attrs.data;
+    const { path } = job.attrs.data || {};
     getQrcode(path);
     console.log(`[CRO] Finished '${job.attrs.name}'.`);
     done();
@@ -535,14 +535,14 @@ export const initAgenda = async () => {
       await payment.save();
       const user = await UserModel.findById(payment.customer);
       await user?.addPoints(monthlyAmount);
-      console.log(`[CRO] Finished '${job.attrs.name}'.`);
-      done();
     }
+    console.log(`[CRO] Finished '${job.attrs.name}'.`);
+    done();
   });
 
   agenda.define("sync history pospal tickets", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { code, dateStart, dateEnd } = job.attrs.data;
+    const { code, dateStart, dateEnd } = job.attrs.data || {};
     const store = await StoreModel.findOne({ code });
     await store?.syncPospalTickets(dateStart, dateEnd);
     console.log(`[CRO] Finished '${job.attrs.name}'.`);
@@ -695,7 +695,7 @@ export const initAgenda = async () => {
 
   agenda.define("init store doors", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { code } = job.attrs.data;
+    const { code } = job.attrs.data || {};
     const store = await StoreModel.findOne({ code });
     if (!store) {
       throw new Error("store_not_found");
@@ -707,7 +707,7 @@ export const initAgenda = async () => {
 
   agenda.define("auth store doors", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { code, no } = job.attrs.data;
+    const { code, no } = job.attrs.data || {};
     const store = await StoreModel.findOne({ code });
     if (!store) {
       throw new Error("store_not_found");
@@ -719,7 +719,7 @@ export const initAgenda = async () => {
 
   agenda.define("open store doors", async (job, done) => {
     console.log(`[CRO] Running '${job.attrs.name}'...`);
-    const { code, name } = job.attrs.data;
+    const { code, name } = job.attrs.data || {};
     const store = await StoreModel.findOne({ code });
     if (!store) {
       throw new Error("store_not_found");
