@@ -4,6 +4,8 @@ import storeModel, { Store, storeDoors } from "../models/Store";
 import { JxCtl } from "jingxing-doors";
 import { parseRemoteServerData } from "jingxing-doors";
 
+const pingInterval = +(process.env.DOOR_PING_INTERVAL || 10000);
+
 export default function handleSocketData(
   socket: Socket,
   client: { store?: DocumentType<Store>; connectedAt: Date }
@@ -35,7 +37,7 @@ export default function handleSocketData(
           socket.destroy(new Error("INVALID STORE"));
           return;
         }
-        const timeout = +(process.env.DOOR_PING_INTERVAL || "") * (1 + 1 / 60);
+        const timeout = Math.ceil(pingInterval * (1 + 1 / 60));
         socket.setTimeout(timeout);
         console.log(
           `[SOK] Identified store ${client.store.code}, socket timeout set to ${timeout}.`
