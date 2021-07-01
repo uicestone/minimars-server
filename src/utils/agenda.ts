@@ -105,7 +105,7 @@ export const initAgenda = async () => {
     const cards = await CardModel.find({
       status: CardStatus.PENDING,
       createdAt: {
-        $lt: moment().subtract(2, "hours").toDate()
+        $lt: moment().subtract(10, "minutes").toDate()
       }
     });
 
@@ -733,7 +733,7 @@ export const initAgenda = async () => {
 
   agenda.on("ready", () => {
     agenda.every("5 minutes", "cancel expired pending bookings");
-    agenda.every("1 hour", "cancel expired pending cards");
+    agenda.every("5 minutes", "cancel expired pending cards");
     agenda.every("1 day", "finish in_service bookings");
     agenda.every("1 day", "update holidays");
     agenda.every("0 0 * * *", "set expired cards"); // run everyday at 0am
