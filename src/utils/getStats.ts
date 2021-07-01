@@ -218,6 +218,7 @@ export default async (
       if (!item) {
         item = {
           name: card.title,
+          isContract: card.isContract || false,
           adultsCount: 0,
           kidsCount: 0,
           amount: 0
@@ -230,7 +231,7 @@ export default async (
       item.amount +=
         (booking.amountPaidInCard || 0) + (booking.amountPaidInDeposit || 0);
       return acc;
-    }, [] as { name: string; adultsCount: number; kidsCount: number; amount: number }[]);
+    }, [] as { name: string; isContract: boolean; adultsCount: number; kidsCount: number; amount: number }[]);
 
   const balanceCount = bookingsPaid
     .filter(b => b.type === Scene.PLAY)
