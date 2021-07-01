@@ -477,7 +477,9 @@ export class Booking {
         attach,
         booking: this.id,
         card: this.card.id,
-        gateway: PaymentGateway.Card,
+        gateway: this.card.isContract
+          ? PaymentGateway.Contract
+          : PaymentGateway.Card,
         times: -cardTimes,
         gatewayData: {
           atReception,

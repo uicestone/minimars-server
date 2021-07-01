@@ -147,6 +147,7 @@ export const SceneLabel = {
       this.paid = true;
       break;
     case PaymentGateway.Card:
+    case PaymentGateway.Contract:
       if (!this.times || !this.gatewayData.cardId) {
         throw new Error("invalid_card_payment_gateway_data");
       }
@@ -354,6 +355,7 @@ export enum PaymentGateway {
   Balance = "balance",
   Points = "points",
   Card = "card",
+  Contract = "contract",
   Coupon = "coupon",
   Scan = "scan",
   Pos = "pos",
@@ -376,6 +378,7 @@ export const gatewayNames = {
   [PaymentGateway.Coupon]: "团购优惠券",
   [PaymentGateway.Scan]: "现场扫码",
   [PaymentGateway.Card]: "会员卡",
+  [PaymentGateway.Contract]: "合作卡",
   [PaymentGateway.Pos]: "银行卡",
   [PaymentGateway.Cash]: "现金",
   [PaymentGateway.Shouqianba]: "收钱吧",
