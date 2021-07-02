@@ -697,7 +697,7 @@ export class Booking {
           PaymentGateway.Card,
           PaymentGateway.Contract
         ].includes(p.gateway) &&
-        p.amount > 0 &&
+        p.amount >= 0 &&
         p.paid &&
         !p.original &&
         !p.refunded
@@ -720,7 +720,7 @@ export class Booking {
           PaymentGateway.Card,
           PaymentGateway.Contract
         ].includes(p.gateway) &&
-        p.amount > 0 &&
+        p.amount >= 0 &&
         p.paid &&
         !p.original &&
         !p.refunded
