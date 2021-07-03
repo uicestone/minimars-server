@@ -849,7 +849,11 @@ export class Booking {
       (total, payment) => {
         if (payment.paid) {
           total.amountPaid += payment.amount;
-          if (payment.gateway === PaymentGateway.Card) {
+          if (
+            [PaymentGateway.Card, PaymentGateway.Contract].includes(
+              payment.gateway
+            )
+          ) {
             total.amountPaidInCard += payment.amount;
           }
           if (payment.gateway === PaymentGateway.Balance) {
