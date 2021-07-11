@@ -119,6 +119,9 @@ export class CardType {
   @prop()
   posterUrl?: string;
 
+  @prop()
+  posterDenseUrl?: string;
+
   @prop({ type: String, default: [] })
   posterUrls: string[] = [];
 

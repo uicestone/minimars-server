@@ -166,6 +166,9 @@ export class Card {
   posterUrl?: string;
 
   @prop()
+  posterDenseUrl?: string;
+
+  @prop()
   content?: string;
 
   @prop()
