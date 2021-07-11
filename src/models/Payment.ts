@@ -129,7 +129,8 @@ export const SceneLabel = {
           this.amountForceDeposit,
           this.amountDeposit,
           true,
-          this.gatewayData?.provider !== "pospal"
+          this.gatewayData?.provider !== "pospal" &&
+            !process.env.DISABLE_POSPAL_SYNC
         );
 
       console.log(

@@ -100,7 +100,7 @@ interface Product {
   attribute4: string;
 }
 
-type ProductWithImage = Product & Partial<ProductImage>;
+export type ProductWithImage = Product & Partial<ProductImage>;
 
 export type Menu = (Category & { products: ProductWithImage[] })[];
 

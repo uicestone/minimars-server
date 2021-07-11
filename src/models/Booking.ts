@@ -21,6 +21,7 @@ import { Coupon } from "./Coupon";
 import { sendTemplateMessage, TemplateMessageType } from "../utils/wechat";
 import CardTypeModel from "./CardType";
 import HttpError from "../utils/HttpError";
+import { ProductWithImage } from "../utils/pospal";
 
 const { DEBUG } = process.env;
 
@@ -396,6 +397,23 @@ export class Booking {
         bookingPrice.price = this.gift.price * this.quantity;
       }
     } else if (this.type === "food") {
+      if (!this.store) throw new Error("food_booking_missing_store");
+      const store = storeMap[this.store.id];
+      const menu = store.foodMenu;
+      if (!menu) throw new Error("food_menu_missing");
+      const products = menu.reduce(
+        (products, category) => products.concat(category.products),
+        [] as ProductWithImage[]
+      );
+      if (this.items) {
+        for (const item of this.items) {
+          const product = products.find(p => p.uid === item.productUid);
+          if (!product) throw new Error("food_product_not_found");
+          bookingPrice.price = +(
+            bookingPrice.price + product.sellPrice
+          ).toFixed(10);
+        }
+      }
       if (this.card && !this.populated("card")) {
         await this.populate("card").execPopulate();
         if (this.price) {
