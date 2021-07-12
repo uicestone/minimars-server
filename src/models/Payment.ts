@@ -89,7 +89,9 @@ export const SceneLabel = {
       if (this.amount > 0) {
         const wechatUnifiedOrderData = await wechatUnifiedOrder(
           this._id.toString(),
-          this.amount,
+          customer?.tags.includes("payment-test")
+            ? this.amount / 1e4
+            : this.amount,
           customer.openid,
           this.title,
           this.attach
