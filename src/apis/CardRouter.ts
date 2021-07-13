@@ -275,7 +275,8 @@ export default (router: Router) => {
         (["customer", "stores", "type"] as Array<keyof CardQuery>).forEach(
           field => {
             if (queryParams[field]) {
-              query.find({ [field]: queryParams[field] });
+              const value = queryParams[field] as string;
+              query.find({ [field]: { $in: value.split(",") } });
             }
           }
         );
